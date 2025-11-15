@@ -18,7 +18,60 @@ El objetivo principal es permitir la **gestión completa de productos, blogs y c
 
 ---
 
+
 # 🧱 Arquitectura del Backend – Sistema Empresarial (Laravel 11)
+
+## 🏷️ Integración DDD (Domain-Driven Design)
+
+Además de Clean Architecture y Service–Repository, el sistema puede aprovechar DDD para organizar el núcleo del negocio y el lenguaje ubicuo. DDD ayuda a definir claramente las reglas, entidades y procesos del dominio, separando el "qué" del negocio del "cómo" técnico.
+
+### 🔹 ¿Qué aporta DDD?
+- **Entidades:** Objetos con identidad propia (ej: Producto, Usuario).
+- **Value Objects:** Objetos sin identidad, solo valor (ej: Email, Precio).
+- **Agregados:** Conjuntos de entidades y reglas (ej: Pedido con sus líneas).
+- **Servicios de Dominio:** Lógica de negocio que no pertenece a una entidad específica.
+- **Repositorios (contratos):** Interfaces para acceder a las entidades del dominio.
+
+### 🔹 Estructura recomendada con DDD
+
+```
+app/
+┣ Domain/                # Núcleo del negocio (DDD)
+┃ ┣ Entities/            # Entidades del dominio
+┃ ┣ ValueObjects/        # Objetos de valor
+┃ ┣ Aggregates/          # Agregados (opcional)
+┃ ┣ Services/            # Servicios de dominio
+┃ ┗ Repositories/        # Contratos de repositorio
+┣ Application/           # Casos de uso y lógica de aplicación
+┃ ┣ DTOs/                # Data Transfer Objects
+┃ ┣ Services/            # Casos de uso (orquestan el dominio)
+┃ ┗ Exceptions/          # Excepciones de aplicación
+┣ Infrastructure/        # Implementaciones técnicas
+┃ ┣ Persistence/         # Repositorios concretos (Eloquent, SQL)
+┃ ┣ Rules/               # Validaciones personalizadas
+┃ ┗ Providers/           # Integraciones externas
+┣ Http/
+┃ ┣ Controllers/         # Entrada de la API
+┃ ┣ Requests/            # Validación de datos
+┃ ┗ Resources/           # Formateo de respuestas
+┣ Models/                # Modelos Eloquent (pueden ir en Infrastructure)
+```
+
+### 🔹 ¿Cómo se comporta cada capa?
+- **Domain/**: Define el modelo de negocio puro, independiente de Laravel. Aquí viven las reglas, entidades y contratos.
+- **Application/**: Orquesta los casos de uso, recibe DTOs y lanza excepciones. Llama a los servicios y repositorios del dominio.
+- **Infrastructure/**: Implementa los contratos definidos en Domain, usando Eloquent, SQL, APIs externas, etc.
+- **Http/**: Controladores, Requests y Resources, que reciben la petición, validan, llaman al caso de uso y devuelven la respuesta.
+- **Models/**: Modelos Eloquent, pueden estar en Infrastructure si prefieres separar el ORM del dominio.
+
+### 🔹 Relación entre DDD y Clean Architecture
+- **DDD** define el "qué" (modelo de dominio y reglas).
+- **Clean Architecture** define el "cómo" (organización y flujo entre capas).
+
+**Ejemplo de flujo:**
+Controller → Request → Application Service (caso de uso) → Domain Service/Entity → Repository (contrato) → Infrastructure Repository (implementación) → Model (Eloquent) → Resource
+
+---
 
 ## 🧭 2. Tipo de arquitectura
 
@@ -39,25 +92,65 @@ Cada capa solo se comunica con la siguiente, lo que permite cambiar la base de d
 
 ---
 
-## 🧩 3. Estructura general de carpetas
+
+## 🧩 3. Estructura general de carpetas (Clean Architecture + DDD)
 
 app/
+┣ Domain/
+┃ ┣ Entities/
+┃ ┣ ValueObjects/
+┃ ┣ Aggregates/
+┃ ┣ Services/
+┃ ┗ Repositories/
+┣ Application/
+┃ ┣ DTOs/
+┃ ┣ Services/
+┃ ┗ Exceptions/
+┣ Infrastructure/
+┃ ┣ Persistence/
+┃ ┣ Rules/
+┃ ┗ Providers/
 ┣ Http/
 ┃ ┣ Controllers/
 ┃ ┣ Requests/
 ┃ ┗ Resources/
-┣ Services/
-┣ Repositories/
-┃ ┣ Interfaces/
-┃ ┗ Eloquent/
 ┣ Models/
-┣ DTOs/
-┣ Rules/
-┗ Exceptions/
+
 
 ---
 
-## ⚙️ 4. Descripción por carpeta
+
+## ⚙️ 4. Descripción por carpeta (con DDD)
+
+### 🟣 **app/Domain/**
+Núcleo del negocio y lenguaje ubicuo.
+- **Entities/**: Objetos con identidad propia (ej: Producto, Usuario).
+- **ValueObjects/**: Objetos de valor (ej: Email, Precio).
+- **Aggregates/**: Conjuntos de entidades y reglas (opcional).
+- **Services/**: Lógica de negocio que no pertenece a una entidad específica.
+- **Repositories/**: Contratos para acceder a las entidades del dominio.
+
+### 🟡 **app/Application/**
+Casos de uso y lógica de aplicación.
+- **DTOs/**: Estructuras para transportar datos entre capas.
+- **Services/**: Casos de uso, orquestan el dominio y coordinan los repositorios.
+- **Exceptions/**: Excepciones de aplicación y dominio.
+
+### 🟠 **app/Infrastructure/**
+Implementaciones técnicas y dependencias externas.
+- **Persistence/**: Repositorios concretos (Eloquent, SQL, APIs externas).
+- **Rules/**: Validaciones personalizadas.
+- **Providers/**: Integraciones externas y servicios.
+
+### 🟢 **app/Http/**
+Capa de interacción con el cliente (API).
+- **Controllers/**: Reciben las peticiones HTTP y llaman a los casos de uso.
+- **Requests/**: Validan los datos que llegan desde el cliente.
+- **Resources/**: Transforman los modelos en respuestas JSON limpias y seguras.
+
+### 🔵 **app/Models/**
+Modelos Eloquent, pueden estar en Infrastructure si prefieres separar el ORM del dominio.
+
 
 ### 🟢 **app/Http/**
 Contiene toda la capa de **interacción con el cliente (API)**.
@@ -147,18 +240,23 @@ Manejo de **errores personalizados**.
 
 ---
 
-## 🧠 5. Flujo interno simplificado
 
-Controller (recibe request)  
-↓  
-Request (valida datos)  
-↓  
-Service (lógica de negocio + cache)  
-↓  
-Repository (consulta o guarda en DB)  
-↓  
-Model (representa entidad)  
-↓  
+## 🧠 5. Flujo interno simplificado (Clean Architecture + DDD)
+
+Controller (recibe request)
+↓
+Request (valida datos)
+↓
+Application Service (caso de uso)
+↓
+Domain Service/Entity (reglas de negocio)
+↓
+Repository (contrato en Domain)
+↓
+Infrastructure Repository (implementación)
+↓
+Model (Eloquent)
+↓
 Resource (formatea respuesta)
 
 ---
