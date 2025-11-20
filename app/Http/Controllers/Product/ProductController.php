@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Product;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -17,7 +17,7 @@ use App\Application\Services\Product\DeleteProductService;
 // DTOs y Resources
 use App\Application\DTOs\Product\ProductDTO;
 use App\Http\Requests\Producto\StoreProductoRequest;
-// use App\Http\Requests\Producto\UpdateProductoRequest; // (Si tienes uno, úsalo)
+// use App\Http\Requests\Producto\UpdateProductoRequest; 
 use App\Http\Resources\Product\ProductResource;
 class ProductController extends Controller
 {
