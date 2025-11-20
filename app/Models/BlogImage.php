@@ -14,6 +14,7 @@ class BlogImage extends Model
         'blog_id',
         'slot_id',
         'url',
+        'alt_text',
     ];
 
     /**
