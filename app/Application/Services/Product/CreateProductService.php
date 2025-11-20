@@ -24,6 +24,10 @@ class CreateProductService
                 'description' => $dto->description,
                 'price' => $dto->price,
                 'status' => $dto->status,
+
+                'meta_title' => $dto->meta_title,
+                'meta_description' => $dto->meta_description,
+                'keywords' => $dto->keywords,
             ]);
 
             // 2. Guardar Imagen Principal (Lógica simplificada)
@@ -34,6 +38,9 @@ class CreateProductService
                 $product->images()->create([
                     'slot_id' => $mainSlot->id,
                     'url' => '/storage/' . $path,
+                    'title' => $product->name, 
+                    'alt_text' => 'Imagen principal de ' . $product->name,
+                    
                 ]);
             }
 

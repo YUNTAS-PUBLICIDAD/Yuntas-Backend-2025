@@ -12,11 +12,16 @@ readonly class ProductDTO
         public ?string $description,
         public float $price,
         public string $status,
+
+        public ?string $meta_title,
+        public ?string $meta_description,
+        public array $keywords,
+
         public ?UploadedFile $main_image,
         public array $gallery_images = [],
         public array $specifications = [],
         public array $benefits = [],
-        public array $seo = []
+
     ) {}
 
     public static function fromRequest($request): self
@@ -28,11 +33,15 @@ readonly class ProductDTO
             description: $request->validated('descripcion'),
             price: (float) $request->validated('precio', 0),
             status: 'active',
+            
+            meta_title: $request->input('etiqueta.meta_titulo'),
+            meta_description: $request->input('etiqueta.meta_descripcion'),
+            keywords: $request->input('etiqueta.keywords', []),
+
             main_image: $request->file('imagen_principal'),
             gallery_images: $request->file('imagenes', []),
             specifications: $request->input('especificaciones', []),
-            benefits: $request->input('beneficios', []),
-            seo: $request->input('etiqueta', [])
+            benefits: $request->input('beneficios', [])
         );
     }
 }
