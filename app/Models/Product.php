@@ -19,10 +19,15 @@ class Product extends Model
         'description',
         'price',
         'status',
+        //Campos SEO
+        'meta_title',
+        'meta_description',
+        'keywords'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'keywords' => 'array',
     ];
 
     /**

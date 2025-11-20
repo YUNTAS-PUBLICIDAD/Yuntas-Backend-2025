@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProductContentSlot extends Model
 {
     use HasFactory;
-
+    protected $table = 'product_content_slots';
     protected $fillable = [
         'name',
         'data_type',
