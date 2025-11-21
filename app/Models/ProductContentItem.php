@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models; 
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +10,7 @@ class ProductContentItem extends Model
 {
     use HasFactory;
 
+    protected $table = 'product_content_items';
     protected $fillable = [
         'product_id',
         'slot_id',
