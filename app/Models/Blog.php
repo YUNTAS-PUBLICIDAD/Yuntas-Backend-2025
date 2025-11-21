@@ -18,6 +18,9 @@ class Blog extends Model
         'cover_subtitle',
         'content',
         'status',
+        'meta_title',
+        'meta_description',
+        'video_url',
     ];
 
     /**
