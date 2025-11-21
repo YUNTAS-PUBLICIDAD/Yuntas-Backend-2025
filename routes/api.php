@@ -1,14 +1,39 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Product\ProductController; 
 
+// ------------------- BLOGS -------------------
+Route::prefix('blogs')->group(function () {
+    Route::post('/', [App\Http\Controllers\BlogController::class, 'store']); // Crear blog
+    // Otros endpoints de blogs (listado, detalle, etc.)
+});
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// ------------------- PRODUCTOS -------------------
+Route::prefix('productos')->group(function () {
+    // Ejemplo: Route::post('/', [App\Http\Controllers\ProductoController::class, 'store']);
+    // Otros endpoints de productos
+});
 
-Route::prefix('v1')->group(function () {
-    Route::apiResource('productos', ProductController::class);
+// ------------------- CATEGORÍAS (Público) -------------------
+Route::prefix('categorias')->group(function () {
+    // Endpoints públicos de categorías (listado, detalle, etc.)
+});
+
+// ------------------- ADMINISTRACIÓN DE CATEGORÍAS -------------------
+Route::prefix('admin/categorias')->group(function () {
+    Route::post('/', [App\Http\Controllers\Admin\CategoryController::class, 'store']);
+    Route::put('/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy']);
+    Route::get('/', [App\Http\Controllers\Admin\CategoryController::class, 'index']);
+    Route::get('/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'show']);
+});
+
+// ------------------- CONTACTO -------------------
+Route::prefix('contacto')->group(function () {
+    // Endpoints de contacto
+});
+
+// ------------------- USUARIOS -------------------
+Route::prefix('usuarios')->group(function () {
+    // Endpoints de usuarios
 });

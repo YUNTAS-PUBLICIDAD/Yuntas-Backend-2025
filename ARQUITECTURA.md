@@ -149,8 +149,13 @@ Capa de interacción con el cliente (API).
 - **Resources/**: Transforman los modelos en respuestas JSON limpias y seguras.
 
 ### 🔵 **app/Models/**
-Modelos Eloquent, pueden estar en Infrastructure si prefieres separar el ORM del dominio.
+Define las **entidades** del sistema.
 
+- Cada modelo representa una tabla de la base de datos.  
+- Aquí se configuran los campos `fillable`, relaciones y scopes.  
+- Ejemplo: `Producto`, `Categoria`, `Blog`, `Usuario`.
+
+---
 
 ### 🟢 **app/Http/**
 Contiene toda la capa de **interacción con el cliente (API)**.
@@ -241,6 +246,98 @@ Manejo de **errores personalizados**.
 ---
 
 
+## 🚦 Orden recomendado para implementar un flujo completo
+
+Para mantener la coherencia y aprovechar al máximo la arquitectura, cada funcionalidad debe seguir este orden de implementación. Se indica la carpeta donde debe ir cada archivo:
+
+1. **Definir el endpoint en `routes/api.php`**  
+   (Carpeta: `routes/`)  
+   Permite saber cómo se va a consumir la funcionalidad desde el frontend y qué método del controlador se invoca.
+
+2. **Crear el Request para validación**  
+   (Carpeta: `app/Http/Requests/`)  
+   Garantiza que los datos recibidos cumplen las reglas antes de llegar a la lógica de negocio.
+
+3. **Crear el Controller y su método**  
+   (Carpeta: `app/Http/Controllers/`)  
+   Recibe la petición, la valida y delega el procesamiento al Service.
+
+4. **Crear el DTO (Data Transfer Object)**  
+   (Carpeta: `app/Application/DTOs/`)  
+   Transporta los datos validados de forma tipada y segura entre capas.
+
+5. **Crear el Service de aplicación**  
+   (Carpeta: `app/Application/Services/`)  
+   Orquesta el caso de uso, aplica reglas de negocio y coordina el acceso a datos.
+
+6. **Definir la interfaz del Repository (contrato)**  
+   (Carpeta: `app/Domain/Repositories/`)  
+   Permite desacoplar la lógica de negocio de la implementación técnica de persistencia.
+
+7. **Implementar el Repository concreto**  
+   (Carpeta: `app/Infrastructure/Persistence/`)  
+   Realiza la persistencia usando Eloquent, SQL, o cualquier tecnología.
+
+8. **Crear la entidad de dominio**  
+   (Carpeta: `app/Domain/Entities/`)  
+   Representa el objeto principal del negocio y sus reglas.
+
+9. **Crear el modelo Eloquent**  
+   (Carpeta: `app/Models/`)  
+   Permite interactuar con la base de datos de forma sencilla y segura.
+
+10. **Crear el Resource para formatear la respuesta**  
+    (Carpeta: `app/Http/Resources/`)  
+    Devuelve los datos al frontend en el formato adecuado, ocultando información sensible o innecesaria.
+
+---
+
+## 🗂️ Otras carpetas importantes y su función
+
+Además de las carpetas anteriores, existen otras carpetas de configuración y soporte que ayudan al funcionamiento y organización del sistema:
+
+- **config/**  
+  Configuración de servicios, base de datos, correo, cache, etc.  
+  Ayuda a los puntos 5, 7 y 9 (Services, Repositories, Models) al definir parámetros globales.
+
+- **database/**  
+  Migraciones, seeders y factories para la base de datos.  
+  Relacionado con el punto 9 (Models) y el 7 (Repositories), ya que define la estructura y datos iniciales.
+
+- **bootstrap/**  
+  Inicialización y configuración de Laravel.  
+  Soporte general para todos los puntos, especialmente para el arranque y registro de providers.
+
+- **public/**  
+  Archivos accesibles públicamente (index.php, assets).  
+  Relacionado con la presentación y acceso externo, indirectamente con el punto 1 (endpoint).
+
+- **resources/**  
+  Vistas Blade y archivos estáticos.  
+  Apoya la presentación y el formateo de respuestas, aunque en API REST se usa más el Resource.
+
+- **storage/**  
+  Archivos generados, logs, cache y uploads.  
+  Soporte para persistencia y debugging, útil para los puntos 7 y 9.
+
+- **tests/**  
+  Pruebas automatizadas para asegurar calidad.  
+  Permite validar el correcto funcionamiento de todos los puntos anteriores.
+
+- **vendor/**  
+  Dependencias externas PHP instaladas por Composer.  
+  Soporte técnico para todos los puntos, especialmente para Models, Repositories y Services.
+
+---
+
+**¿Por qué este orden y organización?**
+- Permite construir el flujo de datos de forma natural, desde la entrada (API) hasta la salida (respuesta).
+- Cada archivo tiene una responsabilidad clara y está alineado con la arquitectura.
+- Facilita el trabajo en equipo y la escalabilidad del sistema.
+- Las carpetas de soporte y configuración aseguran que cada capa funcione correctamente y sea fácil de mantener.
+
+---
+
 ## 🧠 5. Flujo interno simplificado (Clean Architecture + DDD)
 
 Controller (recibe request)
@@ -314,7 +411,47 @@ project-root/
 
 ---
 
-**Resumen final:**  
-La arquitectura se basa en **Clean Architecture con patrón Service–Repository**,  
-distribuyendo el código por capas: *presentación*, *negocio* y *persistencia*.  
-Cada carpeta tiene una responsabilidad clara, lo que garantiza **rendimiento, organización y fácil mantenimiento**.
+## 🧩 Carpetas opcionales y especializadas en la arquitectura
+
+Estas carpetas pueden aparecer en tu proyecto según las necesidades del dominio y la complejidad de la lógica de negocio. No son obligatorias, pero pueden aportar claridad y robustez si tu sistema lo requiere.
+
+- **Domain/ValueObjects/**  
+  Objetos de valor como Email, Precio, etc.  
+  Sirven para encapsular reglas y validaciones de tipos simples pero importantes.  
+  Interactúan principalmente con Entities y Domain/Services.
+
+- **Domain/Aggregates/**  
+  Agregados que agrupan varias entidades bajo una raíz (ej: Pedido con líneas).  
+  Útil para dominios complejos donde varias entidades se gestionan como una sola unidad.  
+  Interactúan con Entities, Domain/Services y Repositories.
+
+- **Domain/Services/**  
+  Servicios de dominio para lógica de negocio que no pertenece a una entidad específica.  
+  Ejemplo: cálculos, validaciones transversales, reglas de negocio complejas.  
+  Interactúan con Entities, ValueObjects y Repositories.
+
+- **Infrastructure/Providers/**  
+  Service Providers personalizados o integraciones externas (APIs, servicios de terceros).  
+  Permiten registrar servicios en el contenedor de Laravel o conectar con sistemas externos.  
+  Interactúan con Application/Services y, a veces, con Domain/Services.
+
+- **Infrastructure/Rules/**  
+  Validaciones personalizadas que no van en los Requests.  
+  Útil para reglas complejas o reutilizables en varios puntos del sistema.  
+  Interactúan con Http/Requests y Application/Services.
+
+- **Application/Exceptions/**  
+  Excepciones personalizadas para errores de negocio y aplicación.  
+  Permiten manejar y devolver mensajes claros en la API.  
+  Interactúan con Application/Services, Domain/Services y Controllers.
+
+---
+
+**¿Cuándo usar estas carpetas?**
+- Solo si tu dominio o lógica de negocio lo requiere.
+- Si tienes reglas, tipos o procesos complejos que no encajan en las carpetas principales.
+- Si necesitas claridad, reutilización y robustez en el diseño.
+
+**¿Con qué interactúan?**
+- Cada carpeta interactúa con las capas principales según su función, como se indica arriba.
+- Así mantienes la arquitectura limpia y solo agregas complejidad cuando realmente aporta valor.
