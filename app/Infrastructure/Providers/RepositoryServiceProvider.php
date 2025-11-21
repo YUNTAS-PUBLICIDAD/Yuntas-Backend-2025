@@ -13,6 +13,8 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public $bindings = [
         // Interface => Implementation
+        \App\Domain\Repositories\Product\ProductRepositoryInterface::class => \App\Infrastructure\Persistence\Eloquent\Repositories\Product\EloquentProductRepository::class,
+        
         // \App\Domain\Repositories\ProductRepositoryInterface::class => \App\Infrastructure\Persistence\Eloquent\ProductRepository::class,
         // \App\Domain\Repositories\BlogRepositoryInterface::class => \App\Infrastructure\Persistence\Eloquent\BlogRepository::class,
         // \App\Domain\Repositories\LeadRepositoryInterface::class => \App\Infrastructure\Persistence\Eloquent\LeadRepository::class,
