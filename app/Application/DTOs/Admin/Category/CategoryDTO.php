@@ -2,22 +2,23 @@
 
 namespace App\Application\DTOs\Admin\Category;
 
-class CategoryDTO
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+readonly class CategoryDTO
 {
-    public string $name;
-    public ?string $description;
+    public function __construct(
+        public string $name,
+        public string $slug,
+        public ?string $description 
+    ) {}
 
-    public function __construct(string $name, ?string $description = null)
-    {
-        $this->name = $name;
-        $this->description = $description;
-    }
-
-    public static function fromArray(array $data): self
+    public static function fromRequest(Request $request): self
     {
         return new self(
-            $data['name'],
-            $data['description'] ?? null
+            name: $request->validated('name'),
+            slug: $request->validated('slug') ?? Str::slug($request->validated('name')),
+            description: $request->validated('description') 
         );
     }
 }

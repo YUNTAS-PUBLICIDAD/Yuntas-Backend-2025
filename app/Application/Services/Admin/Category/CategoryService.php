@@ -3,39 +3,50 @@
 namespace App\Application\Services\Admin\Category;
 
 use App\Application\DTOs\Admin\Category\CategoryDTO;
-use App\Models\Category;
+use App\Domain\Repositories\Category\CategoryRepositoryInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CategoryService
 {
-    public function create(CategoryDTO $dto): Category
+    public function __construct(
+        private CategoryRepositoryInterface $repository
+    ) {}
+
+    public function getAll(int $perPage = 10)
     {
-        return Category::create([
-            'name' => $dto->name,
-            'description' => $dto->description,
-        ]);
+        return $this->repository->getAll($perPage);
     }
 
-    public function update(CategoryDTO $dto, Category $category): Category
+    public function getById(int $id)
     {
-        $category->update([
-            'name' => $dto->name,
-            'description' => $dto->description,
-        ]);
+        $category = $this->repository->findById($id);
+        if (!$category) throw new ModelNotFoundException("Categoría no encontrada");
         return $category;
     }
 
-    public function delete(Category $category): void
+    public function create(CategoryDTO $dto)
     {
-        $category->delete();
+        return $this->repository->save([
+            'name' => $dto->name,
+            'slug' => $dto->slug,
+            'description' => $dto->description 
+        ]);
     }
 
-    public function find(int $id): ?Category
+    public function update(int $id, CategoryDTO $dto)
     {
-        return Category::find($id);
+        $this->getById($id);
+        
+        return $this->repository->update($id, [
+            'name' => $dto->name,
+            'slug' => $dto->slug,
+            'description' => $dto->description 
+        ]);
     }
 
-    public function all()
+    public function delete(int $id): void
     {
-        return Category::all();
+        $this->getById($id);
+        $this->repository->delete($id);
     }
 }
