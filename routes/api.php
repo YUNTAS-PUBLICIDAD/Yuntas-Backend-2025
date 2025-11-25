@@ -63,3 +63,7 @@ Route::prefix('contacto')->group(function () {
 Route::prefix('usuarios')->group(function () {
     // Endpoints de usuarios
 });
+Route::prefix('leads')->group(function () {
+    Route::post('/', [App\Http\Controllers\CRM\LeadController::class, 'store']);
+    Route::get('/', [App\Http\Controllers\CRM\LeadController::class, 'index']);  
+});
