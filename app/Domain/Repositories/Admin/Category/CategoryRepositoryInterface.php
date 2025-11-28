@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Domain\Repositories\Admin\Category;
+namespace App\Domain\Repositories\Category;
 
-use App\Application\DTOs\Admin\Category\CategoryDTO;
 use App\Models\Category;
 
 interface CategoryRepositoryInterface
 {
-    public function create(CategoryDTO $dto): Category;
-    public function update(CategoryDTO $dto, Category $category): Category;
-    public function delete(Category $category): void;
-    public function find(int $id): ?Category;
-    public function all();
+    public function getAll(int $perPage = 10);
+    public function findById(int $id): ?Category;
+    public function save(array $data): Category;
+    public function update(int $id, array $data): Category;
+    public function delete(int $id): bool;
 }
