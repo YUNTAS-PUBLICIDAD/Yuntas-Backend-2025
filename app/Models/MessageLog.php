@@ -10,7 +10,8 @@ class MessageLog extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
+    public $timestamps = true;
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'lead_id',

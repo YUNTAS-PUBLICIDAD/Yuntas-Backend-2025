@@ -10,9 +10,9 @@ use Illuminate\Http\Request;
 use App\Application\Services\Product\ProductService;
 
 use App\Application\DTOs\Product\ProductDTO;
-use App\Http\Requests\Producto\StoreProductoRequest;
 use App\Http\Resources\Product\ProductResource;
-
+use App\Http\Requests\Product\StoreProductRequest;
+use App\Http\Requests\Product\UpdateProductRequest;
 class ProductController extends Controller
 {
     // Inyección de dependencia única
@@ -39,11 +39,11 @@ class ProductController extends Controller
         }
     }
 
-    public function store(StoreProductoRequest $request): JsonResponse
+    public function store(StoreProductRequest $request): JsonResponse
     {
         try {
             $dto = ProductDTO::fromRequest($request);
-            $product = $this->productService->create($dto); // Llamada al método create
+            $product = $this->productService->create($dto); 
 
             return response()->json([
                 'success' => true,
@@ -55,11 +55,11 @@ class ProductController extends Controller
         }
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(UpdateProductRequest $request, $id): JsonResponse
     {
         try {
             $dto = ProductDTO::fromRequest($request);
-            $product = $this->productService->update($id, $dto); // Llamada al método update
+            $product = $this->productService->update($id, $dto); 
 
             return response()->json([
                 'success' => true,
@@ -74,7 +74,7 @@ class ProductController extends Controller
     public function destroy($id): JsonResponse
     {
         try {
-            $this->productService->delete($id); // Llamada al método delete
+            $this->productService->delete($id); 
             return response()->json(['success' => true, 'message' => 'Producto eliminado']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
