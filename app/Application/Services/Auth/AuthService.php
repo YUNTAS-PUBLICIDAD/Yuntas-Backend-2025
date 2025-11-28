@@ -3,12 +3,16 @@
 namespace App\Application\Services\Auth;
 
 use App\Application\DTOs\Auth\LoginDTO;
+use App\Domain\Repositories\User\UserRepositoryInterface;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
+    public function __construct(
+        private UserRepositoryInterface $repository
+    ) {}
     /**
      * Intenta loguear al usuario y devuelve el token.
      */
