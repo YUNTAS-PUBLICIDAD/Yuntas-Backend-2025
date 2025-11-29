@@ -41,6 +41,18 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): JsonResponse
     {
+        if ($request->hasFile('imagen_principal')) {
+        $file = $request->file('imagen_principal');
+        dd([
+            'Nombre' => $file->getClientOriginalName(),
+            'MimeType Detectado (Real)' => $file->getMimeType(),
+            'MimeType Cliente' => $file->getClientMimeType(),
+            'Tamaño' => $file->getSize(),
+            'Error PHP' => $file->getError(), 
+        ]);
+    } else {
+        dd('NO LLEGÓ NINGÚN ARCHIVO');
+    }
         try {
             $dto = ProductDTO::fromRequest($request);
             $product = $this->productService->create($dto); 
