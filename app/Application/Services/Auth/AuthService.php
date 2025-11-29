@@ -26,11 +26,11 @@ class AuthService
             ]);
         }
 
-        // Crear token con Sanctum
+   
         $token = $user->createToken($dto->deviceName)->plainTextToken;
 
         return [
-            'user' => $user->load('roles'), // Retornamos usuario con roles
+            'user' => $user->load('role'), 
             'token' => $token,
             'token_type' => 'Bearer'
         ];
@@ -49,6 +49,6 @@ class AuthService
      */
     public function getProfile(User $user): User
     {
-        return $user->load('roles'); // Eager loading de roles
+        return $user->load('role'); 
     }
 }

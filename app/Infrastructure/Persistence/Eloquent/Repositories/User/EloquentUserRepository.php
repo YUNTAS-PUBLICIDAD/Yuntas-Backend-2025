@@ -10,12 +10,12 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function getAll(int $perPage = 10)
     {
         // Traemos roles para evitar N+1
-        return User::with('roles')->latest()->paginate($perPage);
+        return User::with('role')->latest()->paginate($perPage);
     }
 
     public function findById(int $id): ?User
     {
-        return User::with('roles')->find($id);
+        return User::with('role')->find($id);
     }
 
     public function findByEmail(string $email): ?User
