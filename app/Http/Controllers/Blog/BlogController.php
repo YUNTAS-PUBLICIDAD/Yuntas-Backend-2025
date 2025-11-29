@@ -7,8 +7,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Application\Services\Blog\BlogService;
 use App\Application\DTOs\Blog\BlogDTO;
-use App\Http\Requests\PostBlog\PostStoreBlog; 
+use App\Http\Requests\PostBlog\PostStoreBlog;
 use App\Http\Resources\Blog\BlogResource;
+use App\Http\Requests\Blog\StoreBlogRequest;
 
 class BlogController extends Controller
 {
@@ -35,7 +36,7 @@ class BlogController extends Controller
         }
     }
 
-    public function store(Request $request): JsonResponse 
+    public function store(StoreBlogRequest $request): JsonResponse 
     {
         try {
             $dto = BlogDTO::fromRequest($request); 
