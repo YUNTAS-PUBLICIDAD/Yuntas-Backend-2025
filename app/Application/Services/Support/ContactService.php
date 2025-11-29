@@ -40,7 +40,7 @@ class ContactService
 
     public function delete(int $id): void
     {
-        $this->getById($id); // Verificamos existencia antes de borrar
+        $this->getById($id); 
         $this->repository->delete($id);
     }
 }
