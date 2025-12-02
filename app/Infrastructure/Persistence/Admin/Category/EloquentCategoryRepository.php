@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Infrastructure\Persistence\Eloquent\Repositories\Category;
+namespace App\Infrastructure\Persistence\Admin\Category;
 
-use App\Domain\Repositories\Category\CategoryRepositoryInterface;
+use App\Domain\Repositories\Admin\Category\CategoryRepositoryInterface;
 use App\Models\Category;
 
 class EloquentCategoryRepository implements CategoryRepositoryInterface
