@@ -1,0 +1,194 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Documentación API - Yuntas Backend 2025",
+        "description": "API oficial del sistema Yuntas",
+        "contact": {
+            "email": "your-email@gmail.com"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/productos": {
+            "get": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Listar productos",
+                "operationId": "ed6b1222337b161eba8e9b6ac0ee214c",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Cantidad por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de productos obtenida"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Crear un nuevo producto",
+                "operationId": "7427ebed0215b0524e09964d0adab378",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "precio",
+                                    "imagen_principal"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "precio": {
+                                        "type": "number"
+                                    },
+                                    "imagen_principal": {
+                                        "type": "file"
+                                    },
+                                    "descripcion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Producto creado exitosamente"
+                    },
+                    "500": {
+                        "description": "Error al crear producto"
+                    }
+                }
+            }
+        },
+        "/api/productos/{slug}": {
+            "get": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Obtener detalle de un producto",
+                "operationId": "2e56c697785bf4bf5c4463052363fc1e",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Slug del producto",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalle del producto"
+                    },
+                    "404": {
+                        "description": "Producto no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/productos/{id}": {
+            "put": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Actualizar un producto",
+                "operationId": "d6282eb5b0393c6f0d1f6e6ed080783d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del producto",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "precio": {
+                                        "type": "number"
+                                    },
+                                    "imagen_principal": {
+                                        "type": "file"
+                                    },
+                                    "descripcion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Producto actualizado"
+                    },
+                    "500": {
+                        "description": "Error al actualizar producto"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Productos"
+                ],
+                "summary": "Eliminar un producto",
+                "operationId": "29237a8b10b255f7a5fd7362274d39fa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del producto",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Producto eliminado"
+                    },
+                    "500": {
+                        "description": "Error al eliminar producto"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Productos",
+            "description": "Endpoints para gestión de productos"
+        }
+    ]
+}

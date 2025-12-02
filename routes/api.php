@@ -95,3 +95,11 @@ Route::prefix('admin/claims')->group(function () {
     Route::get('/{id}', [App\Http\Controllers\Support\ClaimController::class, 'show']);
     Route::post('/{id}/reply', [App\Http\Controllers\Support\ClaimController::class, 'reply']);
     });
+
+
+
+// ------------------- Email  -------------------
+
+Route::prefix('email')->group(function () {
+    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
+});
