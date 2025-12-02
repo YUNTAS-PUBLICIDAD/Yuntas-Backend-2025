@@ -108,7 +108,11 @@ class ProductController extends Controller
      * )
      */
     public function store(StoreProductRequest $request): JsonResponse
+
+    
     {
+
+        
         try {
             $dto = ProductDTO::fromRequest($request);
             $product = $this->productService->create($dto);

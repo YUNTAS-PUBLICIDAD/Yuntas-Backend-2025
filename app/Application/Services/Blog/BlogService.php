@@ -45,24 +45,23 @@ class BlogService
 
             // 2. Imagen Principal
             if ($dto->main_image) {
-            // Borrar anterior
-            $oldMain = $blog->images()->whereHas('slot', fn($q) => $q->where('name', 'Main'))->first();
-            if ($oldMain) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $oldMain->url));
-                $oldMain->delete();
+                $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'blogs']);
+                $oldMain = $blog->images()->where('slot_id', $mainSlot->id)->first();
+                
+                if ($oldMain) {
+                    Storage::disk('public')->delete(str_replace('/storage/', '', $oldMain->url));
+                    $oldMain->delete();
+                }
+                
+                $path = $dto->main_image->store('blogs/' . $blog->id, 'public');
+                
+                $blog->images()->create([
+                    'slot_id' => $mainSlot->id, 
+                    'url' => '/storage/' . $path,
+                    'title' => $blog->title,
+                    'alt_text' => 'Portada actualizada'
+                ]);
             }
-            
-            // Subir nueva
-            $path = $dto->main_image->store('blogs/' . $blog->id, 'public');
-            $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'blogs']);
-            
-            $blog->images()->create([
-                'slot_id' => $mainSlot->id, 
-                'url' => '/storage/' . $path,
-                'title' => $blog->title,
-                'alt_text' => 'Portada actualizada'
-            ]);
-             }
 
             // 3. Galería
            if (!empty($dto->gallery_images)) {
@@ -77,7 +76,7 @@ class BlogService
             // 4. Párrafos (Texto simple)
            if (!empty($dto->paragraphs)) {
             $textSlot = BlogContentSlot::firstOrCreate(['name' => 'Parrafos', 'data_type' => 'text']);
-            $blog->contentTexts()->where('slot_id', $textSlot->id)->delete(); // Limpiar viejos
+            $blog->contentTexts()->where('slot_id', $textSlot->id)->delete(); 
             foreach ($dto->paragraphs as $text) {
                 $blog->contentTexts()->create(['slot_id' => $textSlot->id, 'content' => $text]);
             }
@@ -86,7 +85,7 @@ class BlogService
             // 5. Beneficios (Listas)
             if (!empty($dto->benefits)) {
             $listSlot = BlogContentSlot::firstOrCreate(['name' => 'Beneficios', 'data_type' => 'list']);
-            $blog->contentItems()->where('slot_id', $listSlot->id)->delete(); // Limpiar viejos
+            $blog->contentItems()->where('slot_id', $listSlot->id)->delete(); 
             foreach ($dto->benefits as $item) {
                 $blog->contentItems()->create(['slot_id' => $listSlot->id, 'text' => $item, 'position' => 0]);
             }
@@ -94,7 +93,7 @@ class BlogService
             // Bloques
           if (!empty($dto->content_blocks)) {
             $blockSlot = BlogContentSlot::firstOrCreate(['name' => 'Bloques', 'data_type' => 'block']);
-            $blog->contentBlocks()->where('slot_id', $blockSlot->id)->delete(); // Limpiar viejos
+            $blog->contentBlocks()->where('slot_id', $blockSlot->id)->delete(); 
             foreach ($dto->content_blocks as $block) {
                 $blog->contentBlocks()->create([
                     'slot_id' => $blockSlot->id,
@@ -107,6 +106,112 @@ class BlogService
         return $blog->refresh();
 
             });
+    }
+
+    /**
+     * Actualizar un artículo de Blog
+     */
+    public function update(int $id, BlogDTO $dto)
+    {
+        return DB::transaction(function () use ($id, $dto) {
+            // 1. Buscar el Blog
+            $blog = $this->repository->findById($id);
+            if (!$blog) {
+                throw new ModelNotFoundException("Artículo de blog no encontrado");
+            }
+
+            // 2. Actualizar Datos Básicos
+            $blog->update([
+                'title' => $dto->title,
+                'slug' => $dto->slug,
+                'cover_subtitle' => $dto->cover_subtitle,
+                'content' => $dto->content,
+                'status' => $dto->status,
+                'video_url' => $dto->video_url,
+                'meta_title' => $dto->meta_title,
+                'meta_description' => $dto->meta_description,
+            ]);
+
+            // 3. Gestionar Imagen Principal (Reemplazo)
+            if ($dto->main_image) {
+                $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'blogs']);
+                $oldImage = $blog->images()->where('slot_id', $mainSlot->id)->first();
+
+                if ($oldImage) {
+                    Storage::disk('public')->delete(str_replace('/storage/', '', $oldImage->url));
+                    $oldImage->delete();
+                }
+
+                $path = $dto->main_image->store('blogs/' . $blog->id, 'public');
+                
+                $blog->images()->create([
+                    'slot_id' => $mainSlot->id,
+                    'url' => '/storage/' . $path,
+                    'title' => $blog->title,
+                    'alt_text' => 'Portada actualizada'
+                ]);
+            }
+
+            // 4. Gestionar Galería (Solo agregar nuevas)
+            if (!empty($dto->gallery_images)) {
+                $gallerySlot = ImageSlot::firstOrCreate(['name' => 'Gallery', 'module' => 'blogs']);
+                foreach ($dto->gallery_images as $img) {
+                    if (!$img instanceof \Illuminate\Http\UploadedFile) continue;
+                    
+                    $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
+                    $blog->images()->create([
+                        'slot_id' => $gallerySlot->id, 
+                        'url' => '/storage/' . $path
+                    ]);
+                }
+            }
+
+            // 5. Actualizar Párrafos (Borrar y Recrear)
+            if (!empty($dto->paragraphs)) {
+                $textSlot = BlogContentSlot::firstOrCreate(['name' => 'Parrafos', 'data_type' => 'text']);
+                
+                $blog->contentTexts()->where('slot_id', $textSlot->id)->delete();
+
+                foreach ($dto->paragraphs as $text) {
+                    $blog->contentTexts()->create([
+                        'slot_id' => $textSlot->id,
+                        'content' => $text,
+                    ]);
+                }
+            }
+
+            // 6. Actualizar Beneficios (Borrar y Recrear)
+            if (!empty($dto->benefits)) {
+                $listSlot = BlogContentSlot::firstOrCreate(['name' => 'Beneficios', 'data_type' => 'list']);
+                
+                $blog->contentItems()->where('slot_id', $listSlot->id)->delete();
+
+                foreach ($dto->benefits as $item) {
+                    $blog->contentItems()->create([
+                        'slot_id' => $listSlot->id,
+                        'text' => $item,
+                        'position' => 0
+                    ]);
+                }
+            }
+
+            // 7. Actualizar Bloques (Borrar y Recrear)
+            if (!empty($dto->content_blocks)) {
+                $blockSlot = BlogContentSlot::firstOrCreate(['name' => 'Bloques', 'data_type' => 'block']);
+                
+                $blog->contentBlocks()->where('slot_id', $blockSlot->id)->delete();
+
+                foreach ($dto->content_blocks as $block) {
+                    $blog->contentBlocks()->create([
+                        'slot_id' => $blockSlot->id,
+                        'title' => $block['title'] ?? '',
+                        'content' => $block['content'] ?? '',
+                    ]);
+                }
+            }
+
+            return $blog->refresh();
+        });
     }
 
     public function delete(int $id): void
