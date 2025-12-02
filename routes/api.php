@@ -59,7 +59,6 @@ Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'sto
 Route::prefix('contacto')->group(function () {
 Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
 });
-
 // ==============================================================================
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
@@ -104,3 +103,4 @@ Route::middleware('role:admin')->group(function () {
         // Endpoints de usuarios
     });
 });
+
