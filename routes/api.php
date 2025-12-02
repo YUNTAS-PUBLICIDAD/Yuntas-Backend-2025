@@ -102,5 +102,10 @@ Route::middleware('role:admin')->group(function () {
     Route::prefix('usuarios')->group(function () {
         // Endpoints de usuarios
     });
+    
+// ------------------- Email  -------------------
+    Route::prefix('email')->group(function () {
+        Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
+    });
 });
 
