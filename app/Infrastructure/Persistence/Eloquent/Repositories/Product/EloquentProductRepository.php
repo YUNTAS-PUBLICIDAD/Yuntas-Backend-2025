@@ -11,27 +11,29 @@ class EloquentProductRepository implements ProductRepositoryInterface
     {
         return Product::create($data);
     }
+
     public function paginate(int $perPage = 10)
-{
-    return \App\Models\Product::with(['images.slot', 'contentItems.slot'])
-        ->where('status', 'active') // Opcional: solo activos
-        ->orderBy('created_at', 'desc')
-        ->paginate($perPage);
-}
+    {
+        return Product::with(['images.slot', 'contentItems.slot'])
+            ->where('status', 'active') // Opcional
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
 
-public function findById(int $id): ?\App\Models\Product
-{
-    return \App\Models\Product::with(['images.slot', 'contentItems.slot'])->find($id);
-}
+    public function findById(int $id): ?Product
+    {
+        return Product::with(['images.slot', 'contentItems.slot'])
+            ->find($id);
+    }
 
-public function update(int $id, array $data): bool
-{
-    $product = $this->findById($id);
-    return $product ? $product->update($data) : false;
-}
+    public function update(int $id, array $data): bool
+    {
+        $product = $this->findById($id);
+        return $product ? $product->update($data) : false;
+    }
 
-public function delete(int $id): bool
-{
-    return \App\Models\Product::destroy($id) > 0;
-}
+    public function delete(int $id): bool
+    {
+        return Product::destroy($id) > 0;
+    }
 }
