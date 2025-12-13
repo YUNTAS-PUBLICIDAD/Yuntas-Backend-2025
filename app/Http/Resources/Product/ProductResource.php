@@ -9,45 +9,57 @@ class ProductResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $getMainImageObj = fn($slotName) => $this->images->first(fn($img) => $img->slot?->name === $slotName);        
-        
-        $getGallery = fn($slotName) => $this->images->filter(fn($img) => $img->slot?->name === $slotName)->map(fn($img) => [
-            'id' => $img->id,
-            'url' => $img->url
-        ])->values();
-
-        $getContent = fn($slotName) => $this->contentItems->filter(fn($item) => $item->slot?->name === $slotName)->map(fn($item) => $item->text)->values();
+        // Filtramos las imágenes para separarlas en el JSON
+        $mainImage = $this->images->first(fn($img) => $img->slot?->name === 'List' || $img->slot?->name === 'Main');
+        $gallery = $this->images->filter(fn($img) => $img->slot?->name !== 'List' && $img->slot?->name !== 'Main')->values();
 
         return [
             'id' => $this->id,
-            'nombre' => $this->name, 
+            'name' => $this->name,
             'slug' => $this->slug,
-            'titulo_corto' => $this->short_description,
-            'descripcion' => $this->description,
-            'precio' => $this->price,
-            'estado' => $this->status,
+            'sku' => $this->sku,
+            'price' => $this->price,
+            'short_description' => $this->short_description,
+            'description' => $this->description,
+            'status' => $this->status,
             
-          'imagen_principal' => [
-                'url' => $getMainImageObj('Main')?->url,
-                'alt' => $getMainImageObj('Main')?->alt_text,
-                'title' => $getMainImageObj('Main')?->title,
-            ],
-            'galeria' => $this->images->filter(fn($img) => $img->slot?->name === 'Gallery')->map(fn($img) => [
-                'id' => $img->id,
+            // SEO
+            'meta_title' => $this->meta_title,
+            'meta_description' => $this->meta_description,
+            'keywords' => $this->keywords,
+
+            // IMÁGENES (Estructuradas)
+            'main_image' => $mainImage ? [
+                'url' => $mainImage->url, 
+                'alt' => $mainImage->alt_text,
+                'title' => $mainImage->title,
+            ] : null,
+            
+            'gallery' => $gallery->map(fn($img) => [
                 'url' => $img->url,
-                'title' => $img->title,
                 'alt' => $img->alt_text,
-            ])->values(),
-            
-            'especificaciones' => $getContent('Especificaciones'),
-            'beneficios' => $getContent('Beneficios'),
-            'seo' => [
-            'meta_titulo' => $this->meta_title,
-            'meta_descripcion' => $this->meta_description,
-            'keywords' => $this->keywords ?? [],
-        ],
-            
-            'creado_en' => $this->created_at->toIso8601String(),
+                'slot' => $img->slot?->name 
+            ]),
+
+            //  CATEGORÍAS
+            'categories' => $this->categories->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'slug' => $cat->slug
+            ]),
+
+            //  CONTENIDO (Specs, Benefits)
+            'specifications' => $this->contentItems
+                ->filter(fn($i) => $i->slot?->name === 'Especificaciones')
+                ->map(fn($i) => $i->text)
+                ->values(),
+
+            'benefits' => $this->contentItems
+                ->filter(fn($i) => $i->slot?->name === 'Beneficios')
+                ->map(fn($i) => $i->text)
+                ->values(),
+
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }
