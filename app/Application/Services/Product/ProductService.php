@@ -3,49 +3,41 @@
 namespace App\Application\Services\Product;
 
 use App\Application\DTOs\Product\ProductDTO;
-use App\Domain\Repositories\Product\ProductRepositoryInterface;
+use App\Models\Product;
 use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductService
 {
     public function __construct(
-        private ProductRepositoryInterface $repository
+        // Assuming you might want to keep the repository pattern, 
+        // but the code provided uses Eloquent directly for simplicity.
+        // If you strictly use repo, inject it here.
     ) {}
 
-    /**
-     * Listar todos los productos (Catálogo)
-     */
     public function getAll(int $perPage = 10)
     {
-        return $this->repository->paginate($perPage);
+        return Product::paginate($perPage);
     }
 
-    /**
-     * Obtener un producto por Slug o ID
-     */
     public function getDetail(string $slug)
     {
-        $product = $this->repository->findBySlug($slug);
-
+        $product = Product::where('slug', $slug)->first();
         if (!$product) {
             throw new ModelNotFoundException("Producto no encontrado con slug: $slug");
         }
-
         return $product;
     }
 
-    /**
-     * Crear un producto nuevo
-     */
+    // Crear Producto
     public function create(ProductDTO $dto)
     {
         return DB::transaction(function () use ($dto) {
-            // 1. Guardar Producto
-            $product = $this->repository->save([
+            // 1. Guardar datos básicos
+            $product = Product::create([
                 'name' => $dto->name,
                 'slug' => $dto->slug,
                 'short_description' => $dto->short_description,
@@ -57,121 +49,167 @@ class ProductService
                 'keywords' => $dto->keywords,
             ]);
 
-            // 2. Imagen Principal
+            // 2. Sincronizar Categorías (Vital)
+            if (!empty($dto->categories)) {
+                $product->categories()->sync($dto->categories);
+            }
+
+            // 3. Gestionar Imagen Principal (Slot: 'List')
             if ($dto->main_image) {
-                $path = $dto->main_image->store('products/' . $product->id, 'public');
-                $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'products']);
-                
-                $product->images()->create([
-                    'slot_id' => $mainSlot->id,
-                    'url' => '/storage/' . $path,
-                    'title' => $product->name,
-                    'alt_text' => 'Imagen principal de ' . $product->name,
-                ]);
+                // Tu código usaba 'List', el nuevo usaba 'Main'. 
+                $alt = $dto->main_image_alt ?? $product->name;
+                $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
             }
 
-            // 3. Galería
+            // 4. Gestionar Galería con Mapa de Slots (Tu lógica específica)
+            $slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
+            
             if (!empty($dto->gallery_images)) {
-                $gallerySlot = ImageSlot::firstOrCreate(['name' => 'Gallery', 'module' => 'products']);
-                foreach ($dto->gallery_images as $image) {
+                foreach ($dto->gallery_images as $index => $image) {
+                    // Validar que sea archivo
                     if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
-                    $path = $image->store('products/' . $product->id . '/gallery', 'public');
-                    $product->images()->create([
-                        'slot_id' => $gallerySlot->id,
-                        'url' => '/storage/' . $path,
-                    ]);
+
+                    // Determinar Slot y Alt Text
+                    $slotName = $slotMap[$index] ?? 'Gallery';
+                    $altText = $dto->gallery_alts[$index] ?? $product->name;
+
+                    $this->uploadImage($product, $image, $slotName, 'products', $altText);
                 }
             }
 
-            // 4. Especificaciones
+            // 5. Guardar Items (Especificaciones)
             if (!empty($dto->specifications)) {
-                $specSlot = ProductContentSlot::firstOrCreate(['name' => 'Especificaciones', 'data_type' => 'list']);
-                foreach ($dto->specifications as $key => $value) {
-                    $text = is_string($key) ? "$key: $value" : $value;
-                    $product->contentItems()->create([
-                        'slot_id' => $specSlot->id,
-                        'text' => $text,
-                        'position' => 0 
-                    ]);
-                }
+                $this->saveContentItems($product, 'Especificaciones', $dto->specifications);
             }
 
-            return $product;
+            // 6. Guardar Items (Beneficios)
+            if (!empty($dto->benefits)) {
+                $this->saveContentItems($product, 'Beneficios', $dto->benefits);
+            }
+
+            return $product->load('images', 'categories', 'contentItems');
         });
     }
 
-    /**
-     * Actualizar un producto existente
-     */
+    // Actualizar Producto
     public function update(int $id, ProductDTO $dto)
     {
         return DB::transaction(function () use ($id, $dto) {
-            $product = $this->repository->findById($id);
-            if (!$product) throw new ModelNotFoundException("Producto no encontrado");
+            $product = Product::findOrFail($id);
 
-            // Actualizar básicos
             $product->update([
                 'name' => $dto->name,
                 'slug' => $dto->slug,
                 'short_description' => $dto->short_description,
                 'description' => $dto->description,
                 'price' => $dto->price,
+                'status' => $dto->status,
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
                 'keywords' => $dto->keywords,
             ]);
 
-            // Actualizar Imagen Principal (Reemplazo)
+            if (isset($dto->categories)) {
+                $product->categories()->sync($dto->categories);
+            }
+
+            // Actualizar Imagen Principal
             if ($dto->main_image) {
-                $oldMain = $product->images()->whereHas('slot', fn($q) => $q->where('name', 'Main'))->first();
-                if ($oldMain) {
-                    Storage::disk('public')->delete(str_replace('/storage/', '', $oldMain->url));
-                    $oldMain->delete();
-                }
-
-                $path = $dto->main_image->store('products/' . $product->id, 'public');
-                $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'products']);
-                $product->images()->create([
-                    'slot_id' => $mainSlot->id, 
-                    'url' => '/storage/' . $path,
-                    'title' => $product->name,
-                    'alt_text' => 'Imagen actualizada de ' . $product->name
-                ]);
+                $this->deleteImagesBySlot($product, 'List');
+                $alt = $dto->main_image_alt ?? $product->name;
+                $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
             }
 
-            // Actualizar Galería (Agregar nuevas)
+            // Actualizar Galería
+            $slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
+
             if (!empty($dto->gallery_images)) {
-                $gallerySlot = ImageSlot::firstOrCreate(['name' => 'Gallery', 'module' => 'products']);
-                foreach ($dto->gallery_images as $image) {
+                foreach ($dto->gallery_images as $index => $image) {
                     if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
-                    $path = $image->store('products/' . $product->id . '/gallery', 'public');
-                    $product->images()->create(['slot_id' => $gallerySlot->id, 'url' => '/storage/' . $path]);
+
+                    $slotName = $slotMap[$index] ?? 'Gallery';
+                    $altText = $dto->gallery_alts[$index] ?? $product->name;
+
+                    // Si es uno de los slots únicos (Hero, Specs...), borramos el anterior para reemplazarlo
+                    if (in_array($slotName, ['Hero', 'Specs', 'Benefits', 'Popups'])) {
+                        $this->deleteImagesBySlot($product, $slotName);
+                    }
+
+                    $this->uploadImage($product, $image, $slotName, 'products', $altText);
                 }
             }
 
-            // Actualizar Especificaciones (Borrar y Recrear)
-            if (!empty($dto->specifications)) {
-                $specSlot = ProductContentSlot::firstOrCreate(['name' => 'Especificaciones', 'data_type' => 'list']);
-                $product->contentItems()->where('slot_id', $specSlot->id)->delete();
-                
-                foreach ($dto->specifications as $key => $value) {
-                    $text = is_string($key) ? "$key: $value" : $value;
-                    $product->contentItems()->create(['slot_id' => $specSlot->id, 'text' => $text, 'position' => 0]);
-                }
+            // Actualizar Contenido
+            if (isset($dto->specifications)) {
+                $this->saveContentItems($product, 'Especificaciones', $dto->specifications);
+            }
+            if (isset($dto->benefits)) {
+                $this->saveContentItems($product, 'Beneficios', $dto->benefits);
             }
 
             return $product->refresh();
         });
     }
 
-    /**
-     * Eliminar un producto
-     */
     public function delete(int $id): void
     {
-        $product = $this->repository->findById($id);
-        if (!$product) throw new ModelNotFoundException("Producto no encontrado");
-        
-        $this->repository->delete($id);
+        $product = Product::findOrFail($id);
+        $product->delete();
+    }
+
+
+    private function uploadImage(Product $product, $file, $slotName, $module, $altText = null)
+    {
+        // 1. Buscar o Crear el Slot
+        $slot = ImageSlot::firstOrCreate(
+            ['name' => $slotName, 'module' => $module]
+        );
+
+        // 2. Subir Archivo
+        $path = $file->store('products/' . $product->id . '/' . strtolower($slotName), 'public');
+
+        // 3. Crear Registro en DB
+        $product->images()->create([
+            'slot_id' => $slot->id,
+            'url' => '/storage/' . $path,
+            'title' => $product->name, 
+            'alt_text' => $altText ?? $product->name,
+        ]);
+    }
+
+    private function deleteImagesBySlot(Product $product, $slotName)
+    {
+        $slot = ImageSlot::where('name', $slotName)->first();
+        if (!$slot) return;
+
+        $images = $product->images()->where('slot_id', $slot->id)->get();
+        foreach ($images as $img) {
+            if (Storage::disk('public')->exists(str_replace('/storage/', '', $img->url))) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $img->url));
+            }
+            $img->delete();
+        }
+    }
+
+    private function saveContentItems(Product $product, $slotName, array $items)
+    {
+        $slot = ProductContentSlot::firstOrCreate(
+            ['name' => $slotName],
+            ['data_type' => 'list', 'position' => 1]
+        );
+
+        $product->contentItems()->where('slot_id', $slot->id)->delete();
+
+        foreach ($items as $index => $itemData) {
+            $text = is_string($index) ? "$index: $itemData" : $itemData;
+            
+            if(empty(trim($text))) continue;
+
+            $product->contentItems()->create([
+                'slot_id' => $slot->id,
+                'text' => $text,
+                'position' => $index + 1
+            ]);
+        }
     }
 }
