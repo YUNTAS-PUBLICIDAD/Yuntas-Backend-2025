@@ -52,6 +52,7 @@ Route::prefix('categorias')->group(function () {
 Route::prefix('leads')->group(function () {
     Route::post('/', [App\Http\Controllers\CRM\LeadController::class, 'store']);
     Route::get('/', [App\Http\Controllers\CRM\LeadController::class, 'index']);  
+    Route::put('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'update']);
 });
 // ------------------- RECLAMOS (Claims) -------------------
 Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'store']);
@@ -131,4 +132,10 @@ Route::middleware('role:admin')->group(function () {
         // Endpoints de usuarios
     });
     
+
+// ------------------- Email  -------------------
+    Route::prefix('email')->group(function () {
+    //    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
+    });
 });
+
