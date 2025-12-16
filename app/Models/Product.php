@@ -8,9 +8,42 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+// Import Swagger Annotations
+use OpenApi\Annotations as OA;
+
+/**
+ * @OA\Schema(
+ *   schema="Product",
+ *   type="object",
+ *   title="Producto",
+ *   description="Modelo del producto dentro del sistema",
+ *   required={"name", "slug", "price", "status"},
+ *
+ *   @OA\Property(property="id", type="integer", example=1),
+ *   @OA\Property(property="name", type="string", example="Laptop Lenovo Ideapad"),
+ *   @OA\Property(property="slug", type="string", example="laptop-lenovo-ideapad"),
+ *   @OA\Property(property="short_description", type="string", example="Laptop potente para oficina"),
+ *   @OA\Property(property="description", type="string", example="Laptop con procesador AMD Ryzen..."),
+ *
+ *   @OA\Property(property="price", type="number", format="float", example=2599.90),
+ *   @OA\Property(property="status", type="string", example="active"),
+ *
+ *   @OA\Property(property="meta_title", type="string", example="Laptop Lenovo - Oferta"),
+ *   @OA\Property(property="meta_description", type="string", example="Mejor laptop calidad-precio"),
+ *
+ *   @OA\Property(
+ *       property="keywords",
+ *       type="array",
+ *       @OA\Items(type="string"),
+ *       example={"laptop", "lenovo", "computadora"}
+ *   )
+ * )
+ */
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
+
+    
 
     protected $fillable = [
         'name',
@@ -19,7 +52,6 @@ class Product extends Model
         'description',
         'price',
         'status',
-        //Campos SEO
         'meta_title',
         'meta_description',
         'keywords'
@@ -30,49 +62,31 @@ class Product extends Model
         'keywords' => 'array',
     ];
 
-    /**
-     * Get the leads for the product.
-     */
     public function leads(): HasMany
     {
         return $this->hasMany(Lead::class);
     }
 
-    /**
-     * Get the images for the product.
-     */
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
     }
 
-    /**
-     * Get the content items for the product.
-     */
     public function contentItems(): HasMany
     {
         return $this->hasMany(ProductContentItem::class);
     }
 
-    /**
-     * Get the content texts for the product.
-     */
     public function contentTexts(): HasMany
     {
         return $this->hasMany(ProductContentText::class);
     }
 
-    /**
-     * Get the categories for the product.
-     */
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_product');
     }
 
-    /**
-     * Get the claims for the product.
-     */
     public function claims(): HasMany
     {
         return $this->hasMany(Claim::class);

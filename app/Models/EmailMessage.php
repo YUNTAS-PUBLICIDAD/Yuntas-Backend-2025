@@ -41,4 +41,17 @@ class EmailMessage extends Model
     {
         return $this->belongsTo(EmailSlot::class, 'slot_id');
     }
+
+    public function slots()
+{
+    return $this->hasMany(EmailSlot::class);
+}
+
+public function product()
+{
+    return $this->belongsTo(EmailProduct::class);
+}
+
+
+
 }

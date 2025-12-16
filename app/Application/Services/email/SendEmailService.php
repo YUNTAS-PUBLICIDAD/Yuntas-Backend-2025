@@ -1,45 +1,81 @@
 <?php
 
-namespace App\Application\Services;
+namespace App\Application\Services\Email;
 
-use App\Application\DTOs\Support\SendEmailDTO;
-use App\Domain\Repositories\Support\EmailRepositoryInterface;
-
-
-//nuevo
+use App\Application\DTOs\email\SendEmailDTO;
 use App\Domain\Repositories\Product\ProductRepositoryInterface;
-
+use Illuminate\Mail\Mailer;
+use App\Mail\ProductSlotsMailable;
 
 class SendEmailService
 {
-    public function __construct(
-        private EmailRepositoryInterface $repository,
-        private ProductRepositoryInterface $productRepository
-    ) {}
+    private ProductRepositoryInterface $productRepo;
+    private Mailer $mailer;
 
-    public function send(SendEmailDTO $dto): bool
+    public function __construct(ProductRepositoryInterface $productRepo, Mailer $mailer)
     {
-        // Obtener productos seleccionados
-        $productos = [];
-        foreach ($dto->productos as $id) {
-            $producto = $this->productRepository->findById($id);
-            if ($producto) {
-                $productos[] = $producto;
-            }
+        $this->productRepo = $productRepo;
+        $this->mailer = $mailer;
+    }
+
+    public function handle(SendEmailDTO $dto): array
+    {
+        // 1. Obtener producto
+        $product = $this->productRepo->findById($dto->productId);
+        if (!$product) {
+            return ['message' => 'Product not found', 'sent' => false];
         }
 
-        // Armar HTML del mensaje
-        $lista = "<h2>Productos seleccionados</h2><ul>";
+        // 2. Preparar slots base desde el producto
+        $defaultSlots = [
+            'product_name' => $product->name,
+            'product_price' => $product->price,
+            'product_description' => $product->description,
+            'product_url' => url("/products/{$product->id}"),
+        ];
 
-        foreach ($productos as $p) {
-            $lista .= "<li><strong>{$p->name}</strong> — S/ {$p->price}</li>";
+        // 3. Merge con custom slots que envió el cliente
+        $slots = array_merge($defaultSlots, $dto->customSlots);
+
+        // 4. Obtener template (puedes guardar templates en DB o filesystem)
+        $template = $this->getTemplate($dto->templateId);
+
+        // 5. Renderizar body reemplazando placeholders
+        $body = $this->renderSlots($template['body'], $slots);
+        $subject = $this->renderSlots($template['subject'], $slots);
+
+        // 6. Enviar correo (Mailable)
+        $mailable = new ProductSlotsMailable($subject, $body);
+
+        $this->mailer->to($dto->recipientEmail)->send($mailable);
+
+        return ['message' => 'Email sent', 'sent' => true];
+    }
+
+    private function getTemplate(?string $templateId): array
+    {
+        // ejemplo simple. Puedes cargar de DB o archivos.
+        if ($templateId === 'promo') {
+            return [
+                'subject' => 'Oferta: [[product_name]] - ¡solo por S/ [[product_price]]!',
+                'body' => "<h1>[[product_name]]</h1><p>[[product_description]]</p><p>Precio: [[product_price]]</p><a href='[[product_url]]'>Ver producto</a>"
+            ];
         }
 
-        $lista .= "</ul>";
+        // template por defecto
+        return [
+            'subject' => 'Información del producto: [[product_name]]',
+            'body' => "<h1>[[product_name]]</h1><p>[[product_description]]</p><p>Precio: [[product_price]]</p><a href='[[product_url]]'>Ver producto</a>"
+        ];
+    }
 
-        // Si había message previo, lo concatenamos
-        $dto->message = ($dto->message ?: '') . $lista;
-
-        return $this->repository->send($dto);
+    private function renderSlots(string $templateString, array $slots): string
+    {
+        // Reemplaza [[key]] por value
+        $result = $templateString;
+        foreach ($slots as $key => $value) {
+            $result = str_replace("[[$key]]", e($value), $result);
+        }
+        return $result;
     }
 }
