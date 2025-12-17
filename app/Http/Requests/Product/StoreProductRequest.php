@@ -39,7 +39,7 @@ class StoreProductRequest extends FormRequest
 
             // Relaciones
             'categories' => 'nullable|array', 
-            'categories.*' => 'integer|exists:categories,id', 
+            'categories.*' => 'string|max:150', 
 
             // Contenido Dinámico
             'specifications' => 'nullable|array',
