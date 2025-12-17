@@ -23,15 +23,23 @@ class ProductService
         return Product::paginate($perPage);
     }
 
-    public function getDetail(string $slug)
+    public function getDetail(string $term)
     {
-        $product = Product::where('slug', $slug)->first();
-        if (!$product) {
-            throw new ModelNotFoundException("Producto no encontrado con slug: $slug");
+        $product = null;
+
+        if (is_numeric($term)) {
+            $product = Product::find((int)$term);
         }
+
+        if (!$product) {
+            $product = Product::where('slug', $term)->first();
+        }
+        if (!$product) {
+            throw new ModelNotFoundException("Producto no encontrado con el término: $term");
+        }
+
         return $product;
     }
-
     // Crear Producto
     public function create(ProductDTO $dto)
     {
@@ -51,7 +59,8 @@ class ProductService
 
             // 2. Sincronizar Categorías (Vital)
             if (!empty($dto->categories)) {
-                $product->categories()->sync($dto->categories);
+                $categoryIds = $this->resolveCategoryIds($dto->categories);
+                $product->categories()->sync($categoryIds);
             }
 
             // 3. Gestionar Imagen Principal (Slot: 'List')
@@ -109,8 +118,13 @@ class ProductService
                 'keywords' => $dto->keywords,
             ]);
 
-            if (isset($dto->categories)) {
-                $product->categories()->sync($dto->categories);
+           if (!empty($dto->categories)) {
+                $nombresCategorias = is_array($dto->categories) 
+                    ? $dto->categories 
+                    : [$dto->categories];
+
+                $categoryIds = $this->resolveCategoryIds($nombresCategorias);
+                $product->categories()->sync($categoryIds);
             }
 
             // Actualizar Imagen Principal
@@ -211,5 +225,26 @@ class ProductService
                 'position' => $index + 1
             ]);
         }
+    }
+    /**
+     * Recibe un array de NOMBRES de categorías (strings).
+     * Busca el ID si existe, o crea la categoría si es nueva.
+     * Retorna un array de IDs para sincronizar.
+     */
+    private function resolveCategoryIds(array $categoryNames): array
+    {
+        $ids = [];
+        foreach ($categoryNames as $name) {
+            if (empty(trim($name))) continue;
+
+            // Buscamos por nombre o creamos nueva
+            $category = \App\Models\Category::firstOrCreate(
+                ['name' => trim($name)], // Buscamos por nombre exacto
+                ['slug' => \Illuminate\Support\Str::slug($name)] // Si se crea, generamos slug
+            );
+            
+            $ids[] = $category->id;
+        }
+        return $ids;
     }
 }
