@@ -33,10 +33,11 @@ Route::prefix('productos')->group(function () {
     
     Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
     Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
-    Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
+   //Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
     Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']); 
     Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
-    
+    Route::get('/{term}', [App\Http\Controllers\Product\ProductController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
     // Ejemplo: Route::post('/', [App\Http\Controllers\ProductoController::class, 'store']);
     // Otros endpoints de productos
 });
