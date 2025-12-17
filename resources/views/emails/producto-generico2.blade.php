@@ -4,135 +4,109 @@
     <meta charset="UTF-8">
     <title>{{ $data['titulo'] }}</title>
     <style>
-        /* Reset y ajuste básico */
         img {
             max-width: 100%;
-            height: auto;
             display: block;
-            border-radius: 16px;
         }
         table {
             border-collapse: collapse;
         }
-        /* Contenedor principal */
         .container {
             width: 100%;
             max-width: 600px;
-            background-color: #0b1b3a;
-            color: white;
             margin: 0 auto;
         }
-        /* Imágenes secundarias pequeñas */
-        .secondary-img {
-            width: 100%;
+        /* Forzamos que todas las imágenes secundarias midan lo mismo */
+        .img-secundaria {
+            width: 100% !important;
+            height: 350px !important; 
+            object-fit: cover; 
             border-radius: 14px;
-            display: block;
         }
-        /* Media queries para pantallas pequeñas */
         @media only screen and (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            table[class="container"] {
-                width: 100% !important;
-            }
-            td[class="title"] {
-                font-size: 20px !important;
-                padding: 20px 10px 10px !important;
-            }
-            td[class="paragraph"] {
-                font-size: 14px !important;
-                padding: 10px 15px 30px !important;
-            }
-            td[class="button-container"] a {
-                padding: 12px 30px !important;
-                font-size: 14px !important;
-            }
-            td[class="secondary-img-cell"] {
-                width: 100% !important;
-                padding: 5px 0 !important;
-            }
-            /* imágenes secundarias en filas separadas */
-            .secondary-row tr {
-                display: block !important;
-                width: 100% !important;
-            }
-            .secondary-row td {
-                display: block !important;
-                width: 100% !important;
-                padding: 5px 0 !important;
-            }
+            .container { width: 100% !important; }
+            .img-secundaria { height: 250px !important; }
         }
     </style>
 </head>
+<body style="margin:0; padding:0; background-color: #f4f4f4;">
 
-
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b1b3a;">
-<tr>
-<td align="center">
-
-<table width="600" cellpadding="0" cellspacing="0" class="container" style="background-color:#0b1b3a; color:white;">
-
-    <!-- TÍTULO -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
-        <td align="center" class="title" style="padding:30px 20px 10px; font-size:24px; font-weight:bold; text-transform:uppercase;">
-            {{ $data['titulo'] }}
+        <td align="center">
+            
+            <table width="600" cellpadding="0" cellspacing="0" class="container" style="font-family: 'Segoe UI', Arial, sans-serif;">
+                
+                <tr>
+                    <td style="background-color: #1a2e5a;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td align="center" style="padding:35px 20px 25px; font-size:20px; font-weight:bold; font-style: italic; text-transform:uppercase; color: white; letter-spacing: 1px;">
+                                    {{ $data['titulo'] }}
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="padding:0;">
+                                    <img src="{{ $data['imagen_principal'] }}" 
+                                         alt="{{ $data['titulo'] }}" 
+                                         style="width:100%; border:0; display:block;">
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td align="center" style="padding:30px 40px 35px; font-size:14px; color:#dbe7ff; font-style: italic; line-height: 1.5;">
+                                    {{ $data['parrafo1'] }}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="background-color: #ffffff; padding-top: 40px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            
+                            @if(!empty($data['imagenes_secundarias']))
+                            <tr>
+                                <td align="center" style="padding:0 40px;">
+                                    @foreach($data['imagenes_secundarias'] as $img)
+                                    <div style="margin-bottom: 30px;">
+                                        <img src="{{ $img }}" 
+                                             alt="Galería {{ $data['titulo'] }}" 
+                                             class="img-secundaria"
+                                             style="box-shadow: 0 6px 15px rgba(0,0,0,0.15); width: 100%;">
+                                    </div>
+                                    @endforeach
+                                </td>
+                            </tr>
+                            @endif
+
+                            <tr>
+                                <td align="center" style="background-color: #1a2e5a; padding: 50px 20px;">
+                                    <a href="https://yuntaspublicidad.com/contacto" 
+                                       style="background-color: #ffffff; 
+                                              color: #1a2e5a; 
+                                              border-radius: 50px; 
+                                              padding: 18px 55px; 
+                                              font-size: 18px; 
+                                              font-weight: bold; 
+                                              text-transform: uppercase; 
+                                              text-decoration: none; 
+                                              display: inline-block;
+                                              box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+                                        ¡COTIZA HOY!
+                                    </a>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
         </td>
     </tr>
-
-    <!-- IMAGEN PRINCIPAL -->
-    <tr>
-        <td style="padding:20px;">
-            <img src="{{ $data['imagen_principal'] }}" alt="Imagen principal">
-        </td>
-    </tr>
-
-    <!-- TEXTO -->
-    <tr>
-        <td align="center" class="paragraph" style="padding:10px 30px 30px; font-size:16px; color:#dbe7ff;">
-            {{ $data['parrafo1'] }}
-        </td>
-    </tr>
-
-    <!-- IMÁGENES SECUNDARIAS -->
-    <!-- IMÁGENES SECUNDARIAS -->
-@if(!empty($data['imagenes_secundarias']))
-<tr>
-    <td align="center" style="padding:10px 20px;">
-        <table width="100%" style="background:white; border-radius:16px; padding:10px 15px;">
-            @foreach($data['imagenes_secundarias'] as $img)
-            <tr>
-                <td style="padding:10px 0;">
-                    <img src="{{ $img }}" alt="Imagen secundaria" style="width:100%; border-radius:14px; display:block;">
-                </td>
-            </tr>
-            @endforeach
-        </table>
-    </td>
-</tr>
-@endif
-
-
-    <!-- BOTÓN -->
-    <tr>
-        <td align="center" class="button-container" style="padding:30px;">
-            <a href="https://yuntaspublicidad.com/contacto"
-               style="background:white;
-                      color:#0b1b3a;
-                      padding:14px 40px;
-                      border-radius:30px;
-                      text-decoration:none;
-                      font-weight:bold;
-                      font-size:16px;">
-                ¡COTIZA HOY!
-            </a>
-        </td>
-    </tr>
-
-</table>
-
-</td>
-</tr>
 </table>
 
 </body>
