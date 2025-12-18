@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class EmailProducto extends Model
 {
-    public static $apiUrl = 'https://hollis-unturbid-ying.ngrok-free.dev';
+
 
     protected $fillable = [
         'producto_id',
@@ -37,9 +37,10 @@ class EmailProducto extends Model
             return null;
         }
 
-        return preg_match('/^https?:\/\//', $value)
-            ? $value
-            : self::$apiUrl . $value;
+        if (preg_match('/^https?:\/\//', $value)) {
+            return $value;
+        }
+
+        return config('app.url') . $value;
     }
-    
 }
