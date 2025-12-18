@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 
 use Illuminate\Support\Facades\Log;
 
-use App\Mail\ProductMailingInfo;
+
 
 class SendProductEmailJob implements ShouldQueue
 {
