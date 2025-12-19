@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailProducto;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\URL;
+
+
 class EmailProductController extends Controller
 {
     // LISTAR
@@ -16,51 +19,50 @@ class EmailProductController extends Controller
 
     // CREAR
     public function store(Request $request)
-    {
-        $request->validate([
-            'producto_id' => 'required|integer',
-            'paso' => 'required|integer',
-            'titulo' => 'required|string',
-            'parrafo1' => 'required|string',
+{
+    $request->validate([
+        'producto_id' => 'required|integer',
+        'paso' => 'required|integer',
+        'titulo' => 'required|string',
+        'parrafo1' => 'required|string',
 
-            // ARCHIVOS
-            'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png',
-            'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png',
-        ]);
+        'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png',
+        'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png',
+    ]);
 
-        $data = $request->except(['imagenes_secundarias', 'imagen_principal']);
+    $data = $request->except(['imagenes_secundarias', 'imagen_principal']);
 
-        // ==============================
-        // GUARDAR IMAGEN PRINCIPAL
-        // ==============================
-        
-        if ($request->hasFile('imagen_principal')) {
-            $file = $request->file('imagen_principal');
-            $path = $file->store('uploads/email', 'public');
-            $data['imagen_principal'] = "/storage/" . $path;
-        }
+    // ==============================
+    // IMAGEN PRINCIPAL
+    // ==============================
+    if ($request->hasFile('imagen_principal')) {
+        $path = $request->file('imagen_principal')
+                        ->store('uploads/email', 'public');
 
-        // ==============================
-        // GUARDAR IMÁGENES SECUNDARIAS
-        // ==============================
-        $imagenes = [];
-
-        if ($request->hasFile('imagenes_secundarias')) {
-            foreach ($request->file('imagenes_secundarias') as $img) {
-                $path = $img->store('uploads/email', 'public');
-                $imagenes[] = "/storage/" . $path;
-            }
-        }
-
-        $data['imagenes_secundarias'] = json_encode($imagenes);
-
-        $email = EmailProducto::create($data);
-
-        return response()->json([
-            "message" => "Plantilla creada correctamente",
-            "data" => $email
-        ]);
+        $data['imagen_principal'] = asset('storage/' . $path);
     }
+
+    // ==============================
+    // IMÁGENES SECUNDARIAS
+    // ==============================
+    $imagenes = [];
+
+    if ($request->hasFile('imagenes_secundarias')) {
+        foreach ($request->file('imagenes_secundarias') as $img) {
+            $path = $img->store('uploads/email', 'public');
+            $imagenes[] = asset('storage/' . $path);
+        }
+    }
+
+    $data['imagenes_secundarias'] = json_encode($imagenes);
+
+    $email = EmailProducto::create($data);
+
+    return response()->json([
+        'message' => 'Plantilla creada correctamente',
+        'data' => $email
+    ]);
+}
 
     // ACTUALIZAR
     public function update(Request $request, $id)
@@ -82,7 +84,7 @@ class EmailProductController extends Controller
         if ($request->hasFile('imagen_principal')) {
             $file = $request->file('imagen_principal');
             $path = $file->store('uploads/email', 'public');
-            $data['imagen_principal'] = "/storage/" . $path;
+            $data['imagen_principal'] = asset('storage/' . $path);
         }
 
         $imagenes = json_decode($email->imagenes_secundarias, true) ?? [];
@@ -90,7 +92,7 @@ class EmailProductController extends Controller
         if ($request->hasFile('imagenes_secundarias')) {
             foreach ($request->file('imagenes_secundarias') as $img) {
                 $path = $img->store('uploads/email', 'public');
-                $imagenes[] = "/storage/" . $path;
+                $imagenes[] = asset('storage/' . $path);
             }
         }
 
