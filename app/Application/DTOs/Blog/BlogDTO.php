@@ -34,33 +34,35 @@ readonly class BlogDTO
     ) {}
 
     public static function fromRequest($request): self
-    {
-        $seo = is_string($request->input('etiqueta')) 
-            ? json_decode($request->input('etiqueta'), true) 
-            : $request->input('etiqueta', []);
+{
+    $seo = is_string($request->input('etiqueta')) 
+        ? json_decode($request->input('etiqueta'), true) 
+        : $request->input('etiqueta', []);
 
-        return new self(
-            title: $request->validated('titulo') ?? $request->input('titulo'), 
-            slug: \Str::slug($request->validated('titulo') ?? $request->input('titulo')),
-            cover_subtitle: $request->validated('subtitulo') ?? $request->input('subtitulo'),
-            content: $request->validated('contenido') ?? '', 
-            status: 'published', 
-            video_url: $request->validated('url_video') ?? $request->input('url_video'),
-            
-            meta_title: $seo['meta_titulo'] ?? null,
-            meta_description: $seo['meta_descripcion'] ?? null,
+    $title = $request->validated('titulo');
 
-            categories: $request->input('categorias', []),
+    return new self(
+        title: $title,
+        slug: Str::slug($title),
+        cover_subtitle: $request->validated('subtitulo'),
+        content: $request->validated('contenido'),
+        status: 'published',
+        video_url: $request->validated('url_video'),
 
-            main_image: $request->file('imagen_principal'),
-            main_image_alt: $request->input('imagen_principal_alt'),
+        meta_title: $seo['meta_titulo'] ?? null,
+        meta_description: $seo['meta_descripcion'] ?? null,
 
-            gallery_images: $request->file('imagenes', []),
-            gallery_alts: $request->input('imagenes_alts', []),
-            
-            paragraphs: $request->input('parrafos', []),
-            benefits: $request->input('beneficios', []),
-            content_blocks: $request->input('bloques', [])
-        );
-    }
+        categories: $request->validated('categorias') ?? [],
+
+        main_image: $request->file('imagen_principal'),
+        main_image_alt: $request->input('imagen_principal_alt'),
+
+        gallery_images: $request->file('imagenes', []),
+        gallery_alts: $request->input('imagenes_alts', []),
+
+        paragraphs: $request->input('parrafos', []),
+        benefits: $request->input('beneficios', []),
+        content_blocks: $request->input('bloques', [])
+    );
+}
 }
