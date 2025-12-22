@@ -9,7 +9,7 @@ class ProductResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // Filtramos las imágenes para separarlas en el JSON
+        
         $mainImage = $this->images->first(fn($img) => $img->slot?->name === 'List' || $img->slot?->name === 'Main');
         $gallery = $this->images->filter(fn($img) => $img->slot?->name !== 'List' && $img->slot?->name !== 'Main')->values();
 
@@ -28,7 +28,15 @@ class ProductResource extends JsonResource
             'meta_description' => $this->meta_description,
             'keywords' => $this->keywords,
 
-            // IMÁGENES (Estructuradas)
+            'images' => $this->images->map(function ($img) {
+                return [
+                    'id' => $img->id,
+                    'url' => $img->url,
+                    'alt_text' => $img->alt_text, 
+                    'slot_name' => $img->slot?->name ?? 'Gallery', 
+                ];
+            }),
+            
             'main_image' => $mainImage ? [
                 'url' => $mainImage->url, 
                 'alt' => $mainImage->alt_text,
