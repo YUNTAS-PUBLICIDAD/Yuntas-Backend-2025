@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Support;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Requests\Support\StoreContactRequest;
 use App\Application\Services\Support\ContactService;
 use App\Application\DTOs\Support\CreateContactDTO;
 
@@ -14,9 +15,8 @@ class ContactMessageController extends Controller
         private ContactService $service
     ) {}
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreContactRequest $request): JsonResponse
     {
-        $request->validate(['first_name' => 'required', 'message' => 'required']);
 
         try {
             $dto = CreateContactDTO::fromRequest($request);
