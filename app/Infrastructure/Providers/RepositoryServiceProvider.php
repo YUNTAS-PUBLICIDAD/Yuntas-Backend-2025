@@ -31,8 +31,8 @@ class RepositoryServiceProvider extends ServiceProvider
         \App\Domain\Repositories\Support\ContactRepositoryInterface::class 
             => \App\Infrastructure\Persistence\Eloquent\Repositories\Support\EloquentContactRepository::class,
 
-        \App\Domain\Repositories\Category\CategoryRepositoryInterface::class 
-            => \App\Infrastructure\Persistence\Eloquent\Repositories\Category\EloquentCategoryRepository::class,
+        \App\Domain\Repositories\Admin\Category\CategoryRepositoryInterface::class 
+            => \App\Infrastructure\Persistence\Admin\Category\EloquentCategoryRepository::class,
 
         // agregar el ejemplo del repositorio de email
         \App\Domain\Repositories\Support\EmailRepositoryInterface::class

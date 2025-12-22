@@ -3,7 +3,7 @@
 namespace App\Application\Services\Admin\Category;
 
 use App\Application\DTOs\Admin\Category\CategoryDTO;
-use App\Domain\Repositories\Category\CategoryRepositoryInterface;
+use App\Domain\Repositories\Admin\Category\CategoryRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CategoryService
