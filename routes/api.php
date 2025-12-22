@@ -61,6 +61,34 @@ Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'sto
 Route::prefix('contacto')->group(function () {
 Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
 });
+
+// ==============================================================================
+// 3. EMAIL PÚBLICO (Mailings, cotizaciones, formularios)
+// ==============================================================================
+Route::prefix('email')->group(function () {
+
+    // Enviar el correo del formulario principal
+    Route::post('/send', [App\Http\Controllers\Email\EmailController::class, 'iniciarSeguimiento']);
+
+    // Enviar Mailing 1 (día 1)
+   
+
+    // Si deseas Mailing 2 y 3, solo descomenta:
+    // Route::post('/mailing2', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing2']);
+    // Route::post('/mailing3', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing3']);
+});
+Route::prefix('email-productos')->group(function () {
+    Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
+    Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
+});
+
+
+
+
+
 // ==============================================================================
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
@@ -105,6 +133,7 @@ Route::middleware('role:admin')->group(function () {
         // Endpoints de usuarios
     });
     
+
 // ------------------- Email  -------------------
     Route::prefix('email')->group(function () {
     //    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
