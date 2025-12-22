@@ -44,6 +44,7 @@ Route::prefix('productos')->group(function () {
 // ------------------- CATEGORÍAS (Público) -------------------
 Route::prefix('categorias')->group(function () {
     // Endpoints públicos de categorías (listado, detalle, etc.)
+    Route::get('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'index']);
 });
 
 // ==============================================================================
@@ -92,7 +93,7 @@ Route::prefix('email-productos')->group(function () {
 // ==============================================================================
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
-Route::middleware('role:admin')->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 // ------------------- ADMIN: USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index']);
@@ -110,7 +111,6 @@ Route::middleware('role:admin')->group(function () {
         Route::post('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'store']);
         Route::put('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'destroy']);
-        Route::get('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'show']);
     });
     // ------------------- RECLAMOS (Claims) -------------------
@@ -121,7 +121,7 @@ Route::middleware('role:admin')->group(function () {
         Route::post('/{id}/reply', [App\Http\Controllers\Support\ClaimController::class, 'reply']);
         });
     // ------------------- ADMIN: MENSAJES DE CONTACTO -------------------
-    Route::prefix('contacto')->group(function () {
+    Route::prefix('admin/contacto')->group(function () {
         // Endpoints de contacto
         Route::get('/', [App\Http\Controllers\Support\ContactMessageController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ContactMessageController::class, 'show']);
