@@ -17,6 +17,16 @@ class EmailProductController extends Controller
         return EmailProducto::all();
     }
 
+    // OBTENER PLANTILLAS POR PRODUCTO
+    public function show($id)
+{
+    // Buscar todas las plantillas con ese producto_id
+    $plantillas = EmailProducto::where('producto_id', $id)->get();
+
+    return response()->json($plantillas);
+}
+    
+
     // CREAR
     public function store(Request $request)
 {

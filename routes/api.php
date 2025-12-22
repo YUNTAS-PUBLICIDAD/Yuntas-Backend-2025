@@ -25,7 +25,7 @@ Route::prefix('blogs')->group(function () {
     Route::post('/', [App\Http\Controllers\Blog\BlogController::class, 'store']);
     Route::get('/{slug}', [App\Http\Controllers\Blog\BlogController::class, 'show']);
     Route::delete('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'destroy']);
-    Route::post('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
+    Route::put('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
 });
 
 // ------------------- PRODUCTOS -------------------
@@ -34,7 +34,7 @@ Route::prefix('productos')->group(function () {
     Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
     Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
     Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
-    Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']); 
+    Route::put('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']); 
     Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
     
     // Ejemplo: Route::post('/', [App\Http\Controllers\ProductoController::class, 'store']);
