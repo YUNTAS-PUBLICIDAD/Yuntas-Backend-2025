@@ -37,7 +37,11 @@ class ProductService
         if (!$product) {
             throw new ModelNotFoundException("Producto no encontrado con el término: $term");
         }
-
+        $product->load([
+            'images.slot',       
+            'contentItems.slot', 
+            'categories'         
+        ]);
         return $product;
     }
     // Crear Producto
