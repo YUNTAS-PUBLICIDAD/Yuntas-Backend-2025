@@ -88,6 +88,11 @@ Route::prefix('email-productos')->group(function () {
     Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
 });
 
+    // envio de campaña para usuarios ya registrados 
+Route::post(
+    '/email-campanas/enviar',
+    [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']
+);
 
 
 
