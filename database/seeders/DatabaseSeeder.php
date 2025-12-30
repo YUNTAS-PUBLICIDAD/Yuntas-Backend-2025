@@ -12,6 +12,9 @@ use App\Models\LeadSource;
 use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
 use App\Models\BlogContentSlot;
+use App\Models\DocumentType;
+use App\Models\ClaimStatus;
+use App\Models\ClaimType;
 
 class DatabaseSeeder extends Seeder
 {
@@ -61,5 +64,29 @@ class DatabaseSeeder extends Seeder
             'meta_title' => 'SEO Title',
             'keywords' => ['demo'],
         ]);
+
+        // 7. Documento ID
+        DocumentType::create([
+            'code' => '1',
+            'label' => 'dni'
+        ]);
+        DocumentType::create([
+            'code' => '2',
+            'label' => 'pasaporte'
+        ]);
+
+        // 8. Estado reclamo
+        ClaimStatus::create([
+            'name' => 'pendiente',
+        ]);
+        ClaimStatus::create([
+            'name' => 'completo',
+        ]);
+
+        // 9. Tipo Reclamo
+        ClaimType::create([
+            'name' => 'reclamo',
+        ]);
+
     }
 }
