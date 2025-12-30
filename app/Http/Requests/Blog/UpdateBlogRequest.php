@@ -16,13 +16,13 @@ class UpdateBlogRequest extends FormRequest
         return [
             'titulo' => 'required|string|max:150',
             'subtitulo' => 'nullable|string|max:255',
-            'contenido' => 'required|string',
+            'contenido' => 'nullable|string',
             'url_video' => 'nullable|url',
 
             'etiqueta' => 'nullable',
 
             // 🔑 Imagen YA NO es required
-            'imagen_principal' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'imagen_principal' => 'requiered|image|mimes:jpeg,png,jpg,webp|max:5120',
             'imagen_principal_alt' => 'nullable|string|max:191',
 
             'imagenes' => 'nullable|array',
