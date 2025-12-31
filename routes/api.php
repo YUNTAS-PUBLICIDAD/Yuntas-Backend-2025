@@ -25,7 +25,7 @@ Route::prefix('blogs')->group(function () {
     Route::post('/', [App\Http\Controllers\Blog\BlogController::class, 'store']);
     Route::get('/{slug}', [App\Http\Controllers\Blog\BlogController::class, 'show']);
     Route::delete('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'destroy']);
-    Route::post('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
+    Route::put('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
 });
 
 // ------------------- PRODUCTOS -------------------
