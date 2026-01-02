@@ -13,6 +13,9 @@ readonly class BlogDTO
         public string $content,        
         public string $status,
         public ?string $video_url,
+
+        //  Producto
+        public ?int $product_id,
         
         // SEO
         public ?string $meta_title,
@@ -46,6 +49,9 @@ readonly class BlogDTO
             content: $request->validated('contenido') ?? '', 
             status: 'published', 
             video_url: $request->validated('url_video') ?? $request->input('url_video'),
+
+            //  AQUÍ
+            product_id: $request->validated('product_id') ?? null,
             
             meta_title: $seo['meta_titulo'] ?? null,
             meta_description: $seo['meta_descripcion'] ?? null,
