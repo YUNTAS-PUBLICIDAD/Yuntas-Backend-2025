@@ -50,12 +50,6 @@ Route::prefix('categorias')->group(function () {
 // ==============================================================================
 // 3. FORMULARIOS PÚBLICOS (CRM & SOPORTE)
 // ==============================================================================
-// ------------------- CRM / LEADS -------------------
-Route::prefix('leads')->group(function () {
-    Route::post('/', [App\Http\Controllers\CRM\LeadController::class, 'store']);
-    Route::get('/', [App\Http\Controllers\CRM\LeadController::class, 'index']);  
-    Route::put('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'update']);
-});
 // ------------------- RECLAMOS (Claims) -------------------
 Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'store']);
 // ------------------- CONTACTO (Soporte) -------------------
@@ -132,7 +126,14 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::prefix('usuarios')->group(function () {
         // Endpoints de usuarios
     });
-    
+
+    // ------------------- CRM / LEADS -------------------
+    Route::prefix('admin/leads')->group(function () {
+        Route::post('/', [App\Http\Controllers\CRM\LeadController::class, 'store']);
+        Route::get('/', [App\Http\Controllers\CRM\LeadController::class, 'index']);  
+        Route::put('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'destroy']);
+    });
 
 // ------------------- Email  -------------------
     Route::prefix('email')->group(function () {
