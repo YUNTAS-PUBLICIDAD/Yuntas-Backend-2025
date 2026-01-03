@@ -25,17 +25,17 @@ class StoreBlogRequest extends FormRequest
 
             // Imagen Principal
             'imagen_principal' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'imagen_principal_alt' => 'nullable|string|max:191', // <--- NUEVO
+            'imagen_principal_alt' => 'nullable|string|max:191',
 
             // Galería
             'imagenes' => 'nullable|array', 
             'imagenes.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
-            'imagenes_alts' => 'nullable|array', // <--- NUEVO
+            'imagenes_alts' => 'nullable|array', 
             'imagenes_alts.*' => 'nullable|string|max:191',
 
             // Categorías
-            'categorias' => 'nullable|array', // <--- NUEVO
-            'categorias.*' => 'integer|exists:categories,id', // Verifica existencia
+            'categorias' => 'nullable|array', 
+            'categorias.*' => 'string|max:150', 
 
             // Contenido Dinámico
             'parrafos' => 'nullable|array',
@@ -44,7 +44,10 @@ class StoreBlogRequest extends FormRequest
             'beneficios' => 'nullable|array',
             'beneficios.*' => 'string',
 
-            'bloques' => 'nullable|array', // <--- NUEVO (Para bloques complejos)
+            'bloques' => 'nullable|array', 
+
+            // Producto asociado
+            'product_id' => 'nullable|exists:productos,id',
         ];
     }
 }

@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Admin\Category;
 
 use App\Http\Controllers\Controller;
+use App\Application\DTOs\Admin\Category\CategoryDTO;
+use App\Application\Services\Admin\Category\CategoryService;
+use App\Domain\Repositories\Admin\Category\CategoryRepositoryInterface;
+use App\Http\Resources\Admin\Category\CategoryResource;
 use App\Http\Requests\Admin\Category\StoreCategoryRequest;
 use App\Http\Requests\Admin\Category\UpdateCategoryRequest;
 use Illuminate\Http\Request;
@@ -20,13 +24,13 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $categories = $this->repository->all();
+        $categories = $this->repository->getAll();
         return CategoryResource::collection($categories);
     }
 
     public function show($id)
     {
-        $category = $this->repository->find($id);
+        $category = $this->repository->findById($id);
         if (!$category) {
             return response()->json(['message' => 'Categoría no encontrada'], 404);
         }
@@ -37,6 +41,7 @@ class CategoryController extends Controller
     {
         $dto = new CategoryDTO(
             $request->input('name'),
+            $request->input('slug'),
             $request->input('description')
         );
         $category = $this->service->create($dto);
@@ -45,12 +50,13 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, $id)
     {
-        $category = $this->repository->find($id);
+        $category = $this->repository->findById($id);
         if (!$category) {
             return response()->json(['message' => 'Categoría no encontrada'], 404);
         }
         $dto = new CategoryDTO(
             $request->input('name'),
+            $request->input('slug'),
             $request->input('description')
         );
         $updated = $this->service->update($dto, $category);
@@ -59,7 +65,7 @@ class CategoryController extends Controller
 
     public function destroy($id)
     {
-        $category = $this->repository->find($id);
+        $category = $this->repository->findById($id);
         if (!$category) {
             return response()->json(['message' => 'Categoría no encontrada'], 404);
         }

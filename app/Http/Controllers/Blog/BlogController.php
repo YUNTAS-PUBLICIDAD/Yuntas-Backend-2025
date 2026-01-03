@@ -11,6 +11,9 @@ use App\Http\Requests\PostBlog\PostStoreBlog;
 use App\Http\Resources\Blog\BlogResource;
 use App\Http\Requests\Blog\StoreBlogRequest;
 
+
+use App\Http\Requests\Blog\UpdateBlogRequest;
+
 class BlogController extends Controller
 {
     public function __construct(
@@ -51,7 +54,7 @@ class BlogController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-    public function update(Request $request, $id): JsonResponse
+    public function update(UpdateBlogRequest $request, $id): JsonResponse
 {
     try {
         $dto = BlogDTO::fromRequest($request);
