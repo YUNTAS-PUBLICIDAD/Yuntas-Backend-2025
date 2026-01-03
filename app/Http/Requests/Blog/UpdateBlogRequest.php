@@ -33,6 +33,9 @@ class UpdateBlogRequest extends FormRequest
             'categorias' => 'nullable|array',
             'categorias.*' => 'integer|exists:categories,id',
 
+            // 🔑 PRODUCTO (nuevo)
+            'product_id' => 'nullable|integer|exists:products,id',
+
             'parrafos' => 'nullable|array',
             'beneficios' => 'nullable|array',
             'bloques' => 'nullable|array',

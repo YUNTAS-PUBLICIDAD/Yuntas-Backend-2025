@@ -21,6 +21,8 @@ class Blog extends Model
         'meta_title',
         'meta_description',
         'video_url',
+
+        'product_id',
     ];
 
     /**
@@ -62,4 +64,10 @@ class Blog extends Model
     {
         return $this->belongsToMany(Category::class, 'category_blog');
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
 }
