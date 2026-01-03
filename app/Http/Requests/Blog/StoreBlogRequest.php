@@ -45,6 +45,9 @@ class StoreBlogRequest extends FormRequest
             'beneficios.*' => 'string',
 
             'bloques' => 'nullable|array', 
+
+            // Producto asociado
+            'product_id' => 'nullable|exists:productos,id',
         ];
     }
 }
