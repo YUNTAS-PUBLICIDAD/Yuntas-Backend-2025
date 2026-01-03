@@ -22,4 +22,8 @@ class EmailImage extends Model
     {
         return $this->belongsTo(EmailSlot::class, 'slot_id');
     }
+    public function imageSlot()
+{
+    return $this->belongsTo(ImageSlot::class);
+}
 }

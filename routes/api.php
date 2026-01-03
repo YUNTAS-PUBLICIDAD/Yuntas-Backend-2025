@@ -25,7 +25,7 @@ Route::prefix('blogs')->group(function () {
     Route::post('/', [App\Http\Controllers\Blog\BlogController::class, 'store']);
     Route::get('/{slug}', [App\Http\Controllers\Blog\BlogController::class, 'show']);
     Route::delete('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'destroy']);
-    Route::post('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
+    Route::put('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
 });
 
 // ------------------- PRODUCTOS -------------------
@@ -33,16 +33,20 @@ Route::prefix('productos')->group(function () {
     
     Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
     Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
-    Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
+
+   //Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
     Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']); 
+
     Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
-    
+    Route::get('/{term}', [App\Http\Controllers\Product\ProductController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
     // Ejemplo: Route::post('/', [App\Http\Controllers\ProductoController::class, 'store']);
     // Otros endpoints de productos
 });
 // ------------------- CATEGORÍAS (Público) -------------------
 Route::prefix('categorias')->group(function () {
     // Endpoints públicos de categorías (listado, detalle, etc.)
+    Route::get('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'index']);
 });
 
 // ==============================================================================
@@ -60,10 +64,43 @@ Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'sto
 Route::prefix('contacto')->group(function () {
 Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
 });
+
+// ==============================================================================
+// 3. EMAIL PÚBLICO (Mailings, cotizaciones, formularios)
+// ==============================================================================
+Route::prefix('email')->group(function () {
+
+    // Enviar el correo del formulario principal
+    Route::post('/send', [App\Http\Controllers\Email\EmailController::class, 'iniciarSeguimiento']);
+
+    // Enviar Mailing 1 (día 1)
+   
+
+    // Si deseas Mailing 2 y 3, solo descomenta:
+    // Route::post('/mailing2', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing2']);
+    // Route::post('/mailing3', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing3']);
+});
+Route::prefix('email-productos')->group(function () {
+    Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
+    Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
+});
+
+    // envio de campaña para usuarios ya registrados 
+Route::post(
+    '/email-campanas/enviar',
+    [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']
+);
+
+
+
+
 // ==============================================================================
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
-Route::middleware('role:admin')->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 // ------------------- ADMIN: USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index']);
@@ -81,7 +118,6 @@ Route::middleware('role:admin')->group(function () {
         Route::post('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'store']);
         Route::put('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'destroy']);
-        Route::get('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'show']);
     });
     // ------------------- RECLAMOS (Claims) -------------------
@@ -92,7 +128,7 @@ Route::middleware('role:admin')->group(function () {
         Route::post('/{id}/reply', [App\Http\Controllers\Support\ClaimController::class, 'reply']);
         });
     // ------------------- ADMIN: MENSAJES DE CONTACTO -------------------
-    Route::prefix('contacto')->group(function () {
+    Route::prefix('admin/contacto')->group(function () {
         // Endpoints de contacto
         Route::get('/', [App\Http\Controllers\Support\ContactMessageController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ContactMessageController::class, 'show']);
@@ -104,9 +140,12 @@ Route::middleware('role:admin')->group(function () {
         // Endpoints de usuarios
     });
     
+
 // ------------------- Email  -------------------
     Route::prefix('email')->group(function () {
     //    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
     });
 });
 
+
+// -------------- WhatssApp --------------

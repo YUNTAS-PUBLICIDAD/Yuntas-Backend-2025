@@ -53,6 +53,16 @@ class BlogResource extends JsonResource
                 'name' => $cat->name,
                 'slug' => $cat->slug
             ]),
+
+            // PRODUCTO ASOCIADO 
+            'product' => $this->when(
+            $this->product,
+            fn () => [
+            'id' => $this->product->id,
+            'name' => $this->product->name ?? $this->product->nombre,
+            'slug' => $this->product->slug ?? null,
+    ]
+),
             
             // IMAGEN PRINCIPAL (Objeto completo con ALT)
             'main_image' => $mainImage ? [

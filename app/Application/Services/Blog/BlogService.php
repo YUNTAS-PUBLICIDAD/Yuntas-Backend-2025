@@ -40,6 +40,10 @@ class BlogService
                 'content' => $dto->content,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,
+
+                //  AQUÍ
+                'product_id' => $dto->product_id,
+
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
             ]);
@@ -83,7 +87,7 @@ class BlogService
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
             ]);
-
+ 
             // 2. Sincronizar Categorías
             if (isset($dto->categories)) {
                 $blog->categories()->sync($dto->categories);

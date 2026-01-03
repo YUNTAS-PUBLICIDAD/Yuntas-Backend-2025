@@ -61,27 +61,35 @@ class ProductController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/productos/{slug}",
-     *     summary="Obtener detalle de un producto",
-     *     tags={"Productos"},
-     *     @OA\Parameter(
-     *         name="slug",
-     *         in="path",
-     *         required=true,
-     *         description="Slug del producto",
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Response(response=200, description="Detalle del producto"),
-     *     @OA\Response(response=404, description="Producto no encontrado")
+     * path="/api/productos/{term}",  
+     * summary="Obtener detalle de un producto",
+     * tags={"Productos"},
+     * @OA\Parameter(
+     * name="term",               
+     * in="path",
+     * required=true,
+     * description="Slug O ID del producto", 
+     * @OA\Schema(type="string")
+     * ),
+     * @OA\Response(response=200, description="Detalle del producto"),
+     * @OA\Response(response=404, description="Producto no encontrado")
      * )
      */
-    public function show($slug): JsonResponse
+    // Cambiamos $slug por $term
+    public function show($term): JsonResponse 
     {
         try {
-            $product = $this->productService->getDetail($slug);
-            return response()->json(['success' => true, 'data' => new ProductResource($product)]);
+            $product = $this->productService->getDetail($term); 
+            
+            return response()->json([
+                'success' => true, 
+                'data' => new ProductResource($product)
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+            return response()->json([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ], 404);
         }
     }
 
