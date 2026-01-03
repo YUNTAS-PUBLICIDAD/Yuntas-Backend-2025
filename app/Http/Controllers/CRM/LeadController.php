@@ -35,7 +35,7 @@ class LeadController extends Controller
     }
 
     /**
-     * Listar leads (Solo para Admin)
+     * Listar leads
      */
     public function index(Request $request): JsonResponse
     {

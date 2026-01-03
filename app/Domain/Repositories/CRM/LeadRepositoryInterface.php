@@ -10,5 +10,4 @@ interface LeadRepositoryInterface
     public function save(array $data): Lead;
     public function findByEmail(string $email): ?Lead;
     public function findById(int $id): ?Lead;
-    // public function getLeadsByProduct(int $productId); // Futuro reporte
 }
