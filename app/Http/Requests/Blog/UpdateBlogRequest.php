@@ -21,8 +21,7 @@ class UpdateBlogRequest extends FormRequest
 
             'etiqueta' => 'nullable',
 
-            // 🔑 Imagen YA NO es required
-            'imagen_principal' => 'requiered|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'imagen_principal' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'imagen_principal_alt' => 'nullable|string|max:191',
 
             'imagenes' => 'nullable|array',
