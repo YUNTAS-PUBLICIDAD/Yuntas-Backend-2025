@@ -12,42 +12,71 @@ use Illuminate\Support\Facades\URL;
 class EmailProductController extends Controller
 {
     // LISTAR
-    public function index()
-    {
-        return EmailProducto::all();
+    public function index(Request $request)
+{
+    $query = EmailProducto::query();
+
+    if ($request->filled('producto_id')) {
+        $query->where('producto_id', $request->producto_id);
     }
+
+    return $query->orderBy('paso')->get();
+}
+
+    // OBTENER PLANTILLAS POR PRODUCTO
+   public function show($id)
+{
+    return EmailProducto::findOrFail($id);
+}
+    
 
     // CREAR
     public function store(Request $request)
 {
     $request->validate([
         'producto_id' => 'required|integer',
-        'paso' => 'required|integer',
+        'paso' => 'required|integer|min:0',
         'titulo' => 'required|string',
-        'parrafo1' => 'required|string',
+        'parrafo1' => 'nullable|string',
 
-        'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png',
-        'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png',
+        'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png,webp',
+        'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png,webp',
     ]);
 
-    $data = $request->except(['imagenes_secundarias', 'imagen_principal']);
+    // Buscar si ya existe esa plantilla (producto + paso)
+    $email = EmailProducto::where('producto_id', $request->producto_id)
+        ->where('paso', $request->paso)
+        ->first();
+
+    $data = [
+        'producto_id' => $request->producto_id,
+        'paso'        => $request->paso,
+        'titulo'      => $request->titulo,
+        'parrafo1'    => $request->parrafo1,
+    ];
 
     // ==============================
     // IMAGEN PRINCIPAL
     // ==============================
     if ($request->hasFile('imagen_principal')) {
         $path = $request->file('imagen_principal')
-                        ->store('uploads/email', 'public');
+            ->store('uploads/email', 'public');
 
         $data['imagen_principal'] = asset('storage/' . $path);
+    } elseif ($email) {
+        // mantener la existente
+        $data['imagen_principal'] = $email->imagen_principal;
     }
 
     // ==============================
     // IMÁGENES SECUNDARIAS
     // ==============================
-    $imagenes = [];
+    $imagenes = $email
+        ? json_decode($email->imagenes_secundarias, true) ?? []
+        : [];
 
     if ($request->hasFile('imagenes_secundarias')) {
+        $imagenes = []; // REEMPLAZA, no acumula
         foreach ($request->file('imagenes_secundarias') as $img) {
             $path = $img->store('uploads/email', 'public');
             $imagenes[] = asset('storage/' . $path);
@@ -56,11 +85,20 @@ class EmailProductController extends Controller
 
     $data['imagenes_secundarias'] = json_encode($imagenes);
 
-    $email = EmailProducto::create($data);
+    // ==============================
+    // UPDATE O CREATE (ANTI DUPLICADO)
+    // ==============================
+    $saved = EmailProducto::updateOrCreate(
+        [
+            'producto_id' => $request->producto_id,
+            'paso'        => $request->paso,
+        ],
+        $data
+    );
 
     return response()->json([
-        'message' => 'Plantilla creada correctamente',
-        'data' => $email
+        'message' => 'Plantilla guardada correctamente',
+        'data' => $saved
     ]);
 }
 
