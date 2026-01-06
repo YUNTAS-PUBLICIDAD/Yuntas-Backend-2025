@@ -23,6 +23,9 @@ return [
 
     'http://localhost:3000',
         'http://127.0.0.1:3000',
+
+        // PRODUCCIÓN
+        'https://yuntaspublicidad.com',
     
     ],
 
@@ -34,6 +37,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];
