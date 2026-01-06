@@ -15,16 +15,17 @@ class EloquentLeadRepository implements LeadRepositoryInterface
 
     public function save(array $data): Lead
     {
-        return Lead::create($data);
+        $lead = Lead::create($data);
+        return $lead->load('product', 'source');
     }
 
     public function findByEmail(string $email): ?Lead
     {
-        return Lead::where('email', $email)->first();
+        return Lead::with(['product', 'source'])->where('email', $email)->first();
     }
 
     public function findById(int $id): ?Lead
     {
-        return Lead::find($id);
+        return Lead::with(['product', 'source'])->find($id);
     }
 }

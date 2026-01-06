@@ -47,7 +47,7 @@ class StoreBlogRequest extends FormRequest
             'bloques' => 'nullable|array', 
 
             // Producto asociado
-            'product_id' => 'nullable|exists:productos,id',
+            'product_id' => 'nullable|exists:products,id',
         ];
     }
 }
