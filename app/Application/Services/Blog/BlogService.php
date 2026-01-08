@@ -83,11 +83,12 @@ class BlogService
                 'cover_subtitle' => $dto->cover_subtitle,
                 'content' => $dto->content,
                 'status' => $dto->status,
-                'video_url' => $dto->video_url,
+                'video_url' => $dto->video_url,                
+                'product_id' => $dto->product_id, 
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
             ]);
- 
+
             // 2. Sincronizar Categorías
             if (isset($dto->categories)) {
                 $blog->categories()->sync($dto->categories);
