@@ -30,19 +30,10 @@ Route::prefix('blogs')->group(function () {
 
 // ------------------- PRODUCTOS -------------------
 Route::prefix('productos')->group(function () {
-    
     Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
-    Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
-
-   //Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
-    Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']); 
-
-    Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
-    Route::get('/{term}', [App\Http\Controllers\Product\ProductController::class, 'show']);
-    Route::put('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
-    // Ejemplo: Route::post('/', [App\Http\Controllers\ProductoController::class, 'store']);
-    // Otros endpoints de productos
+    Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
 });
+
 // ------------------- CATEGORÍAS (Público) -------------------
 Route::prefix('categorias')->group(function () {
     // Endpoints públicos de categorías (listado, detalle, etc.)
@@ -74,22 +65,6 @@ Route::prefix('email')->group(function () {
     // Route::post('/mailing2', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing2']);
     // Route::post('/mailing3', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing3']);
 });
-Route::prefix('email-productos')->group(function () {
-    Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
-    Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
-    Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
-    Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
-});
-
-    // envio de campaña para usuarios ya registrados 
-Route::post(
-    '/email-campanas/enviar',
-    [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']
-);
-
-
-
 
 // ==============================================================================
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
@@ -115,7 +90,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'show']);
     });
     // ------------------- RECLAMOS (Claims) -------------------
-    // Admin (Protegido)
     Route::prefix('admin/claims')->group(function () {
         Route::get('/', [App\Http\Controllers\Support\ClaimController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ClaimController::class, 'show']);
@@ -142,7 +116,24 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::delete('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'destroy']);
     });
 
-// ------------------- Email  -------------------
+    // ------------------- PRODUCTOS -------------------
+    Route::prefix('admin/productos')->group(function () {
+        Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
+        Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
+    });
+    Route::prefix('admin/email-productos')->group(function () { // gestión de email de productos
+        Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
+    });
+    Route::prefix('admin/email-campanas')->group(function () { // envio de campaña para usuarios ya registrados 
+        Route::post('/enviar', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']);
+    });
+
+    // ------------------- Email  -------------------
     Route::prefix('email')->group(function () {
     //    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
     });

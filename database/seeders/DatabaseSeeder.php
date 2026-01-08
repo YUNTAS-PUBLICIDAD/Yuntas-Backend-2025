@@ -33,8 +33,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 3. Slots de Imágenes
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Main'], ['position' => 1]);
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Gallery'], ['position' => 2]);
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Main'], ['position' => 1]);
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Gallery'], ['position' => 2]);
 
@@ -57,7 +55,7 @@ class DatabaseSeeder extends Seeder
         Product::create([
             'name' => 'Laptop Demo',
             'slug' => 'laptop-demo',
-            'short_description' => 'Demo',
+            'hero_title' => 'Laptop Demo',
             'description' => 'Descripción...',
             'price' => 1000.00,
             'status' => 'active',
