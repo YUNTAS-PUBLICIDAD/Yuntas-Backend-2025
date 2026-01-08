@@ -52,7 +52,7 @@ class ProductService
             $product = Product::create([
                 'name' => $dto->name,
                 'slug' => $dto->slug,
-                'short_description' => $dto->short_description,
+                'hero_title' => $dto->hero_title,
                 'description' => $dto->description,
                 'price' => $dto->price,
                 'status' => $dto->status,
@@ -75,16 +75,16 @@ class ProductService
             }
 
             // 4. Gestionar Galería con Mapa de Slots (Tu lógica específica)
-            $slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
+            //$slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
             
-            if (!empty($dto->gallery_images)) {
-                foreach ($dto->gallery_images as $index => $image) {
+            if (!empty($dto->gallery)) {
+                foreach ($dto->gallery as $item) {
+                    $slotName = $item['slot'];
+                    $image = $item['image'];
+                    $altText = $item['alt'] ?? $product->name;
+
                     // Validar que sea archivo
                     if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
-
-                    // Determinar Slot y Alt Text
-                    $slotName = $slotMap[$index] ?? 'Gallery';
-                    $altText = $dto->gallery_alts[$index] ?? $product->name;
 
                     $this->uploadImage($product, $image, $slotName, 'products', $altText);
                 }
@@ -113,7 +113,7 @@ class ProductService
             $product->update([
                 'name' => $dto->name,
                 'slug' => $dto->slug,
-                'short_description' => $dto->short_description,
+                'hero_title' => $dto->hero_title,
                 'description' => $dto->description,
                 'price' => $dto->price,
                 'status' => $dto->status,
@@ -139,17 +139,19 @@ class ProductService
             }
 
             // Actualizar Galería
-            $slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
+            //$slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
 
-            if (!empty($dto->gallery_images)) {
-                foreach ($dto->gallery_images as $index => $image) {
+            if (!empty($dto->gallery)) {
+                foreach ($dto->gallery as $item) {
+                    $slotName = $item['slot'];
+                    $image = $item['image'];
+                    $altText = $item['alt'] ?? $product->name;
+
                     if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
 
-                    $slotName = $slotMap[$index] ?? 'Gallery';
-                    $altText = $dto->gallery_alts[$index] ?? $product->name;
-
-                    // Si es uno de los slots únicos (Hero, Specs...), borramos el anterior para reemplazarlo
-                    if (in_array($slotName, ['Hero', 'Specs', 'Benefits', 'Popups'])) {
+                    // Si es un slot único, borramos el anterior
+                    $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'Popups'];
+                    if (in_array($slotName, $uniqueSlots)) {
                         $this->deleteImagesBySlot($product, $slotName);
                     }
 

@@ -22,7 +22,6 @@ use OpenApi\Annotations as OA;
  *   @OA\Property(property="id", type="integer", example=1),
  *   @OA\Property(property="name", type="string", example="Laptop Lenovo Ideapad"),
  *   @OA\Property(property="slug", type="string", example="laptop-lenovo-ideapad"),
- *   @OA\Property(property="short_description", type="string", example="Laptop potente para oficina"),
  *   @OA\Property(property="description", type="string", example="Laptop con procesador AMD Ryzen..."),
  *
  *   @OA\Property(property="price", type="number", format="float", example=2599.90),
@@ -48,7 +47,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'slug',
-        'short_description',
+        'hero_title',
         'description',
         'price',
         'status',

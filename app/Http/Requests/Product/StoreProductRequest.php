@@ -18,7 +18,7 @@ class StoreProductRequest extends FormRequest
             'name' => 'required|string|max:150', 
             'slug' => 'nullable|string|max:160|unique:products,slug',
             'price' => 'required|numeric|min:0', 
-            'short_description' => 'nullable|string|max:255',
+            'hero_title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status' => 'nullable|in:active,inactive',
 
@@ -32,10 +32,10 @@ class StoreProductRequest extends FormRequest
             'main_image_alt' => 'nullable|string|max:191', 
 
             // Galería
-            'gallery_images' => 'nullable|array',
-            'gallery_images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
-            'gallery_alts' => 'nullable|array', 
-            'gallery_alts.*' => 'nullable|string|max:191',
+            'gallery' => 'nullable|array',
+            'gallery.*.slot' => 'required|string|in:Hero,Specs,Benefits,Popups,Gallery',
+            'gallery.*.image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'gallery.*.alt' => 'nullable|string|max:191',
 
             // Relaciones
             'categories' => 'nullable|array', 
