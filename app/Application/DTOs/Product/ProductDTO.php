@@ -23,6 +23,7 @@ class ProductDTO
         public ?string $main_image_alt, 
 
         public ?array $gallery, // [['slot' => 'Hero', 'image' => File, 'alt' => '...'], ...]   
+        public ?array $gallery_alt, // esto solo es cuando se actualiza alt de imagenes existentes
         
         // Contenido
         public ?array $specifications,
@@ -50,7 +51,7 @@ class ProductDTO
             main_image_alt: $request->input('main_image_alt'), 
 
             gallery: self::processGallery($request),
-
+            gallery_alt: $request->input('gallery_alt', []),
             specifications: $request->input('specifications', []),
             benefits: $request->input('benefits', [])
         );

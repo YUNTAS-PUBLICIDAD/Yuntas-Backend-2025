@@ -132,30 +132,39 @@ class ProductService
             }
 
             // Actualizar Imagen Principal
-            if ($dto->main_image) {
+            if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
                 $this->deleteImagesBySlot($product, 'List');
                 $alt = $dto->main_image_alt ?? $product->name;
                 $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
+            } elseif (isset($dto->main_image_alt)) {
+                $this->updateImageAlt($product, 'List', $dto->main_image_alt);
             }
 
             // Actualizar Galería
-            //$slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
-
             if (!empty($dto->gallery)) {
                 foreach ($dto->gallery as $item) {
                     $slotName = $item['slot'];
-                    $image = $item['image'];
+                    $image = $item['image'] ?? null;
                     $altText = $item['alt'] ?? $product->name;
 
-                    if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
-
-                    // Si es un slot único, borramos el anterior
-                    $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'Popups'];
-                    if (in_array($slotName, $uniqueSlots)) {
-                        $this->deleteImagesBySlot($product, $slotName);
+                    if ($image instanceof \Illuminate\Http\UploadedFile) {
+                        // Nueva imagen: borrar anterior y subir nueva
+                        $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'Popups'];
+                        if (in_array($slotName, $uniqueSlots)) {
+                            $this->deleteImagesBySlot($product, $slotName);
+                        }
+                        $this->uploadImage($product, $image, $slotName, 'products', $altText);
+                    } else {
+                        // Imagen existente: solo actualizar ALT si cambió
+                        $this->updateImageAlt($product, $slotName, $altText);
                     }
-
-                    $this->uploadImage($product, $image, $slotName, 'products', $altText);
+                }
+            }
+            
+            // solo para actualizar ALT de la galería
+            if (!empty($dto->gallery_alt)) {
+                foreach ($dto->gallery_alt as $slot => $alt) {
+                    $this->updateImageAlt($product, $slot, $alt);
                 }
             }
 
@@ -195,6 +204,20 @@ class ProductService
             'title' => $product->name, 
             'alt_text' => $altText ?? $product->name,
         ]);
+    }
+
+    private function updateImageAlt(Product $product, string $slotName, string $alt): void
+    {   
+        // Buscar el Slot
+        $slot = ImageSlot::where(
+            ['name' => $slotName, 'module' => 'products']
+        )->first();
+
+        $image = $product->images()->where('slot_id', $slot->id)->first();
+        
+        if ($image) {
+            $image->update(['alt_text' => $alt]);
+        }
     }
 
     private function deleteImagesBySlot(Product $product, $slotName)
