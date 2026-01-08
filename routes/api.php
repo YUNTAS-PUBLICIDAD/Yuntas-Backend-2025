@@ -32,20 +32,6 @@ Route::prefix('blogs')->group(function () {
 Route::prefix('productos')->group(function () {
     Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
     Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
-    Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
-    Route::put('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
-    Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
-});
-
-Route::prefix('email-productos')->group(function () { // gestión de email de productos
-    Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
-    Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
-    Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
-    Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
-});
-Route::prefix('email-campanas')->group(function () { // envio de campaña para usuarios ya registrados 
-    Route::post('/enviar', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']);
 });
 
 // ------------------- CATEGORÍAS (Público) -------------------
@@ -131,9 +117,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     });
 
     // ------------------- PRODUCTOS -------------------
-    /* Route::prefix('admin/productos')->group(function () {
+    Route::prefix('admin/productos')->group(function () {
         Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
-        Route::put('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
+        Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
     });
     Route::prefix('admin/email-productos')->group(function () { // gestión de email de productos
@@ -145,7 +131,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     });
     Route::prefix('admin/email-campanas')->group(function () { // envio de campaña para usuarios ya registrados 
         Route::post('/enviar', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']);
-    }); */
+    });
 
     // ------------------- Email  -------------------
     Route::prefix('email')->group(function () {
