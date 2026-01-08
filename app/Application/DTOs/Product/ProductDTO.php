@@ -9,7 +9,7 @@ class ProductDTO
     public function __construct(
         public string $name,
         public string $slug,
-        public ?string $short_description,
+        public ?string $hero_title,
         public ?string $description,
         public float $price,
         public string $status,
@@ -20,9 +20,9 @@ class ProductDTO
         // Relaciones y Archivos
         public ?array $categories,        
         public $main_image,
-        public ?string $main_image_alt,   
-        public ?array $gallery_images,
-        public ?array $gallery_alts,      
+        public ?string $main_image_alt, 
+
+        public ?array $gallery, // [['slot' => 'Hero', 'image' => File, 'alt' => '...'], ...]   
         
         // Contenido
         public ?array $specifications,
@@ -34,7 +34,7 @@ class ProductDTO
         return new self(
             name: $request->validated('name') ?? $request->input('name'),
             slug: $request->validated('slug') ?? $request->input('slug'),
-            short_description: $request->input('short_description'),
+            hero_title: $request->input('hero_title'),
             description: $request->input('description'),
             price: (float) $request->input('price'),
             status: $request->input('status', 'active'),
@@ -49,11 +49,30 @@ class ProductDTO
             main_image: $request->file('main_image'),
             main_image_alt: $request->input('main_image_alt'), 
 
-            gallery_images: $request->file('gallery_images', []),
-            gallery_alts: $request->input('gallery_alts', []), 
+            gallery: self::processGallery($request),
 
             specifications: $request->input('specifications', []),
             benefits: $request->input('benefits', [])
         );
+    }
+
+    private static function processGallery(Request $request): array
+    {
+        $gallery = [];
+        $galleryData = $request->input('gallery', []);
+
+        foreach ($galleryData as $index => $item) {
+            $imageFile = $request->file("gallery.{$index}.image");
+            
+            if ($imageFile) {
+                $gallery[] = [
+                    'slot' => $item['slot'] ?? 'Gallery',
+                    'image' => $imageFile,
+                    'alt' => $item['alt'] ?? null
+                ];
+            }
+        }
+
+        return $gallery;
     }
 }
