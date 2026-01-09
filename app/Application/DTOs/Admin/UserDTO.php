@@ -10,7 +10,7 @@ readonly class UserDTO
         public string $name,
         public string $email,
         public ?string $password, 
-        public ?string $role      
+        public ?int $role_id      
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -19,7 +19,7 @@ readonly class UserDTO
             name: $request->validated('name'),
             email: $request->validated('email'),
             password: $request->validated('password'),
-            role: $request->input('role')
+            role_id: $request->validated('role_id') 
         );
     }
 }
