@@ -29,23 +29,25 @@ class UserManagementService
         return $user;
     }
 
-    public function create(UserDTO $dto)
+public function create(UserDTO $dto)
     {
         return DB::transaction(function () use ($dto) {
-            $roleName = $dto->role ?? 'user';
-            $role = Role::where('name', $roleName)->first();
+            
+           
+            $roleId = $dto->role_id ?? 2; 
 
             $data = [
                 'name' => $dto->name,
                 'email' => $dto->email,
                 'password' => Hash::make($dto->password),
-                'role_id' => $role ? $role->id : null, 
+                'role_id' => $roleId, 
             ];
 
             return $this->repository->create($data);
         });
     }
 
+   
     public function update(int $id, UserDTO $dto)
     {
         return DB::transaction(function () use ($id, $dto) {
@@ -60,11 +62,9 @@ class UserManagementService
                 $data['password'] = Hash::make($dto->password);
             }
 
-            if ($dto->role) {
-                $role = Role::where('name', $dto->role)->first();
-                if ($role) {
-                    $data['role_id'] = $role->id;
-                }
+            
+            if ($dto->role_id) {
+                $data['role_id'] = $dto->role_id;
             }
 
             $this->repository->update($id, $data);
