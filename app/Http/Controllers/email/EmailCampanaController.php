@@ -34,19 +34,6 @@ class EmailCampanaController extends Controller
             ], 422);
         }
 
-        // Validar que existan las 3 plantillas
-        if ($secciones->count() < 3) {
-            $pasosFaltantes = collect([0, 1, 2])
-                ->diff($secciones->pluck('paso'))
-                ->values();
-
-            return response()->json([
-                'message' => 'El producto debe tener las 3 plantillas completas (paso 0, 1, 2)',
-                'plantillas_existentes' => $secciones->pluck('paso')->toArray(),
-                'plantillas_faltantes' => $pasosFaltantes->toArray()
-            ], 422);
-        }
-
         $leads = Lead::where('product_id', $productoId)
             ->whereNotNull('email')
             ->get();

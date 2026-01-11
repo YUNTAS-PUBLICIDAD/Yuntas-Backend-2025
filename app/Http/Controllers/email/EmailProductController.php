@@ -45,9 +45,19 @@ class EmailProductController extends Controller
     ]);
 
     // Buscar si ya existe esa plantilla (producto + paso)
-    $email = EmailProducto::where('producto_id', $request->producto_id)
+    $plantilla = EmailProducto::where('producto_id', $request->producto_id)
         ->where('paso', $request->paso)
         ->first();
+
+    // se valida la imagen principal cuando es nueva
+    if (!$plantilla && !$request->hasFile('imagen_principal')) {
+        return response()->json([
+            'message' => 'La imagen principal es obligatoria para crear una nueva plantilla',
+            'errors' => [
+                'imagen_principal' => ['Se requiere una imagen principal']
+            ]
+        ], 422);
+    }
 
     $data = [
         'producto_id' => $request->producto_id,
@@ -56,45 +66,47 @@ class EmailProductController extends Controller
         'parrafo1'    => $request->parrafo1,
     ];
 
-    // ==============================
     // IMAGEN PRINCIPAL
-    // ==============================
     if ($request->hasFile('imagen_principal')) {
         // Eliminar imagen anterior si existe
-        if ($email && $email->imagen_principal) {
-            $oldPath = str_replace(asset('storage/'), '', $email->imagen_principal);
+        if ($plantilla && $plantilla->imagen_principal) {
+            $oldPath = str_replace(asset('storage/'), '', $plantilla->imagen_principal);
             Storage::disk('public')->delete($oldPath);
         }
         
-        $path = $request->file('imagen_principal')
-            ->store('uploads/email', 'public');
-
+        $path = $request->file('imagen_principal')->store('uploads/email', 'public');
         $data['imagen_principal'] = asset('storage/' . $path);
-    } elseif ($email) {
+    } elseif ($plantilla) {
         // mantener la existente
-        $data['imagen_principal'] = $email->imagen_principal;
+        $data['imagen_principal'] = $plantilla->imagen_principal;
     }
 
-    // ==============================
     // IMÁGENES SECUNDARIAS
-    // ==============================
-    $imagenes = $email
-        ? json_decode($email->imagenes_secundarias, true) ?? []
-        : [];
-
     if ($request->hasFile('imagenes_secundarias')) {
+        if ($plantilla && $plantilla->imagenes_secundarias) { // eliminar las anteriores si existen
+            $oldImages = json_decode($plantilla->imagenes_secundarias, true) ?? [];
+            foreach ($oldImages as $oldImage) {
+                $oldPath = str_replace(asset('storage/'), '', $oldImage);
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
         $imagenes = []; // REEMPLAZA, no acumula
         foreach ($request->file('imagenes_secundarias') as $img) {
             $path = $img->store('uploads/email', 'public');
             $imagenes[] = asset('storage/' . $path);
         }
+
+        $data['imagenes_secundarias'] = json_encode($imagenes);
+
+    } elseif ($plantilla) {
+        // Mantener las existentes
+        $data['imagenes_secundarias'] = $plantilla->imagenes_secundarias;
+    } else {
+        // Nueva plantilla sin secundarias
+        $data['imagenes_secundarias'] = json_encode([]);
     }
 
-    $data['imagenes_secundarias'] = json_encode($imagenes);
-
-    // ==============================
-    // UPDATE O CREATE (ANTI DUPLICADO)
-    // ==============================
+    // GUARDAR O ACTUALIZAR
     $saved = EmailProducto::updateOrCreate(
         [
             'producto_id' => $request->producto_id,
@@ -103,9 +115,12 @@ class EmailProductController extends Controller
         $data
     );
 
+    $accion = $plantilla ? 'actualizada' : 'creada';
+
     return response()->json([
-        'message' => 'Plantilla guardada correctamente',
-        'data' => $saved
+        'message' => "Plantilla {$accion} correctamente",
+        'data' => $saved,
+        'es_nueva' => !$plantilla
     ]);
 }
 
