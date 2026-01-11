@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Email;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmailProducto;
+use App\Models\Product;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 
@@ -34,13 +35,13 @@ class EmailProductController extends Controller
     public function store(Request $request)
 {
     $request->validate([
-        'producto_id' => 'required|integer',
-        'paso' => 'required|integer|min:0',
-        'titulo' => 'required|string',
-        'parrafo1' => 'nullable|string',
+        'producto_id' => 'required|integer|exists:products,id',
+        'paso' => 'required|integer|min:0|max:2',
+        'titulo' => 'required|string|max:250',
+        'parrafo1' => 'nullable|string|max:250',
 
-        'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png,webp',
-        'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png,webp',
+        'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+        'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
     ]);
 
     // Buscar si ya existe esa plantilla (producto + paso)
@@ -59,6 +60,12 @@ class EmailProductController extends Controller
     // IMAGEN PRINCIPAL
     // ==============================
     if ($request->hasFile('imagen_principal')) {
+        // Eliminar imagen anterior si existe
+        if ($email && $email->imagen_principal) {
+            $oldPath = str_replace(asset('storage/'), '', $email->imagen_principal);
+            Storage::disk('public')->delete($oldPath);
+        }
+        
         $path = $request->file('imagen_principal')
             ->store('uploads/email', 'public');
 
