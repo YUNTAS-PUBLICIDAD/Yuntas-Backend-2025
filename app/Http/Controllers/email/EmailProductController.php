@@ -1,5 +1,5 @@
 <?php
-
+# solucionando el nombre de la carpeta Email con mayúscula
 namespace App\Http\Controllers\Email;
 
 use App\Http\Controllers\Controller;
