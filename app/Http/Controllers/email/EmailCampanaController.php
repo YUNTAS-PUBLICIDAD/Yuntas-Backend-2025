@@ -52,9 +52,9 @@ class EmailCampanaController extends Controller
         foreach ($leads as $lead) {
 
             $cliente = [
-                'name'  => $lead->name,
-                'email' => $lead->email,
-                'phone' => $lead->phone,
+                'nombre' => $lead->name,
+                'correo' => $lead->email,
+                'telefono' => $lead->phone,
             ];
 
             Log::info('✉️ Enviando correos a lead', [

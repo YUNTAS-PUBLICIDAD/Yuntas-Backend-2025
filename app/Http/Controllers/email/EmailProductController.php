@@ -70,12 +70,12 @@ class EmailProductController extends Controller
     if ($request->hasFile('imagen_principal')) {
         // Eliminar imagen anterior si existe
         if ($plantilla && $plantilla->imagen_principal) {
-            $oldPath = str_replace(asset('storage/'), '', $plantilla->imagen_principal);
+            $oldPath = str_replace('storage/', '', $plantilla->imagen_principal);
             Storage::disk('public')->delete($oldPath);
         }
         
         $path = $request->file('imagen_principal')->store('uploads/email', 'public');
-        $data['imagen_principal'] = asset('storage/' . $path);
+        $data['imagen_principal'] = 'storage/' . $path;
     } elseif ($plantilla) {
         // mantener la existente
         $data['imagen_principal'] = $plantilla->imagen_principal;
@@ -86,14 +86,14 @@ class EmailProductController extends Controller
         if ($plantilla && $plantilla->imagenes_secundarias) { // eliminar las anteriores si existen
             $oldImages = json_decode($plantilla->imagenes_secundarias, true) ?? [];
             foreach ($oldImages as $oldImage) {
-                $oldPath = str_replace(asset('storage/'), '', $oldImage);
+                $oldPath = str_replace('storage/', '', $oldImage);
                 Storage::disk('public')->delete($oldPath);
             }
         }
         $imagenes = []; // REEMPLAZA, no acumula
         foreach ($request->file('imagenes_secundarias') as $img) {
             $path = $img->store('uploads/email', 'public');
-            $imagenes[] = asset('storage/' . $path);
+            $imagenes[] = 'storage/' . $path;
         }
 
         $data['imagenes_secundarias'] = json_encode($imagenes);
@@ -142,9 +142,13 @@ class EmailProductController extends Controller
         $data = $request->except(['imagenes_secundarias', 'imagen_principal']);
 
         if ($request->hasFile('imagen_principal')) {
-            $file = $request->file('imagen_principal');
-            $path = $file->store('uploads/email', 'public');
-            $data['imagen_principal'] = asset('storage/' . $path);
+            // Eliminar imagen anterior
+            if ($email->imagen_principal) {
+                $oldPath = str_replace('storage/', '', $email->imagen_principal);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('imagen_principal')->store('uploads/email', 'public');
+            $data['imagen_principal'] = 'storage/' . $path;
         }
 
         $imagenes = json_decode($email->imagenes_secundarias, true) ?? [];
@@ -152,7 +156,7 @@ class EmailProductController extends Controller
         if ($request->hasFile('imagenes_secundarias')) {
             foreach ($request->file('imagenes_secundarias') as $img) {
                 $path = $img->store('uploads/email', 'public');
-                $imagenes[] = asset('storage/' . $path);
+                $imagenes[] = 'storage/' . $path;
             }
         }
 
