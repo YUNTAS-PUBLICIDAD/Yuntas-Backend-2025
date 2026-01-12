@@ -94,6 +94,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/', [App\Http\Controllers\Support\ClaimController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ClaimController::class, 'show']);
         Route::post('/{id}/reply', [App\Http\Controllers\Support\ClaimController::class, 'reply']);
+        Route::put('/{id}/status', [App\Http\Controllers\Support\ClaimController::class, 'updateStatus']);
         });
     // ------------------- ADMIN: MENSAJES DE CONTACTO -------------------
     Route::prefix('admin/contacto')->group(function () {
