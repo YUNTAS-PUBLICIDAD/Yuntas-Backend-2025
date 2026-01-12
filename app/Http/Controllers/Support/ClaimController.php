@@ -74,4 +74,28 @@ class ClaimController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+  
+
+    public function updateStatus(Request $request, $id): JsonResponse
+    {
+        try {
+        
+            $request->validate([
+                'status_id' => 'required|in:1,2' 
+            ]);
+
+            
+            $claim = \App\Models\Claim::findOrFail($id);
+            $claim->claim_status_id = $request->status_id;
+            $claim->save();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Estado actualizado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
 }
