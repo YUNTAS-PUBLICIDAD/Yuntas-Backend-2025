@@ -65,6 +65,8 @@ Route::prefix('email')->group(function () {
     // Route::post('/mailing2', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing2']);
     // Route::post('/mailing3', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing3']);
 });
+//  RUTA PÚBLICA PARA EL POPUP
+Route::post('leads', [App\Http\Controllers\CRM\LeadController::class, 'store']);
 
 // ==============================================================================
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
