@@ -14,23 +14,15 @@ class EmailCampanaController extends Controller
 {
     public function enviar(Request $request)
     {
-        Log::info('🚀 Iniciando envío de campaña', $request->all());
-
         $request->validate([
             'producto_id' => 'required|integer',
         ]);
 
         $productoId = $request->producto_id;
 
-        // 1️⃣ Obtener plantilla (secciones)
         $secciones = EmailProducto::where('producto_id', $productoId)
             ->orderBy('paso')
             ->get();
-
-        Log::info('📧 Plantillas encontradas', [
-            'producto_id' => $productoId,
-            'total' => $secciones->count(),
-        ]);
 
         if ($secciones->isEmpty()) {
             Log::warning('⚠️ No hay plantillas para el producto', [
@@ -42,15 +34,9 @@ class EmailCampanaController extends Controller
             ], 422);
         }
 
-        // 2️⃣ Obtener leads del producto
         $leads = Lead::where('product_id', $productoId)
             ->whereNotNull('email')
             ->get();
-
-        Log::info('👥 Leads encontrados', [
-            'producto_id' => $productoId,
-            'total' => $leads->count(),
-        ]);
 
         if ($leads->isEmpty()) {
             Log::warning('⚠️ No hay leads para el producto', [
@@ -62,13 +48,13 @@ class EmailCampanaController extends Controller
             ], 422);
         }
 
-        // 3️⃣ Envío de correos
+        // Envío de correos
         foreach ($leads as $lead) {
 
             $cliente = [
-                'name'  => $lead->name,
-                'email' => $lead->email,
-                'phone' => $lead->phone,
+                'nombre' => $lead->name,
+                'correo' => $lead->email,
+                'telefono' => $lead->phone,
             ];
 
             Log::info('✉️ Enviando correos a lead', [
@@ -88,12 +74,6 @@ class EmailCampanaController extends Controller
                 );
             }
         }
-
-        Log::info('✅ Campaña finalizada correctamente', [
-            'producto_id' => $productoId,
-            'total_leads' => $leads->count(),
-            'total_correos' => $leads->count() * $secciones->count(),
-        ]);
 
         return response()->json([
             'message' => 'Campaña enviada correctamente',
