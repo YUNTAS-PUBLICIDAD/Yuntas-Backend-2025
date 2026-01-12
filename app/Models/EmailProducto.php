@@ -41,6 +41,6 @@ class EmailProducto extends Model
             return $value;
         }
 
-        return config('app.url') . $value;
+        return config('app.url') . '/' . $value;
     }
 }
