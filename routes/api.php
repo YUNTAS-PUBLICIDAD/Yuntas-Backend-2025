@@ -72,7 +72,8 @@ Route::post('leads', [App\Http\Controllers\CRM\LeadController::class, 'store']);
 // 4. ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-// ------------------- ADMIN: USUARIOS -------------------
+
+    // ------------------- USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index']);
         Route::post('/', [App\Http\Controllers\Admin\UserController::class, 'store']);
@@ -104,11 +105,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/', [App\Http\Controllers\Support\ContactMessageController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ContactMessageController::class, 'show']);
         Route::delete('/{id}', [App\Http\Controllers\Support\ContactMessageController::class, 'destroy']);
-    });
-
-    // ------------------- USUARIOS -------------------   
-    Route::prefix('usuarios')->group(function () {
-        // Endpoints de usuarios
     });
 
     // ------------------- CRM / LEADS -------------------
