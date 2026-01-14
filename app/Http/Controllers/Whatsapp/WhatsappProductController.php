@@ -4,23 +4,31 @@ namespace App\Http\Controllers\Whatsapp;
 
 use App\Http\Controllers\Controller;
 use App\Models\WhatsappProducto;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 
 
 class WhatsappProductController extends Controller
 {
     // OBTENER PLANTILLAS POR PRODUCTO
     public function indexByProduct(Request $request) {
-        $query = WhatsappProducto::query();
+        $request->validate([
+            'producto_id' => 'required|integer|exists:products,id'
+        ]);
 
-        if ($request->filled('producto_id')) {
-            $query->where('producto_id', $request->producto_id);
+        $plantilla = WhatsappProducto::where('producto_id', $request->producto_id)->first();
+
+        if (!$plantilla) {
+            return response()->json([
+                'message' => 'No se encontró plantilla para este producto',
+                'data' => null
+            ], 200);
         }
 
-        return $query->get();
+        return response()->json([
+            'message' => 'Plantilla encontrada',
+            'data' => $plantilla
+        ]);
     }
 
     // OBTENER PLANTILLA POR ID
@@ -32,8 +40,6 @@ class WhatsappProductController extends Controller
     public function store(Request $request) {
         $request->validate([
             'producto_id' => 'required|integer|exists:products,id',
-            'parrafo' => 'nullable|string|max:250',
-            'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
         $plantilla = WhatsappProducto::where('producto_id', $request->producto_id)->first();
