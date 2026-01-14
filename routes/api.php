@@ -121,22 +121,25 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
     });
+
+    // ------------------- PRODUCTOS: EMAIL -------------------
     Route::prefix('admin/email-productos')->group(function () { // gestión de email de productos
-        Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
+        Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'indexByProduct']);
         Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
         Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
-        Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
-        Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
     });
     Route::prefix('admin/email-campanas')->group(function () { // envio de campaña para usuarios ya registrados 
         Route::post('/enviar', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']);
     });
 
-    // ------------------- Email  -------------------
-    Route::prefix('email')->group(function () {
-    //    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
+    // ------------------- PRODUCTOS: WHATSAPP -------------------
+    Route::prefix('admin/whatsapp-productos')->group(function () { // gestión de whatsapp de productos
+        Route::get('/', [App\Http\Controllers\WhatsApp\WhatsAppProductController::class, 'indexByProduct']);
+        Route::post('/', [App\Http\Controllers\WhatsApp\WhatsAppProductController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\WhatsApp\WhatsAppProductController::class, 'show']);
     });
+
 });
 
 
-// -------------- WhatssApp --------------
+

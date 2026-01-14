@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\URL;
 
 class EmailProductController extends Controller
 {
-    // LISTAR
-    public function index(Request $request)
+    // OBTENER PLANTILLAS POR PRODUCTO
+    public function indexByProduct(Request $request)
 {
     $query = EmailProducto::query();
 
@@ -24,7 +24,7 @@ class EmailProductController extends Controller
     return $query->orderBy('paso')->get();
 }
 
-    // OBTENER PLANTILLAS POR PRODUCTO
+    //  OBTENER PLANTILLA POR ID
    public function show($id)
 {
     return EmailProducto::findOrFail($id);
@@ -120,53 +120,6 @@ class EmailProductController extends Controller
     return response()->json([
         'message' => "Plantilla {$accion} correctamente",
         'data' => $saved,
-        'es_nueva' => !$plantilla
     ]);
 }
-
-    // ACTUALIZAR
-    public function update(Request $request, $id)
-    {
-        $email = EmailProducto::findOrFail($id);
-
-        $request->validate([
-            
-            'titulo' => 'nullable|string',
-            'parrafo1' => 'nullable|string',
-
-            // ARCHIVOS
-            'imagen_principal' => 'nullable|image|mimes:jpg,jpeg,png',
-            'imagenes_secundarias.*' => 'nullable|image|mimes:jpg,jpeg,png',
-        ]);
-
-        $data = $request->except(['imagenes_secundarias', 'imagen_principal']);
-
-        if ($request->hasFile('imagen_principal')) {
-            // Eliminar imagen anterior
-            if ($email->imagen_principal) {
-                $oldPath = str_replace('storage/', '', $email->imagen_principal);
-                Storage::disk('public')->delete($oldPath);
-            }
-            $path = $request->file('imagen_principal')->store('uploads/email', 'public');
-            $data['imagen_principal'] = 'storage/' . $path;
-        }
-
-        $imagenes = json_decode($email->imagenes_secundarias, true) ?? [];
-
-        if ($request->hasFile('imagenes_secundarias')) {
-            foreach ($request->file('imagenes_secundarias') as $img) {
-                $path = $img->store('uploads/email', 'public');
-                $imagenes[] = 'storage/' . $path;
-            }
-        }
-
-        $data['imagenes_secundarias'] = json_encode($imagenes);
-
-        $email->update($data);
-
-        return response()->json([
-            "message" => "Plantilla actualizada correctamente",
-            "data" => $email
-        ]);
-    }
 }
