@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class WhatsappProducto extends Model
 {
+    protected $table = 'whatsapp_producto';
+    
     protected $fillable = [
         'parrafo',
         'imagen_principal',
