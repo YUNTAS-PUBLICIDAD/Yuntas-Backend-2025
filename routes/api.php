@@ -142,3 +142,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
 
 // -------------- WhatssApp --------------
+
+ Route::prefix('admin/whatsapp-productos')->group(function () {
+        // GET: Obtener plantilla por producto_id
+        Route::get('/', [App\Http\Controllers\Admin\Whatsapp\WhatsappPlantillaController::class, 'index']);
+        
+        // POST: Guardar o Actualizar plantilla 
+        Route::post('/', [App\Http\Controllers\Admin\Whatsapp\WhatsappPlantillaController::class, 'store']);
+    });
