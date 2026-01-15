@@ -134,9 +134,16 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
     // ------------------- PRODUCTOS: WHATSAPP -------------------
     Route::prefix('admin/whatsapp-productos')->group(function () { // gestión de whatsapp de productos
-        Route::get('/', [App\Http\Controllers\WhatsApp\WhatsAppProductController::class, 'indexByProduct']);
-        Route::post('/', [App\Http\Controllers\WhatsApp\WhatsAppProductController::class, 'store']);
-        Route::get('/{id}', [App\Http\Controllers\WhatsApp\WhatsAppProductController::class, 'show']);
+        Route::get('/', [App\Http\Controllers\WhatsApp\WhatsappProductController::class, 'indexByProduct']);
+        Route::post('/', [App\Http\Controllers\WhatsApp\WhatsappProductController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\WhatsApp\WhatsappProductController::class, 'show']);
+    });
+    Route::prefix('admin/whatsapp-campanas')->group(function () { // envio de campaña por whatsapp para usuarios ya registrados
+        Route::get('/status', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'getStatus']);
+        Route::post('/request-qr', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'requestQR']);
+        Route::post('/send-message', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'sendMessage']);
+        Route::post('/send-image', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'sendImage']);
+        Route::post('/reset', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'resetSession']);
     });
 
 });
