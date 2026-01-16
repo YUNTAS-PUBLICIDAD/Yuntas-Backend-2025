@@ -135,19 +135,16 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
     // ------------------- PRODUCTOS: WHATSAPP -------------------
     Route::prefix('admin/whatsapp-productos')->group(function () { // gestión de whatsapp de productos
-        Route::get('/', [App\Http\Controllers\WhatsApp\WhatsappProductController::class, 'indexByProduct']);
-        Route::post('/', [App\Http\Controllers\WhatsApp\WhatsappProductController::class, 'store']);
-        Route::get('/{id}', [App\Http\Controllers\WhatsApp\WhatsappProductController::class, 'show']);
+        Route::get('/', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'indexByProduct']);
+        Route::post('/', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'show']);
     });
     Route::prefix('admin/whatsapp-campanas')->group(function () { 
-        Route::get('/status', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'getStatus']);
-        Route::post('/pedir-qr', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'pedirQR']);
-        Route::post('/enviar', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'enviar']);
-        Route::post('/enviar-campana', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'enviarCampana']);
-        Route::post('/reset', [App\Http\Controllers\WhatsApp\WhatsappCampanaController::class, 'resetSession']);
+        Route::get('/status', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'getStatus']);
+        Route::post('/reset', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'resetSession']);
+        Route::post('/pedir-qr', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'pedirQR']);
+        Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviar']);
+        Route::post('/enviar-campana', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviarCampana']);
     });
 
 });
-
-
-
