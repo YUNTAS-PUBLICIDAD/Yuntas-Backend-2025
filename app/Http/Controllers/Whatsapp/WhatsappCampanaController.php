@@ -198,14 +198,14 @@ class WhatsappCampanaController extends Controller
                 $imageData = base64_encode($image);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", [
-                    'phone' => $lead->phone,
+                    'phone' => strlen($lead->phone) === 9 ? '51' . $lead->phone : $lead->phone,
                     'imageData' => $imageData,
                     'caption' => $plantilla->parrafo ?? ''
                 ]);
             } else {
                 // Enviar solo texto
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-message", [
-                    'phone' => $lead->phone,
+                    'phone' => strlen($lead->phone) === 9 ? '51' . $lead->phone : $lead->phone,
                     'message' => $plantilla->parrafo ?? ''
                 ]);
             }
