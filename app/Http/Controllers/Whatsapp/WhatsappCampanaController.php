@@ -66,7 +66,7 @@ class WhatsappCampanaController extends Controller
             'email' => 'required|email',
             'phone' => 'required|string',
             'message' => 'nullable|string',
-            'producto_id' => 'required|integer',
+            'producto_id' => 'nullable|integer',
             'source_id' => 'nullable|integer',
         ]);
 
@@ -89,13 +89,20 @@ class WhatsappCampanaController extends Controller
             ], 422);
         }
 
-        // Obtener plantilla del producto
-        $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
+        if ($productoId) {
+            // Obtener plantilla del producto
+            $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
+            if (!$plantilla) {
+                $plantilla = $this->obtenerPlantillaDefault();
+            }
+        } else {
+            $plantilla = $this->obtenerPlantillaDefault();
+        }
 
         if (!$plantilla) {
             return response()->json([
                 'success' => false,
-                'message' => 'No se encontró plantilla para este producto',
+                'message' => 'No se encontró plantilla para enviar',
             ], 404);
         }
 
@@ -120,7 +127,7 @@ class WhatsappCampanaController extends Controller
         ]);
     }
 
-    // Enviar mensaje con imagen
+    // Enviar mensaje con imagen masiva a todos los leads de un producto
     public function enviarCampana(Request $request)
     {
         $request->validate([
@@ -129,7 +136,7 @@ class WhatsappCampanaController extends Controller
 
         $productoId = $request->producto_id;
 
-        $plantilla = WhatsappProducto::where('producto_id', $request->producto_id)->first();
+        $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
 
         if (!$plantilla) {
             return response()->json([
@@ -151,7 +158,6 @@ class WhatsappCampanaController extends Controller
 
         $exitosos = 0;
         $fallidos = 0;
-
 
         foreach ($leads as $lead) {
             $resultado = $this->enviarWhatsappALead($lead, $plantilla);
@@ -237,5 +243,11 @@ class WhatsappCampanaController extends Controller
 
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    // Obtener plantilla por defecto
+    private function obtenerPlantillaDefault()
+    {
+        return WhatsappProducto::getDefault();
     }
 }
