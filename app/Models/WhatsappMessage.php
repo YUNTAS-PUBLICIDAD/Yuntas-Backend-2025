@@ -15,6 +15,7 @@ class WhatsappMessage extends Model
         'body',
         'image_url',
         'status',
+        'chat_id',
         'sent_at',
         'error_message',
     ];
