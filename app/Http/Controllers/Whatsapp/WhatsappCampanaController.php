@@ -66,19 +66,25 @@ class WhatsappCampanaController extends Controller
             'email' => 'required|email',
             'phone' => 'required|string',
             'message' => 'nullable|string',
-            'producto_id' => 'nullable|integer',
+            'product_id' => 'nullable|integer',
             'source_id' => 'nullable|integer',
         ]);
 
-        $productoId = $request->producto_id;
+        $productoId = $request->product_id;
 
         // Buscar o crear el lead
         $lead = Lead::where('email', $request->email)->first();
 
         if (!$lead) {
             // Crear nuevo lead
-            $dto = LeadDTO::fromRequest($request);
-            $lead = $this->leadService->create($dto);
+            $lead = Lead::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'message' => $request->message ?? null,
+                'product_id' => $request->product_id ?? null,
+                'source_id' => $request->source_id ?? null,
+            ]);
         }
 
         // Validar que tenga teléfono
@@ -200,7 +206,9 @@ class WhatsappCampanaController extends Controller
         try {
             // Si tiene imagen, enviar con imagen
             if ($plantilla->imagen_principal) {
-                $image = Storage::disk('public')->get($plantilla->imagen_principal);
+                $imagePath = str_replace('storage/', '', $plantilla->imagen_principal);
+
+                $image = Storage::disk('public')->get($imagePath);
                 $imageData = base64_encode($image);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", [
@@ -222,7 +230,7 @@ class WhatsappCampanaController extends Controller
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
                 'body' => $plantilla->parrafo ?? '',
-                'status' => $success ? 'sent' : 'failed',
+                'status' => $success ? 'enviado' : 'fallido',
                 'image_url' => $plantilla->imagen_principal ?? null,
                 'sent_at' => now(),
                 'error_message' => $success ? null : ($response->json()['message'] ?? 'Error desconocido'),
@@ -235,7 +243,7 @@ class WhatsappCampanaController extends Controller
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
                 'body' => $plantilla->parrafo ?? '',
-                'status' => 'failed',
+                'status' => 'fallido',
                 'image_url' => $plantilla->imagen_principal ?? null,
                 'sent_at' => now(),
                 'error_message' => $e->getMessage(),
