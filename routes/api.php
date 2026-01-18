@@ -137,7 +137,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::prefix('admin/whatsapp-productos')->group(function () { // gestión de whatsapp de productos
         Route::get('/', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'indexByProduct']);
         Route::post('/', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'store']);
-        Route::get('/{id}', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'show']);
+        Route::get('/default', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'getDefault']);
+        Route::post('/default', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'storeDefault']);
     });
     Route::prefix('admin/whatsapp-campanas')->group(function () { 
         Route::get('/status', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'getStatus']);
