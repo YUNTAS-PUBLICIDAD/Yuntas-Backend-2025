@@ -142,6 +142,13 @@ class WhatsappCampanaController extends Controller
 
         $productoId = $request->producto_id;
 
+        if ($productoId === 0) { // plantilla por defecto, no se permite campaña masiva
+             return response()->json([
+                'success' => false,
+                'message' => 'No se permite enviar campaña masiva con plantilla por defecto',
+            ], 422);
+        }
+
         $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
 
         if (!$plantilla) {
