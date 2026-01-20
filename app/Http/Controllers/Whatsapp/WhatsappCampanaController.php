@@ -67,7 +67,7 @@ class WhatsappCampanaController extends Controller
             'phone' => 'required|string',
             'message' => 'nullable|string',
             'product_id' => 'nullable|integer',
-            'source_id' => 'nullable|integer',
+            'source_id' => 'required|integer',
         ]);
 
         $productoId = $request->product_id;
@@ -83,7 +83,7 @@ class WhatsappCampanaController extends Controller
                 'phone' => $request->phone,
                 'message' => $request->message ?? null,
                 'product_id' => $request->product_id ?? null,
-                'source_id' => $request->source_id ?? null,
+                'source_id' => $request->source_id,
             ]);
         }
 
