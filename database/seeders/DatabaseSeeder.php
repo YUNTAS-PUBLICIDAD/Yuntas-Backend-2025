@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\Product;
 use App\Models\Category;
 use App\Models\LeadSource;
 use App\Models\ImageSlot;
@@ -29,7 +28,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Administrador',
             'email' => 'admin@admin.com',
             'password' => Hash::make('password'),
-            'role_id' => $adminRole->id, // Asignación manual
+            'role_id' => $adminRole->id,
         ]);
 
         // 3. Slots de Imágenes
@@ -45,33 +44,17 @@ class DatabaseSeeder extends Seeder
         BlogContentSlot::firstOrCreate(['name' => 'Bloques'], ['data_type' => 'block', 'position' => 3]);
 
         // 5. Fuentes de Leads
-        LeadSource::firstOrCreate(['name' => 'Web']);
-        LeadSource::firstOrCreate(['name' => 'Facebook']);
+        LeadSource::firstOrCreate(['name' => 'Inicio']);
+        LeadSource::firstOrCreate(['name' => 'Productos']);
+        LeadSource::firstOrCreate(['name' => 'Producto detalle']);
+        LeadSource::firstOrCreate(['name' => 'Administración']);
 
         // 6. Categorías
         Category::firstOrCreate(['name' => 'Laptops', 'slug' => 'laptops', 'description' => 'Portátiles']);
 
-        // 7. Producto Demo
-        Product::create([
-            'name' => 'Laptop Demo',
-            'slug' => 'laptop-demo',
-            'hero_title' => 'Laptop Demo',
-            'description' => 'Descripción...',
-            'price' => 1000.00,
-            'status' => 'active',
-            'meta_title' => 'SEO Title',
-            'keywords' => ['demo'],
-        ]);
-
         // 7. Documento ID
-        DocumentType::create([
-            'code' => '1',
-            'label' => 'dni'
-        ]);
-        DocumentType::create([
-            'code' => '2',
-            'label' => 'pasaporte'
-        ]);
+        DocumentType::create(['code' => '1','label' => 'dni']);
+        DocumentType::create(['code' => '2','label' => 'pasaporte']);
 
         // 8. Estado reclamo
         ClaimStatus::create([
