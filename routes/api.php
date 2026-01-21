@@ -66,6 +66,19 @@ Route::prefix('email')->group(function () {
     // Route::post('/mailing3', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing3']);
 });
 
+// envio de wasap
+Route::prefix('whatsapp-campanas')->group(function () { 
+       
+        Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviar']);
+    
+    });
+
+// envio email
+Route::prefix('email-campanas')->group(function () {
+        Route::post('/enviar', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']);
+    
+    });
+
 // ------------------- LEADS (POPUP) -------------------
 Route::post('leads', [App\Http\Controllers\CRM\LeadController::class, 'store']);
 
@@ -145,7 +158,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/status', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'getStatus']);
         Route::post('/reset', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'resetSession']);
         Route::post('/pedir-qr', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'pedirQR']);
-        Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviar']);
+        
         Route::post('/enviar-campana', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviarCampana']);
     });
 
