@@ -26,11 +26,11 @@ class EmailCampanaController extends Controller
             'email' => 'required|email',
             'phone' => 'nullable|string',
             'message' => 'nullable|string',
-            'producto_id' => 'nullable|integer',
+            'product_id' => 'nullable|integer',
             'source_id' => 'nullable|integer',
         ]);
 
-        $productoId = $request->producto_id;
+        $productoId = $request->product_id;
 
         // Buscar o crear el lead
         $lead = Lead::where('email', $request->email)->first();
@@ -61,7 +61,7 @@ class EmailCampanaController extends Controller
 
             if ($secciones->isEmpty()) {
                 Log::warning('No hay plantillas para el producto, usando genérica', [
-                    'producto_id' => $productoId,
+                    'product_id' => $productoId,
                 ]);
                 $secciones = $this->obtenerPlantillaGenerica();
             }
@@ -100,7 +100,7 @@ class EmailCampanaController extends Controller
             ->get();
 
         if ($secciones->isEmpty()) {
-            Log::warning('⚠️ No hay plantillas para el producto', [
+            Log::warning('No hay plantillas para el producto', [
                 'producto_id' => $productoId,
             ]);
 
@@ -114,7 +114,7 @@ class EmailCampanaController extends Controller
             ->get();
 
         if ($leads->isEmpty()) {
-            Log::warning('⚠️ No hay leads para el producto', [
+            Log::warning('No hay leads para el producto', [
                 'producto_id' => $productoId,
             ]);
 
