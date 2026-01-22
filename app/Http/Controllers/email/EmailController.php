@@ -41,16 +41,16 @@ public function iniciarSeguimiento(Request $request)
     $cliente = $request->only(['nombre', 'telefono', 'correo']);
     $productoId = $request->producto_id;
 
-    // Email inmediato
+    // 📧 Email inmediato (Día 0)
     SendProductEmailJob::dispatch($productoId, 0, $cliente);
 
-    // +10 segundos
+    // 📧 Día 1
     SendProductEmailJob::dispatch($productoId, 1, $cliente)
-        ->delay(now()->addMinutes(2));
+        ->delay(now()->addDays(1));
 
-    // +20 segundos
+    // 📧 Día 3
     SendProductEmailJob::dispatch($productoId, 2, $cliente)
-        ->delay(now()->addMinutes(4));
+        ->delay(now()->addDays(3));
 
     return response()->json([
         'message' => 'Secuencia de emails programada correctamente'
