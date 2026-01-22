@@ -118,8 +118,8 @@ class WhatsappCampanaController extends Controller
             $variables = array_merge($variables, [
                 'producto_nombre' => $lead->product->name ?? '',
                 'descripcion' => $lead->product->description ?? '',
-                'fecha' => now()->format('d/m/Y'),
-                'hora' => now()->format('H:i'),
+                'fecha' => now('America/Lima')->format('d/m/Y'),
+                'hora' => now('America/Lima')->format('H:i'),
                 'email' => $lead->email,
             ]);
         }
@@ -158,13 +158,6 @@ class WhatsappCampanaController extends Controller
         ]);
 
         $productoId = $request->producto_id;
-
-        if ($productoId === 0) { // plantilla por defecto, no se permite campaña masiva
-             return response()->json([
-                'success' => false,
-                'message' => 'No se permite enviar campaña masiva con plantilla por defecto',
-            ], 422);
-        }
 
         $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
 
