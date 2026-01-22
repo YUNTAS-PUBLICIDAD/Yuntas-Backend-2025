@@ -12,16 +12,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Application\Services\CRM\LeadService;
-use App\Application\DTOs\CRM\LeadDTO;
 
 class WhatsappCampanaController extends Controller
 {
     private $whatsappServiceUrl;
 
-    public function __construct(
-        private LeadService $leadService
-    ) {
+    public function __construct() {
         $this->whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:3001');
     }
 
