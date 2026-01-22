@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Category;
 use App\Models\LeadSource;
+use App\Models\WhatsappPopup;
 use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
 use App\Models\BlogContentSlot;
@@ -24,12 +25,14 @@ class DatabaseSeeder extends Seeder
         $userRole = Role::firstOrCreate(['name' => 'user']);
 
         // 2. Usuario Administrador
-        User::create([
-            'name' => 'Administrador',
-            'email' => 'admin@admin.com',
-            'password' => Hash::make('password'),
-            'role_id' => $adminRole->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Administrador',
+                'password' => Hash::make('password'),
+                'role_id' => $adminRole->id,
+            ]
+        );
 
         // 3. Slots de Imágenes
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Main'], ['position' => 1]);
@@ -49,25 +52,56 @@ class DatabaseSeeder extends Seeder
         LeadSource::firstOrCreate(['name' => 'Producto detalle']);
         LeadSource::firstOrCreate(['name' => 'Administración']);
 
-        // 6. Categorías
-        Category::firstOrCreate(['name' => 'Laptops', 'slug' => 'laptops', 'description' => 'Portátiles']);
+        // 6. Plantillas de Whatsapp Popup
+        WhatsappPopup::firstOrCreate([
+            'lead_source_id' => 1, 
+            'nombre' => 'Popup Inicio',
+            'mensaje' => '¡Hola {nombre}! 👋 Gracias por tu interés en Yuntas Publicidad. ¿En qué podemos ayudarte hoy?',
+            'variables' => json_encode(['nombre']),
+            'activo' => true,
+            ]
+        );
+        WhatsappPopup::firstOrCreate([
+            'lead_source_id' => 2, 
+            'nombre' => 'Popup Productos',
+            'mensaje' => 'Hola {nombre}, somos Yuntas Publicidad. Veo que te interesan nuestros productos 📦. ¿Necesitas información específica de alguno?',
+            'variables' => json_encode(['nombre']),
+            'activo' => true,
+            ]
+        );
+        WhatsappPopup::firstOrCreate([
+            'lead_source_id' => 3, 
+            'nombre' => 'Popup Producto detalle',
+            'mensaje' => "📢 *Bienvenido a Yuntas Publicidad* 📢\n\n" .
+                        "Gracias por su interés en nuestros productos. A continuación, los detalles del producto consultado:\n\n" .
+                        "📝 *Producto Consultado:*\n" .
+                        "• Nombre: *{producto_nombre}*\n" .
+                        "• Descripción: {descripcion}\n\n" .
+                        "📅 *Fecha y Hora de Consulta:*\n" .
+                        "• Fecha: {fecha}\n" .
+                        "• Hora: {hora}\n\n" .
+                        "📧 *Información Adicional:*\n" .
+                        "Le informamos que recibirá un correo a *{email}* con más detalles sobre el producto consultado. Le recomendamos revisar su bandeja de entrada.\n" .
+                        "Si tiene alguna otra consulta o desea más información, no dude en contactarnos.\n\n" .
+                        "¡Gracias por elegirnos!\n\n" .
+                        "Atentamente,\n" .
+                        "*Yuntas Publicidad*",
+            'variables' => json_encode(['producto_nombre', 'descripcion', 'fecha', 'hora', 'email']),
+            'activo' => true,
+            ]
+        );
+
 
         // 7. Documento ID
-        DocumentType::create(['code' => '1','label' => 'dni']);
-        DocumentType::create(['code' => '2','label' => 'pasaporte']);
+        DocumentType::firstOrCreate(['code' => '1','label' => 'dni']);
+        DocumentType::firstOrCreate(['code' => '2','label' => 'pasaporte']);
 
         // 8. Estado reclamo
-        ClaimStatus::create([
-            'name' => 'pendiente',
-        ]);
-        ClaimStatus::create([
-            'name' => 'completo',
-        ]);
+        ClaimStatus::firstOrCreate(['name' => 'pendiente']);
+        ClaimStatus::firstOrCreate(['name' => 'completo']);
 
         // 9. Tipo Reclamo
-        ClaimType::create([
-            'name' => 'reclamo',
-        ]);
+        ClaimType::firstOrCreate(['name' => 'reclamo']);
 
     }
 }
