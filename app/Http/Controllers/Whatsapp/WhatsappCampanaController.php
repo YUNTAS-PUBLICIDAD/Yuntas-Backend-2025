@@ -336,10 +336,4 @@ class WhatsappCampanaController extends Controller
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-
-    // Obtener plantilla por defecto
-    private function obtenerPlantillaDefault()
-    {
-        return WhatsappProducto::getDefault();
-    }
 }
