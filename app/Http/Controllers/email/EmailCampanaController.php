@@ -9,14 +9,10 @@ use App\Models\Lead;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\ProductMailing1;
-use App\Application\Services\CRM\LeadService;
-use App\Application\DTOs\CRM\LeadDTO;
 
 class EmailCampanaController extends Controller
 {   
-    public function __construct(
-        private LeadService $leadService
-    ) {}
+    public function __construct() {}
 
     // Envia un email de campaña a un lead específico
     public function enviar(Request $request)
@@ -27,31 +23,22 @@ class EmailCampanaController extends Controller
             'phone' => 'nullable|string',
             'message' => 'nullable|string',
             'product_id' => 'nullable|integer',
-            'source_id' => 'nullable|integer',
+            'source_id' => 'required|integer',
         ]);
 
+        // Actualizar o crear lead
+        $lead = Lead::updateOrCreate(
+            ['email' => $request->email],
+            [
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'message' => $request->message,
+                'product_id' => $request->product_id,
+                'source_id' => $request->source_id,
+            ]
+        );
+
         $productoId = $request->product_id;
-
-        // Buscar o crear el lead
-        $lead = Lead::where('email', $request->email)->first();
-
-        if (!$lead) {
-            // Crear nuevo lead
-            $dto = LeadDTO::fromRequest($request);
-            $lead = $this->leadService->create($dto);
-
-            Log::info('Nuevo lead creado', [
-                'lead_id' => $lead->id,
-                'email' => $lead->email,
-            ]);
-        } else {
-            Log::info('Lead existente encontrado', [
-                'lead_id' => $lead->id,
-                'email' => $lead->email,
-            ]);
-        }
-
-        $leadId = $request->lead_id;
 
         // Obtener plantillas según el producto
         if ($productoId) {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Whatsapp;
 use App\Http\Controllers\Controller;
 use App\Models\WhatsappMessage;
 use App\Models\Lead;
+use App\Models\WhatsappPopup;
+use App\Models\Product;
 use App\Models\WhatsappProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -70,22 +72,17 @@ class WhatsappCampanaController extends Controller
             'source_id' => 'required|integer',
         ]);
 
-        $productoId = $request->product_id;
-
-        // Buscar o crear el lead
-        $lead = Lead::where('email', $request->email)->first();
-
-        if (!$lead) {
-            // Crear nuevo lead
-            $lead = Lead::create([
+        // Actualizar o crear lead
+        $lead = Lead::updateOrCreate(
+            ['email' => $request->email], // Buscar por email
+            [
                 'name' => $request->name,
-                'email' => $request->email,
                 'phone' => $request->phone,
-                'message' => $request->message ?? null,
-                'product_id' => $request->product_id ?? null,
+                'message' => $request->message,
+                'product_id' => $request->product_id,
                 'source_id' => $request->source_id,
-            ]);
-        }
+            ]
+        );
 
         // Validar que tenga teléfono
         if (!$lead->phone) {
@@ -95,25 +92,45 @@ class WhatsappCampanaController extends Controller
             ], 422);
         }
 
-        if ($productoId) {
-            // Obtener plantilla del producto
-            $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
-            if (!$plantilla) {
-                $plantilla = $this->obtenerPlantillaDefault();
-            }
-        } else {
-            $plantilla = $this->obtenerPlantillaDefault();
-        }
+        // Obtener plantilla según el popup del que viene el lead
+        $plantillaPopup = WhatsappPopup::activaPorSource($request->source_id);
 
-        if (!$plantilla) {
+        if (!$plantillaPopup) {
             return response()->json([
                 'success' => false,
-                'message' => 'No se encontró plantilla para enviar',
-            ], 404);
+                'message' => 'No hay plantilla configurada para esta fuente'
+            ], 500);
+        }
+
+        // variables para el mensaje
+        $variables = [
+            'nombre' => $lead->name,
+        ];
+
+        // Si es detalle de producto, agregar variables y obtener imagen
+        $imagenProducto = null;
+        if ($lead->product_id && $lead->source->name === 'Producto detalle') {
+            $imagenProducto = $lead->product->images
+                                    ->where('slot_id', 5) // Slot de imagen principal
+                                    ->first()?->url;
+
+            // variables adicionales
+            $variables = array_merge($variables, [
+                'producto_nombre' => $lead->product->name ?? '',
+                'descripcion' => $lead->product->description ?? '',
+                'fecha' => now('America/Lima')->format('d/m/Y'),
+                'hora' => now('America/Lima')->format('H:i'),
+                'email' => $lead->email,
+            ]);
         }
 
         // Enviar mensaje al lead
-        $resultado = $this->enviarWhatsappALead($lead, $plantilla);
+        $resultado = $this->enviarWhatsappALead(
+            $lead, 
+            $plantillaPopup, 
+            $variables,
+            $imagenProducto
+        );
 
         if (!$resultado['success']) {
             return response()->json([
@@ -141,13 +158,6 @@ class WhatsappCampanaController extends Controller
         ]);
 
         $productoId = $request->producto_id;
-
-        if ($productoId === 0) { // plantilla por defecto, no se permite campaña masiva
-             return response()->json([
-                'success' => false,
-                'message' => 'No se permite enviar campaña masiva con plantilla por defecto',
-            ], 422);
-        }
 
         $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
 
@@ -208,10 +218,20 @@ class WhatsappCampanaController extends Controller
         }
     }
 
-    private function enviarWhatsappALead($lead, $plantilla)
+    private function enviarWhatsappALead($lead, $plantilla, array $variables = [], ?string $imagenOverride = null)
     {
         try {
-            // Verificar si podemos omitir validación
+            //  popup (WhatsappPopup)
+            if ($plantilla instanceof WhatsappPopup) {
+                $mensajeProcesado = $plantilla->procesarVariables($variables);
+                $imagenUrl = $imagenOverride ?? $plantilla->imagen_url;
+            } else {
+                // campaña masiva (WhatsappProducto)
+                $mensajeProcesado = $plantilla->parrafo;
+                $imagenUrl = $plantilla->imagen_principal;
+            }
+
+            // Verificar si podemos omitir validación en el servicio de WhatsApp
             $ultimoMensajeExitoso = WhatsappMessage::where('lead_id', $lead->id)
                 ->where('status', 'enviado')
                 ->latest('sent_at')
@@ -233,42 +253,40 @@ class WhatsappCampanaController extends Controller
                 }
             }
 
-            // Si tiene imagen, enviar con imagen
-            if ($plantilla->imagen_principal) {
-                $imagePath = str_replace('storage/', '', $plantilla->imagen_principal);
+            // Preparar payload base
+            $payload = [
+                'phone' => strlen($lead->phone) === 9 ? '51' . $lead->phone : $lead->phone,
+            ];
 
-                $image = Storage::disk('public')->get($imagePath);
-                $imageData = base64_encode($image);
-
-                $payload = [
-                    'phone' => strlen($lead->phone) === 9 ? '51' . $lead->phone : $lead->phone,
-                    'imageData' => $imageData,
-                    'caption' => $plantilla->parrafo ?? ''
-                ];
-
-                if ($skipValidation) {
-                    $payload['skipValidation'] = true;
-                    if ($chatId) {
-                        $payload['chatId'] = $chatId;
-                    }
+            if ($skipValidation) {
+                $payload['skipValidation'] = true;
+                if ($chatId) {
+                    $payload['chatId'] = $chatId;
                 }
+            }
 
-                Log::info('Enviando WhatsApp con imagen', ['payload' => array_merge($payload, ['imageData' => 'data omitted'])]);
+            // Si tiene imagen, enviar con imagen
+            if ($imagenUrl) {
+                $imagePath = str_replace('storage/', '', $imagenUrl);
+                $image = Storage::disk('public')->get($imagePath);
+
+                $payload['imageData'] = base64_encode($image);
+                $payload['caption'] = $mensajeProcesado;
+
+                Log::info('Enviando WhatsApp con imagen', [
+                    'lead_id' => $lead->id,
+                    'phone' => $payload['phone'],
+                    'tiene_imagen' => true
+                ]);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
             } else {
-                // Enviar solo texto
-                $payload = [
-                    'phone' => strlen($lead->phone) === 9 ? '51' . $lead->phone : $lead->phone,
-                    'message' => $plantilla->parrafo ?? ''
-                ];
+                $payload['message'] = $mensajeProcesado;
 
-                if ($skipValidation) {
-                    $payload['skipValidation'] = true;
-                    if ($chatId) {
-                        $payload['chatId'] = $chatId;
-                    }
-                }
+                Log::info('Enviando WhatsApp solo texto', [
+                    'lead_id' => $lead->id,
+                    'phone' => $payload['phone']
+                ]);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-message", $payload);
             }
@@ -279,9 +297,9 @@ class WhatsappCampanaController extends Controller
             // Guardar registro del mensaje
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
-                'body' => $plantilla->parrafo ?? '',
+                'body' => $mensajeProcesado,
                 'status' => $success ? 'enviado' : 'fallido',
-                'image_url' => $plantilla->imagen_principal ?? null,
+                'image_url' => $imagenUrl,
                 'sent_at' => now(),
                 'chat_id' => $responseChatId,
                 'error_message' => $success ? null : ($response->json()['message'] ?? 'Error desconocido'),
@@ -290,24 +308,25 @@ class WhatsappCampanaController extends Controller
             return ['success' => $success];
 
         } catch (\Exception $e) {
+            Log::error('Error enviando WhatsApp', [
+                'lead_id' => $lead->id,
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             // Guardar registro del error
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
-                'body' => $plantilla->parrafo ?? '',
+                'body' => $mensajeProcesado ?? '',
                 'status' => 'fallido',
                 'chat_id' => null,
-                'image_url' => $plantilla->imagen_principal ?? null,
+                'image_url' => $imagenUrl ?? null,
                 'sent_at' => now(),
                 'error_message' => $e->getMessage(),
             ]);
 
             return ['success' => false, 'error' => $e->getMessage()];
         }
-    }
-
-    // Obtener plantilla por defecto
-    private function obtenerPlantillaDefault()
-    {
-        return WhatsappProducto::getDefault();
     }
 }
