@@ -21,4 +21,9 @@ class LeadSource extends Model
     {
         return $this->hasMany(Lead::class, 'source_id');
     }
+
+    public function whatsappPopup()
+    {
+        return $this->hasOne(WhatsappPopup::class);
+    }
 }
