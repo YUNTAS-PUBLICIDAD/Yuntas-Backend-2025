@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class WhatsappCampanaController extends Controller
+class WhatsappPopupController extends Controller
 {
     private $whatsappServiceUrl;
 
@@ -21,115 +21,102 @@ class WhatsappCampanaController extends Controller
         $this->whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:3001');
     }
 
-    // Ver estado de la conexion de WhatsApp
-    public function getStatus()
-    {
-        try {
-            $response = Http::timeout(5)->get("{$this->whatsappServiceUrl}/api/whatsapp/status");
-
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            Log::error('Error obteniendo estado WhatsApp', ['error' => $e->getMessage()]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al conectar con servicio WhatsApp',
-                'isConnected' => false
-            ], 500);
-        }
-    }
-
-    // Solicitar un codigo QR 
-    public function pedirQR(Request $request)
-    {
-        try {
-            $response = Http::timeout(10)->post("{$this->whatsappServiceUrl}/api/whatsapp/request-qr");
-
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            Log::error('Error solicitando QR', ['error' => $e->getMessage()]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al solicitar QR'
-            ], 500);
-        }
-    }
-
-    // Resetear sesion de Whatsapp 
-    public function resetSession(Request $request)
-    {
-        try {
-            $response = Http::timeout(10)->post("{$this->whatsappServiceUrl}/api/whatsapp/reset");
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            Log::error('Error reseteando sesión', ['error' => $e->getMessage()]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al resetear sesión'
-            ], 500);
-        }
-    }
-
-    // Enviar mensaje con imagen masiva a todos los leads de un producto
-    public function enviarCampana(Request $request)
+    // Enviar mensaje de WhatsApp a un lead específico
+    public function enviar(Request $request)
     {
         $request->validate([
-            'producto_id' => 'required|integer',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => 'required|string',
+            'message' => 'nullable|string',
+            'product_id' => 'nullable|integer',
+            'source_id' => 'required|integer',
         ]);
 
-        $productoId = $request->producto_id;
+        // Actualizar o crear lead
+        $lead = Lead::updateOrCreate(
+            ['email' => $request->email], // Buscar por email
+            [
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'message' => $request->message,
+                'product_id' => $request->product_id,
+                'source_id' => $request->source_id,
+            ]
+        );
 
-        $plantilla = WhatsappProducto::where('producto_id', $productoId)->first();
-
-        if (!$plantilla) {
+        // Validar que tenga teléfono
+        if (!$lead->phone) {
             return response()->json([
                 'success' => false,
-                'message' => 'No se encontró plantilla para este producto',
-            ], 404);
-        }
-
-        $leads = Lead::where('product_id', $productoId)
-                ->whereNotNull('phone')
-                ->get();
-
-        if ($leads->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No existen leads con teléfono para este producto'
+                'message' => 'El lead no tiene número de teléfono'
             ], 422);
         }
 
-        $exitosos = 0;
-        $fallidos = 0;
+        // Obtener plantilla según el popup del que viene el lead
+        $plantillaPopup = WhatsappPopup::activaPorSource($request->source_id);
 
-        foreach ($leads as $lead) {
-            $resultado = $this->enviarWhatsappALead($lead, $plantilla);
-        
-            if ($resultado['success']) {
-                $exitosos++;
-            } else {
-                $fallidos++;
-            }
+        if (!$plantillaPopup) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay plantilla configurada para esta fuente'
+            ], 500);
+        }
+
+        // variables para el mensaje
+        $variables = [
+            'nombre' => $lead->name,
+        ];
+
+        // Si es detalle de producto, agregar variables y obtener imagen
+        $imagenProducto = null;
+        if ($lead->product_id && $lead->source->name === 'Producto detalle') {
+            $imagenProducto = $lead->product->images
+                                    ->where('slot_id', 5) // Slot de imagen principal
+                                    ->first()?->url;
+
+            // variables adicionales
+            $variables = array_merge($variables, [
+                'producto_nombre' => $lead->product->name ?? '',
+                'descripcion' => $lead->product->description ?? '',
+                'fecha' => now('America/Lima')->format('d/m/Y'),
+                'hora' => now('America/Lima')->format('H:i'),
+                'email' => $lead->email,
+            ]);
+        }
+
+        // Enviar mensaje al lead
+        $resultado = $this->enviarWhatsappALead(
+            $lead, 
+            $plantillaPopup, 
+            $variables,
+            $imagenProducto
+        );
+
+        if (!$resultado['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar mensaje de WhatsApp'
+            ], 500);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Campaña de WhatsApp enviada',
-            'total_leads' => $leads->count(),
-            'exitosos' => $exitosos,
-            'fallidos' => $fallidos
+            'message' => 'Mensaje de WhatsApp enviado correctamente',
+            'lead' => [
+                'id' => $lead->id,
+                'nombre' => $lead->name,
+                'phone' => $lead->phone,
+            ]
         ]);
-            
     }
 
-    private function enviarWhatsappALead($lead, $plantilla)
+    private function enviarWhatsappALead($lead, $plantilla, array $variables, ?string $imagenProducto)
     {
         try {
 
-            $mensaje = $plantilla->parrafo;
-            $imagenUrl = $plantilla->imagen_principal;
+            $mensaje = $plantilla->procesarVariables($variables);
+            $imagenUrl = $imagenProducto;
 
             // Verificar si podemos omitir validación en el servicio de WhatsApp
             $ultimoMensajeExitoso = WhatsappMessage::where('lead_id', $lead->id)
