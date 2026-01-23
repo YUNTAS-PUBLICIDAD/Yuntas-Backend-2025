@@ -21,6 +21,7 @@ class EmailPopupController extends Controller
         ]);
 
         if (!$request->product_id) { // SOLO POR EL MOMENTO, HASTA TENER PLANTILLA DE INICIO Y PRODUCTO
+            Log::info('Solicitud de email popup sin product_id');
             return response()->json([
                 'message' => 'Por ahora solo se envia email en detalle de producto'
             ], 200);
