@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $marketingRole = Role::firstOrCreate(['name' => 'marketing']);
+        $ventasRole = Role::firstOrCreate(['name' => 'ventas']);
 
         // 2. Usuario Administrador
         User::firstOrCreate(
