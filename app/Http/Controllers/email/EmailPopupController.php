@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Email;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Jobs\SendProductEmailJob;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\InicioMailing;
+use App\Mail\ProductosMailing;
 use App\Models\Lead;
 use Illuminate\Support\Facades\Log;
 
@@ -19,13 +22,6 @@ class EmailPopupController extends Controller
             'product_id' => 'nullable|integer',
             'source_id' => 'required|integer',
         ]);
-
-        if (!$request->product_id) { // SOLO POR EL MOMENTO, HASTA TENER PLANTILLA DE INICIO Y PRODUCTO
-            Log::info('Solicitud de email popup sin product_id');
-            return response()->json([
-                'message' => 'Por ahora solo se envia email en detalle de producto'
-            ], 200);
-        }
 
         // Crear o actualizar lead
         $lead = Lead::updateOrCreate(
@@ -44,6 +40,33 @@ class EmailPopupController extends Controller
             'correo' => $lead->email,
             'telefono' => $lead->phone,
         ];
+
+
+        // enviar si viene de inicio o producto
+        if (!$lead->product_id) {
+            if ($lead->source->name === 'Inicio') {
+                Mail::to($cliente['correo'])->send(new InicioMailing($cliente));
+                return response()->json([
+                    'message' => 'Email de Inicio enviado correctamente',
+                    'lead_id' => $lead->id,
+                ], 200);
+            } else if ($lead->source->name === 'Productos') {
+                Mail::to($cliente['correo'])->send(new ProductosMailing($cliente));
+                return response()->json([
+                    'message' => 'Email de Productos enviado correctamente',
+                    'lead_id' => $lead->id,
+                ], 200);
+            } else {
+                Log::info('Lead no viene de Inicio ni Productos, no se envía email', [
+                    'lead_id' => $lead->id,
+                    'source' => $lead->source->name,
+                ]);
+                return response()->json([
+                    'message' => 'Lead registrado sin envío de email',
+                    'lead_id' => $lead->id,
+                ], 200);
+            }
+        }
 
         $productoId = $lead->product_id;
 
