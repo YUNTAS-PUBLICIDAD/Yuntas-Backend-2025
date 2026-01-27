@@ -69,9 +69,9 @@ class WhatsappPopupController extends Controller
         ];
 
         // Si es detalle de producto, agregar variables y obtener imagen
-        $imagenProducto = null;
+        $imagenUrl = null;
         if ($lead->product_id && $lead->source->name === 'Producto detalle') {
-            $imagenProducto = $lead->product->images
+            $imagenUrl = $lead->product->images
                                     ->where('slot_id', 5) // Slot de imagen principal
                                     ->first()?->url;
 
@@ -83,6 +83,8 @@ class WhatsappPopupController extends Controller
                 'hora' => now('America/Lima')->format('H:i'),
                 'email' => $lead->email,
             ]);
+        } else { // Para popup de Inicio y Productos, se usa imagen de la plantilla
+            $imagenUrl = $plantillaPopup->imagen_url;
         }
 
         // Enviar mensaje al lead
@@ -90,7 +92,7 @@ class WhatsappPopupController extends Controller
             $lead, 
             $plantillaPopup, 
             $variables,
-            $imagenProducto
+            $imagenUrl
         );
 
         if (!$resultado['success']) {
