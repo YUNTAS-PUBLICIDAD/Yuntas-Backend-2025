@@ -50,27 +50,22 @@ Route::prefix('contacto')->group(function () {
 Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
 });
 
-// ==============================================================================
-// 3. EMAIL PÚBLICO (Mailings, cotizaciones, formularios)
-// ==============================================================================
-Route::prefix('email')->group(function () {
+// ------------------- POPUP: EMAIL -------------------
+Route::prefix('email-popup')->group(function () {
+    Route::post('/enviar', [App\Http\Controllers\Email\EmailPopupController::class, 'enviar']);
+});
 
-    // Enviar el correo del formulario principal
-    Route::post('/send', [App\Http\Controllers\Email\EmailController::class, 'iniciarSeguimiento']);
-
-    // Enviar Mailing 1 (día 1)
-   
-
-    // Si deseas Mailing 2 y 3, solo descomenta:
-    // Route::post('/mailing2', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing2']);
-    // Route::post('/mailing3', [App\Http\Controllers\Email\EmailController::class, 'enviarMailing3']);
+// ------------------- POPUP: WHATSAPP -------------------
+Route::prefix('whatsapp-popup')->group(function () { 
+    Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappPopupController::class, 'enviar']);
 });
 
 // ==============================================================================
-// 4. ADMINISTRACIÓN (ADMIN PANEL)
+//                          ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-// ------------------- ADMIN: USUARIOS -------------------
+Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(function () {
+
+    // ------------------- USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index']);
         Route::post('/', [App\Http\Controllers\Admin\UserController::class, 'store']);
@@ -82,34 +77,35 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::post('/{id}/role', [App\Http\Controllers\Admin\UserController::class, 'assignRole']);
     });
 
-    // ------------------- ADMINISTRACIÓN DE CATEGORÍAS -------------------
+    // ------------------- CATEGORÍAS -------------------
     Route::prefix('admin/categorias')->group(function () {
         Route::post('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'store']);
         Route::put('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'destroy']);
         Route::get('/{id}', [App\Http\Controllers\Admin\Category\CategoryController::class, 'show']);
     });
+
     // ------------------- RECLAMOS (Claims) -------------------
     Route::prefix('admin/claims')->group(function () {
         Route::get('/', [App\Http\Controllers\Support\ClaimController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ClaimController::class, 'show']);
         Route::post('/{id}/reply', [App\Http\Controllers\Support\ClaimController::class, 'reply']);
         Route::put('/{id}/status', [App\Http\Controllers\Support\ClaimController::class, 'updateStatus']);
-        });
-    // ------------------- ADMIN: MENSAJES DE CONTACTO -------------------
+    });
+
+    // ------------------- ROLES -------------------
+    Route::prefix('admin/roles')->group(function () {
+        Route::get('/', [App\Http\Controllers\Support\RoleController::class, 'index']);
+    });
+
+    // ------------------- MENSAJES DE CONTACTO -------------------
     Route::prefix('admin/contacto')->group(function () {
-        // Endpoints de contacto
         Route::get('/', [App\Http\Controllers\Support\ContactMessageController::class, 'index']);
         Route::get('/{id}', [App\Http\Controllers\Support\ContactMessageController::class, 'show']);
         Route::delete('/{id}', [App\Http\Controllers\Support\ContactMessageController::class, 'destroy']);
     });
 
-    // ------------------- USUARIOS -------------------   
-    Route::prefix('usuarios')->group(function () {
-        // Endpoints de usuarios
-    });
-
-    // ------------------- CRM / LEADS -------------------
+    // ------------------- LEADS -------------------
     Route::prefix('admin/leads')->group(function () {
         Route::post('/', [App\Http\Controllers\CRM\LeadController::class, 'store']);
         Route::get('/', [App\Http\Controllers\CRM\LeadController::class, 'index']);  
@@ -123,30 +119,26 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
     });
-    Route::prefix('admin/email-productos')->group(function () { // gestión de email de productos
-        Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'index']);
+
+    // ------------------- PRODUCTOS: EMAIL -------------------
+    Route::prefix('admin/email-productos')->group(function () { // gestión de plantillas de email para productos
+        Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'indexByProduct']);
         Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
-        Route::get('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'show']);
-        Route::put('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'update']);
-        Route::delete('/{id}', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
     });
-    Route::prefix('admin/email-campanas')->group(function () { // envio de campaña para usuarios ya registrados 
-        Route::post('/enviar', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviar']);
+    Route::prefix('admin/email-campanas')->group(function () {
+        Route::post('/enviar-campana', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviarCampana']);
     });
 
-    // ------------------- Email  -------------------
-    Route::prefix('email')->group(function () {
-    //    Route::post('/send', [App\Http\Controllers\Support\EmailController::class, 'send']);
+    // ------------------- PRODUCTOS: WHATSAPP -------------------
+    Route::prefix('admin/whatsapp-productos')->group(function () { // gestión de plantillas de whatsapp para productos
+        Route::get('/', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'indexByProduct']);
+        Route::post('/', [App\Http\Controllers\Whatsapp\WhatsappProductController::class, 'store']);
     });
+    Route::prefix('admin/whatsapp-campanas')->group(function () { 
+        Route::get('/status', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'getStatus']);
+        Route::post('/reset', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'resetSession']);
+        Route::post('/pedir-qr', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'pedirQR']);
+        Route::post('/enviar-campana', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviarCampana']);
+    });
+
 });
-
-
-// -------------- WhatssApp --------------
-
- Route::prefix('admin/whatsapp-productos')->group(function () {
-        // GET: Obtener plantilla por producto_id
-        Route::get('/', [App\Http\Controllers\Admin\Whatsapp\WhatsappPlantillaController::class, 'index']);
-        
-        // POST: Guardar o Actualizar plantilla 
-        Route::post('/', [App\Http\Controllers\Admin\Whatsapp\WhatsappPlantillaController::class, 'store']);
-    });
