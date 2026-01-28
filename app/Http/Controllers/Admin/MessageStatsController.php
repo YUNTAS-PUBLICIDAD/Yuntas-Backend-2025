@@ -7,6 +7,7 @@ use App\Models\EmailMessage;
 use App\Models\WhatsappMessage;
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MessageStatsController extends Controller
 {
@@ -15,6 +16,52 @@ class MessageStatsController extends Controller
         $leads = Lead::with(['emailMessages', 'whatsappMessages'])
             ->get()
             ->map(function ($lead) {
+                // Email popup: contar mensajes individuales
+                $emailPopupCount = EmailMessage::where('lead_id', $lead->id)
+                    ->where('type', 'popup')
+                    ->count();
+
+                $lastEmailPopup = EmailMessage::where('lead_id', $lead->id)
+                    ->where('type', 'popup')
+                    ->latest('sent_at')
+                    ->first();
+
+                // Email campaign: contar campañas únicas (no mensajes)
+                $emailCampaignCount = EmailMessage::where('lead_id', $lead->id)
+                    ->where('type', 'campaign')
+                    ->whereNotNull('campaign_id')
+                    ->distinct('campaign_id')
+                    ->count('campaign_id');
+
+                $lastEmailCampaign = EmailMessage::where('lead_id', $lead->id)
+                    ->where('type', 'campaign')
+                    ->whereNotNull('campaign_id')
+                    ->latest('sent_at')
+                    ->first();
+
+                // WhatsApp popup: contar mensajes individuales
+                $whatsappPopupCount = WhatsappMessage::where('lead_id', $lead->id)
+                    ->where('type', 'popup')
+                    ->count();
+
+                $lastWhatsappPopup = WhatsappMessage::where('lead_id', $lead->id)
+                    ->where('type', 'popup')
+                    ->latest('sent_at')
+                    ->first();
+
+                // WhatsApp campaign: contar campañas únicas (no mensajes)
+                $whatsappCampaignCount = WhatsappMessage::where('lead_id', $lead->id)
+                    ->where('type', 'campaign')
+                    ->whereNotNull('campaign_id')
+                    ->distinct('campaign_id')
+                    ->count('campaign_id');
+
+                $lastWhatsappCampaign = WhatsappMessage::where('lead_id', $lead->id)
+                    ->where('type', 'campaign')
+                    ->whereNotNull('campaign_id')
+                    ->latest('sent_at')
+                    ->first();
+
                 return [
                     'id' => $lead->id,
                     'name' => $lead->name,
@@ -26,30 +73,22 @@ class MessageStatsController extends Controller
                     'stats' => [
                         'email' => [
                             'popup' => [
-                                'total' => $lead->emailMessages()->popup()->count(),
-                                'exitosos' => $lead->emailMessages()->popup()->success()->count(),
-                                'fallidos' => $lead->emailMessages()->popup()->failed()->count(),
-                                'ultimo_envio' => $lead->emailMessages()->popup()->latest('sent_at')->first()?->sent_at,
+                                'total_mensajes' => $emailPopupCount,
+                                'ultimo_envio' => $lastEmailPopup?->sent_at,
                             ],
                             'campaign' => [
-                                'total' => $lead->emailMessages()->campaign()->count(),
-                                'exitosos' => $lead->emailMessages()->campaign()->success()->count(),
-                                'fallidos' => $lead->emailMessages()->campaign()->failed()->count(),
-                                'ultimo_envio' => $lead->emailMessages()->campaign()->latest('sent_at')->first()?->sent_at,
+                                'total_campanas' => $emailCampaignCount,
+                                'ultimo_envio' => $lastEmailCampaign?->sent_at,
                             ],
                         ],
                         'whatsapp' => [
                             'popup' => [
-                                'total' => $lead->whatsappMessages()->popup()->count(),
-                                'exitosos' => $lead->whatsappMessages()->popup()->success()->count(),
-                                'fallidos' => $lead->whatsappMessages()->popup()->failed()->count(),
-                                'ultimo_envio' => $lead->whatsappMessages()->popup()->latest('sent_at')->first()?->sent_at,
+                                'total_mensajes' => $whatsappPopupCount,
+                                'ultimo_envio' => $lastWhatsappPopup?->sent_at,
                             ],
                             'campaign' => [
-                                'total' => $lead->whatsappMessages()->campaign()->count(),
-                                'exitosos' => $lead->whatsappMessages()->campaign()->success()->count(),
-                                'fallidos' => $lead->whatsappMessages()->campaign()->failed()->count(),
-                                'ultimo_envio' => $lead->whatsappMessages()->campaign()->latest('sent_at')->first()?->sent_at,
+                                'total_campanas' => $whatsappCampaignCount,
+                                'ultimo_envio' => $lastWhatsappCampaign?->sent_at,
                             ],
                         ],
                     ],
@@ -58,67 +97,56 @@ class MessageStatsController extends Controller
 
         return response()->json([
             'leads' => $leads,
-            'totals' => [
-                'email' => [
-                    'popup' => [
-                        'total' => EmailMessage::popup()->count(),
-                        'exitosos' => EmailMessage::popup()->success()->count(),
-                        'fallidos' => EmailMessage::popup()->failed()->count(),
-                    ],
-                    'campaign' => [
-                        'total' => EmailMessage::campaign()->count(),
-                        'exitosos' => EmailMessage::campaign()->success()->count(),
-                        'fallidos' => EmailMessage::campaign()->failed()->count(),
-                    ],
-                ],
-                'whatsapp' => [
-                    'popup' => [
-                        'total' => WhatsappMessage::popup()->count(),
-                        'exitosos' => WhatsappMessage::popup()->success()->count(),
-                        'fallidos' => WhatsappMessage::popup()->failed()->count(),
-                    ],
-                    'campaign' => [
-                        'total' => WhatsappMessage::campaign()->count(),
-                        'exitosos' => WhatsappMessage::campaign()->success()->count(),
-                        'fallidos' => WhatsappMessage::campaign()->failed()->count(),
-                    ],
-                ],
-            ],
+            'totals' => $this->calculateTotals(),
         ]);
     }
 
-    // Stats globales (resumen general)
     public function totals(Request $request)
     {
-        return response()->json([
+        return response()->json($this->calculateTotals());
+    }
+
+    private function calculateTotals()
+    {
+        // Email campaign: contar campañas únicas
+        $emailCampaignCount = DB::table('email_messages')
+            ->where('type', 'campaign')
+            ->whereNotNull('campaign_id')
+            ->distinct('campaign_id')
+            ->count('campaign_id');
+
+        // WhatsApp campaign: contar campañas únicas
+        $whatsappCampaignCount = DB::table('whatsapp_messages')
+            ->where('type', 'campaign')
+            ->whereNotNull('campaign_id')
+            ->distinct('campaign_id')
+            ->count('campaign_id');
+
+        return [
             'email' => [
                 'popup' => [
-                    'total' => EmailMessage::popup()->count(),
+                    'total_mensajes' => EmailMessage::popup()->count(),
                     'exitosos' => EmailMessage::popup()->success()->count(),
                     'fallidos' => EmailMessage::popup()->failed()->count(),
                     'ultimo_envio' => EmailMessage::popup()->latest('sent_at')->first()?->sent_at,
                 ],
                 'campaign' => [
-                    'total' => EmailMessage::campaign()->count(),
-                    'exitosos' => EmailMessage::campaign()->success()->count(),
-                    'fallidos' => EmailMessage::campaign()->failed()->count(),
+                    'total_campanas' => $emailCampaignCount,
                     'ultimo_envio' => EmailMessage::campaign()->latest('sent_at')->first()?->sent_at,
                 ],
             ],
             'whatsapp' => [
                 'popup' => [
-                    'total' => WhatsappMessage::popup()->count(),
+                    'total_mensajes' => WhatsappMessage::popup()->count(),
                     'exitosos' => WhatsappMessage::popup()->success()->count(),
                     'fallidos' => WhatsappMessage::popup()->failed()->count(),
                     'ultimo_envio' => WhatsappMessage::popup()->latest('sent_at')->first()?->sent_at,
                 ],
                 'campaign' => [
-                    'total' => WhatsappMessage::campaign()->count(),
-                    'exitosos' => WhatsappMessage::campaign()->success()->count(),
-                    'fallidos' => WhatsappMessage::campaign()->failed()->count(),
+                    'total_campanas' => $whatsappCampaignCount,
                     'ultimo_envio' => WhatsappMessage::campaign()->latest('sent_at')->first()?->sent_at,
                 ],
             ],
-        ]);
+        ];
     }
 }
