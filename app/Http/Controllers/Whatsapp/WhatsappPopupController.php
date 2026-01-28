@@ -186,6 +186,7 @@ class WhatsappPopupController extends Controller
             // Guardar registro del mensaje
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'popup',
                 'body' => $mensaje,
                 'status' => $success ? 'enviado' : 'fallido',
                 'image_url' => $imagenUrl,
@@ -207,6 +208,7 @@ class WhatsappPopupController extends Controller
             // Guardar registro del error
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'popup',
                 'body' => $mensaje ?? '',
                 'status' => 'fallido',
                 'chat_id' => null,

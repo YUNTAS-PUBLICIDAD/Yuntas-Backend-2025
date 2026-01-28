@@ -73,15 +73,39 @@ class EmailCampanaController extends Controller
         ];
 
         foreach ($secciones as $seccion) {
-            Log::info('Enviando sección', [
-                'email' => $lead->email,
-                'paso' => $seccion->paso,
-                'titulo' => $seccion->titulo,
-            ]);
+            try {
+                Mail::to($lead->email)->send(
+                    new ProductMailing1($seccion, $cliente)
+                );
 
-            Mail::to($lead->email)->send(
-                new ProductMailing1($seccion, $cliente)
-            );
+                // Guardar registro exitoso
+                EmailMessage::create([
+                    'lead_id' => $lead->id,
+                    'type' => 'campaign',
+                    'subject' => $seccion->titulo,
+                    'body' => $seccion->parrafo1,
+                    'status' => 'enviado',
+                    'sent_at' => now(),
+                ]);
+                
+            } catch (\Exception $e) {
+                Log::error('Error enviando email campaña', [
+                    'lead_id' => $lead->id,
+                    'paso' => $seccion->paso,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // Guardar registro fallido
+                EmailMessage::create([
+                    'lead_id' => $lead->id,
+                    'type' => 'campaign',
+                    'subject' => $seccion->titulo,
+                    'body' => $seccion->parrafo1,
+                    'status' => 'fallido',
+                    'sent_at' => now(),
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }
