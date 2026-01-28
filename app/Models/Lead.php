@@ -51,12 +51,4 @@ class Lead extends Model
     {
         return $this->hasMany(EmailMessage::class);
     }
-
-    /**
-     * Get the message logs for the lead.
-     */
-    public function messageLogs(): HasMany
-    {
-        return $this->hasMany(MessageLog::class);
-    }
 }

@@ -12,17 +12,15 @@ class EmailMessage extends Model
 
     protected $fillable = [
         'lead_id',
-        'slot_id',
+        'type',
         'subject',
         'body',
         'status',
-        'scheduled_at',
         'sent_at',
         'error_message',
     ];
 
     protected $casts = [
-        'scheduled_at' => 'datetime',
         'sent_at' => 'datetime',
     ];
 
@@ -34,24 +32,28 @@ class EmailMessage extends Model
         return $this->belongsTo(Lead::class);
     }
 
-    /**
-     * Get the slot for the email message.
-     */
-    public function slot(): BelongsTo
+    public function scopePopup($query)
     {
-        return $this->belongsTo(EmailSlot::class, 'slot_id');
+        return $query->where('type', 'popup');
     }
 
-    public function slots()
-{
-    return $this->hasMany(EmailSlot::class);
-}
+    public function scopeCampaign($query)
+    {
+        return $query->where('type', 'campaign');
+    }
 
-public function product()
-{
-    return $this->belongsTo(EmailProduct::class);
-}
+    public function scopeSuccess($query)
+    {
+        return $query->where('status', 'enviado');
+    }
 
+    public function scopeFailed($query)
+    {
+        return $query->where('status', 'fallido');
+    }
 
-
+    public function product()
+    {
+        return $this->belongsTo(EmailProduct::class);
+    }
 }

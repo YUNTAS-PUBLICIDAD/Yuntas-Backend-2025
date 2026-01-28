@@ -197,6 +197,7 @@ class WhatsappCampanaController extends Controller
             // Guardar registro del mensaje
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'campaign',
                 'body' => $mensaje,
                 'status' => $success ? 'enviado' : 'fallido',
                 'image_url' => $imagenUrl,
@@ -218,6 +219,7 @@ class WhatsappCampanaController extends Controller
             // Guardar registro del error
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'campaign',
                 'body' => $mensaje ?? '',
                 'status' => 'fallido',
                 'chat_id' => null,

@@ -141,4 +141,9 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::post('/enviar-campana', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviarCampana']);
     });
 
+    // ------------------- STATS DE MENSAJES (WHATSAPP Y EMAIL) -------------------
+    Route::prefix('admin/message-stats')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\MessageStatsController::class, 'index']); // Stats por lead
+        Route::get('/totals', [App\Http\Controllers\Admin\MessageStatsController::class, 'totals']); // Stats globales
+    });
 });
