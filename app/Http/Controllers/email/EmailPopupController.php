@@ -9,6 +9,7 @@ use App\Mail\InicioMailing;
 use App\Mail\ProductosMailing;
 use App\Models\Lead;
 use Illuminate\Support\Facades\Log;
+use App\Models\EmailMessage;
 
 class EmailPopupController extends Controller
 {
