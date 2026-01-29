@@ -33,9 +33,13 @@ class WhatsappPopupController extends Controller
             'source_id' => 'required|integer',
         ]);
 
+        // Buscar lead existente
+        $leadExistente = Lead::where('email', $request->email)->first();
+        $phoneChanged = $leadExistente && $leadExistente->phone !== $request->phone;
+
         // Actualizar o crear lead
         $lead = Lead::updateOrCreate(
-            ['email' => $request->email], // Buscar por email
+            ['email' => $request->email],
             [
                 'name' => $request->name,
                 'phone' => $request->phone,
@@ -44,6 +48,12 @@ class WhatsappPopupController extends Controller
                 'source_id' => $request->source_id,
             ]
         );
+
+        if ($phoneChanged) { // si phone cambia, se limpia chat_id en mensajes de WhatsApp
+            WhatsappMessage::where('lead_id', $lead->id)
+                ->whereNotNull('chat_id')
+                ->update(['chat_id' => null]);
+        }
 
         // Validar que tenga teléfono
         if (!$lead->phone) {
