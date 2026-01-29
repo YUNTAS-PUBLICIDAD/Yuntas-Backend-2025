@@ -8,6 +8,7 @@ use App\Models\EmailProducto;
 use App\Models\Lead;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Mail\ProductMailing1;
 
 class EmailCampanaController extends Controller
@@ -53,24 +54,40 @@ class EmailCampanaController extends Controller
         }
 
         // Envío de correos
+        $campanasExitosas = 0;
+        $campanasFallidas = 0;
+    
         foreach ($leads as $lead) {
-            $this->enviarCorreosALead($lead, $secciones);
+            $resultado = $this->enviarCorreosALead($lead, $secciones);
+
+            if ($resultado['todos_exitosos']) {
+                $campanasExitosas++;
+            } else {
+                $campanasFallidas++;
+            }
         }
 
         return response()->json([
             'message' => 'Campaña enviada correctamente',
             'total_leads' => $leads->count(),
-            'total_correos' => $leads->count() * $secciones->count()
+            'campanas_exitosas' => $campanasExitosas,
+            'campanas_fallidas' => $campanasFallidas,
+            'total_emails_enviados' => $leads->count() * $secciones->count()
         ]);
     }
 
     private function enviarCorreosALead($lead, $secciones)
     {
+        // se genera un ID para la campaña
+        $campaignId = Str::uuid()->toString();
+
         $cliente = [
             'nombre' => $lead->name,
             'correo' => $lead->email,
             'telefono' => $lead->phone,
         ];
+
+        $todosExitosos = true;
 
         foreach ($secciones as $seccion) {
             try {
@@ -82,6 +99,7 @@ class EmailCampanaController extends Controller
                 EmailMessage::create([
                     'lead_id' => $lead->id,
                     'type' => 'campaign',
+                    'campaign_id' => $campaignId,
                     'subject' => $seccion->titulo,
                     'body' => $seccion->parrafo1,
                     'status' => 'enviado',
@@ -89,8 +107,11 @@ class EmailCampanaController extends Controller
                 ]);
                 
             } catch (\Exception $e) {
+                $todosExitosos = false;
+
                 Log::error('Error enviando email campaña', [
                     'lead_id' => $lead->id,
+                    'campaign_id' => $campaignId,
                     'paso' => $seccion->paso,
                     'error' => $e->getMessage(),
                 ]);
@@ -99,6 +120,7 @@ class EmailCampanaController extends Controller
                 EmailMessage::create([
                     'lead_id' => $lead->id,
                     'type' => 'campaign',
+                    'campaign_id' => $campaignId,
                     'subject' => $seccion->titulo,
                     'body' => $seccion->parrafo1,
                     'status' => 'fallido',
@@ -107,5 +129,7 @@ class EmailCampanaController extends Controller
                 ]);
             }
         }
+
+        return ['todos_exitosos' => $todosExitosos, 'campaign_id' => $campaignId];
     }
 }
