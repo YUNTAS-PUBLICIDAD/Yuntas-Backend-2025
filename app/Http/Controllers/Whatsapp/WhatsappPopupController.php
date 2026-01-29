@@ -33,9 +33,13 @@ class WhatsappPopupController extends Controller
             'source_id' => 'required|integer',
         ]);
 
+        // Buscar lead existente
+        $leadExistente = Lead::where('email', $request->email)->first();
+        $phoneChanged = $leadExistente && $leadExistente->phone !== $request->phone;
+
         // Actualizar o crear lead
         $lead = Lead::updateOrCreate(
-            ['email' => $request->email], // Buscar por email
+            ['email' => $request->email],
             [
                 'name' => $request->name,
                 'phone' => $request->phone,
@@ -44,6 +48,12 @@ class WhatsappPopupController extends Controller
                 'source_id' => $request->source_id,
             ]
         );
+
+        if ($phoneChanged) { // si phone cambia, se limpia chat_id en mensajes de WhatsApp
+            WhatsappMessage::where('lead_id', $lead->id)
+                ->whereNotNull('chat_id')
+                ->update(['chat_id' => null]);
+        }
 
         // Validar que tenga teléfono
         if (!$lead->phone) {
@@ -69,9 +79,9 @@ class WhatsappPopupController extends Controller
         ];
 
         // Si es detalle de producto, agregar variables y obtener imagen
-        $imagenProducto = null;
+        $imagenUrl = null;
         if ($lead->product_id && $lead->source->name === 'Producto detalle') {
-            $imagenProducto = $lead->product->images
+            $imagenUrl = $lead->product->images
                                     ->where('slot_id', 5) // Slot de imagen principal
                                     ->first()?->url;
 
@@ -83,6 +93,8 @@ class WhatsappPopupController extends Controller
                 'hora' => now('America/Lima')->format('H:i'),
                 'email' => $lead->email,
             ]);
+        } else { // Para popup de Inicio y Productos, se usa imagen de la plantilla
+            $imagenUrl = $plantillaPopup->imagen_url;
         }
 
         // Enviar mensaje al lead
@@ -90,7 +102,7 @@ class WhatsappPopupController extends Controller
             $lead, 
             $plantillaPopup, 
             $variables,
-            $imagenProducto
+            $imagenUrl
         );
 
         if (!$resultado['success']) {
@@ -184,6 +196,7 @@ class WhatsappPopupController extends Controller
             // Guardar registro del mensaje
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'popup',
                 'body' => $mensaje,
                 'status' => $success ? 'enviado' : 'fallido',
                 'image_url' => $imagenUrl,
@@ -205,6 +218,7 @@ class WhatsappPopupController extends Controller
             // Guardar registro del error
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'popup',
                 'body' => $mensaje ?? '',
                 'status' => 'fallido',
                 'chat_id' => null,

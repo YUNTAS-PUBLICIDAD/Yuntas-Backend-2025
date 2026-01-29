@@ -25,7 +25,7 @@ class Lead extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_id')->withTrashed();
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     /**
@@ -50,13 +50,5 @@ class Lead extends Model
     public function emailMessages(): HasMany
     {
         return $this->hasMany(EmailMessage::class);
-    }
-
-    /**
-     * Get the message logs for the lead.
-     */
-    public function messageLogs(): HasMany
-    {
-        return $this->hasMany(MessageLog::class);
     }
 }

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class WhatsappCampanaController extends Controller
 {
@@ -126,6 +127,9 @@ class WhatsappCampanaController extends Controller
 
     private function enviarWhatsappALead($lead, $plantilla)
     {
+        // se genera un ID único para la campaña
+        $campaignId = Str::uuid()->toString();
+
         try {
 
             $mensaje = $plantilla->parrafo;
@@ -176,7 +180,7 @@ class WhatsappCampanaController extends Controller
                 Log::info('Enviando WhatsApp con imagen', [
                     'lead_id' => $lead->id,
                     'phone' => $payload['phone'],
-                    'tiene_imagen' => true
+                    'campaign_id' => $campaignId,
                 ]);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
@@ -185,7 +189,8 @@ class WhatsappCampanaController extends Controller
 
                 Log::info('Enviando WhatsApp solo texto', [
                     'lead_id' => $lead->id,
-                    'phone' => $payload['phone']
+                    'phone' => $payload['phone'],
+                    'campaign_id' => $campaignId,
                 ]);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-message", $payload);
@@ -197,6 +202,8 @@ class WhatsappCampanaController extends Controller
             // Guardar registro del mensaje
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'campaign',
+                'campaign_id' => $campaignId,
                 'body' => $mensaje,
                 'status' => $success ? 'enviado' : 'fallido',
                 'image_url' => $imagenUrl,
@@ -218,6 +225,8 @@ class WhatsappCampanaController extends Controller
             // Guardar registro del error
             WhatsappMessage::create([
                 'lead_id' => $lead->id,
+                'type' => 'campaign',
+                'campaign_id' => $campaignId,
                 'body' => $mensaje ?? '',
                 'status' => 'fallido',
                 'chat_id' => null,
