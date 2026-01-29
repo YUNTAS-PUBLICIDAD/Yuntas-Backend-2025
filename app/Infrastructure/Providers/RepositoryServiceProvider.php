@@ -25,6 +25,9 @@ class RepositoryServiceProvider extends ServiceProvider
         \App\Domain\Repositories\Support\ClaimRepositoryInterface::class 
             => \App\Infrastructure\Persistence\Eloquent\Repositories\Support\EloquentClaimRepository::class,
 
+        \App\Domain\Repositories\Support\RoleRepositoryInterface::class 
+            => \App\Infrastructure\Persistence\Eloquent\Repositories\Support\EloquentRoleRepository::class,
+
         \App\Domain\Repositories\User\UserRepositoryInterface::class 
             => \App\Infrastructure\Persistence\Eloquent\Repositories\User\EloquentUserRepository::class,
 
