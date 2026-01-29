@@ -5,32 +5,26 @@
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header-image { width: 100%; max-width: 600px; height: auto; margin-bottom: 20px; }
         h1 { color: #2c3e50; }
-        .emoji { font-size: 1.2em; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><span class="emoji">👋</span> ¡Bienvenido a Yuntas Publicidad! <span class="emoji">👋</span></h1>
+        <img src="{{ asset('storage/plantillas/yuntas-bienvenida.webp') }}" alt="Yuntas Bienvenida" class="header-image">
         
-        <p>Hola <strong>{{ $cliente['nombre'] }}</strong>, gracias por visitarnos y mostrar interés en nuestros servicios.</p>
+        <h1>¡Bienvenido/a a Yuntas!</h1>
         
-        <h3><span class="emoji">🎯</span> Somos tu aliado en publicidad</h3>
-        <p>Nos especializamos en soluciones publicitarias personalizadas que ayudan a destacar tu marca.</p>
+        <p>Gracias por registrarte, <strong>{{ $cliente['nombre'] }}</strong>. Nos alegra tenerte con nosotros y que formes parte de nuestra comunidad.</p>
         
-        <h3><span class="emoji">💡</span> ¿En qué podemos ayudarte?</h3>
-        <ul>
-            <li>Productos publicitarios personalizados</li>
-            <li>Cotizaciones sin compromiso</li>
-        </ul>
+        <p>Desde ahora tendrás acceso a información sobre nuestros productos, novedades y soluciones en letreros acrílicos y señalización diseñadas para potenciar la imagen de tu negocio con un estilo moderno, profesional y duradero.</p>
         
-        <h3><span class="emoji">📧</span> Mantente informado</h3>
-        <p>Pronto recibirás información detallada en tu correo.</p>
+        <p>Si tienes alguna consulta o necesitas asesoría personalizada, no dudes en escribirnos. Estaremos encantados de ayudarte a encontrar la mejor opción para tu proyecto.</p>
         
-        <p>Estamos aquí para resolver todas tus dudas. ¡No dudes en escribirnos!</p>
+        <p>Gracias por confiar en Yuntas.<br>
+        Tu marca merece destacar.</p>
         
-        <p>Saludos cordiales,<br>
-        <strong>Yuntas Publicidad</strong> <span class="emoji">✨</span></p>
+        <p><strong>Equipo Yuntas</strong></p>
     </div>
 </body>
 </html>

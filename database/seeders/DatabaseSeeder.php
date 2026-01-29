@@ -61,20 +61,15 @@ class DatabaseSeeder extends Seeder
             ['lead_source_id' => $inicioSource->id],    
             [
                 'nombre' => 'Popup Inicio',
-                 'mensaje' => "👋 *¡Bienvenido a Yuntas Publicidad!* 👋\n\n" .
-                            "Hola *{nombre}*, gracias por visitarnos y mostrar interés en nuestros servicios.\n\n" .
-                            "🎯 *Somos tu aliado en publicidad*\n" .
-                            "Nos especializamos en soluciones publicitarias personalizadas que ayudan a destacar tu marca.\n\n" .
-                            "💡 *¿En qué podemos ayudarte?*\n" .
-                            "• Productos publicitarios personalizados\n" .
-                            "• Cotizaciones sin compromiso\n\n" .
-                            "📧 *Mantente informado*\n" .
-                            "Pronto recibirás información detallada en tu correo.\n\n" .
-                            "Estamos aquí para resolver todas tus dudas. ¡No dudes en escribirnos!\n\n" .
-                            "Saludos cordiales,\n" .
-                            "*Yuntas Publicidad* ✨",
+                'mensaje' => "¡Bienvenido/a a Yuntas!\n\n" .
+                            "Gracias por registrarte, *{nombre}*. Nos alegra tenerte con nosotros y que formes parte de nuestra comunidad.\n\n" .
+                            "Desde ahora tendrás acceso a información sobre nuestros productos, novedades y soluciones en letreros acrílicos y señalización diseñadas para potenciar la imagen de tu negocio con un estilo moderno, profesional y duradero.\n\n" .
+                            "Si tienes alguna consulta o necesitas asesoría personalizada, no dudes en escribirnos. Estaremos encantados de ayudarte a encontrar la mejor opción para tu proyecto.\n\n" .
+                            "Gracias por confiar en Yuntas.\n" .
+                            "Tu marca merece destacar.\n\n" .
+                            "*Equipo Yuntas*",
                 'variables' => ['nombre'],
-                'imagen_url' => null,
+                'imagen_url' => 'storage/plantillas/yuntas-bienvenida.webp',
                 'activo' => true,
             ]
         );

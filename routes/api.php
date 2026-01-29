@@ -140,5 +140,4 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::post('/pedir-qr', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'pedirQR']);
         Route::post('/enviar-campana', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviarCampana']);
     });
-
 });
