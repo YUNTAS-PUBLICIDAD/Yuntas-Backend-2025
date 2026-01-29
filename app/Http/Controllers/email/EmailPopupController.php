@@ -45,17 +45,64 @@ class EmailPopupController extends Controller
         // enviar si viene de inicio o producto
         if (!$lead->product_id) {
             if ($lead->source->name === 'Inicio') {
-                Mail::to($cliente['correo'])->send(new InicioMailing($cliente));
-                return response()->json([
-                    'message' => 'Email de Inicio enviado correctamente',
-                    'lead_id' => $lead->id,
-                ], 200);
+                try {
+                    Mail::to($cliente['correo'])->send(new InicioMailing($cliente));
+
+                    // Guardar registro
+                    EmailMessage::create([
+                        'lead_id' => $lead->id,
+                        'type' => 'popup',
+                        'subject' => 'Bienvenido a Yuntas',
+                        'body' => 'Email de bienvenida desde Inicio',
+                        'status' => 'enviado',
+                        'sent_at' => now(),
+                    ]);
+
+                    return response()->json([
+                        'message' => 'Email de Inicio enviado correctamente',
+                        'lead_id' => $lead->id,
+                    ], 200);
+                } catch (\Exception $e) {
+                    EmailMessage::create([
+                        'lead_id' => $lead->id,
+                        'type' => 'popup',
+                        'subject' => 'Bienvenido a Yuntas',
+                        'body' => 'Email de bienvenida desde Inicio',
+                        'status' => 'fallido',
+                        'sent_at' => now(),
+                        'error_message' => $e->getMessage(),
+                    ]);
+                    throw $e;
+                }
             } else if ($lead->source->name === 'Productos') {
-                Mail::to($cliente['correo'])->send(new ProductosMailing($cliente));
-                return response()->json([
-                    'message' => 'Email de Productos enviado correctamente',
-                    'lead_id' => $lead->id,
-                ], 200);
+                try {
+                    Mail::to($cliente['correo'])->send(new ProductosMailing($cliente));
+
+                    EmailMessage::create([
+                        'lead_id' => $lead->id,
+                        'type' => 'popup',
+                        'subject' => 'Bienvenido a Yuntas',
+                        'body' => 'Email de productos',
+                        'status' => 'enviado',
+                        'sent_at' => now(),
+                    ]);
+
+                    return response()->json([
+                        'message' => 'Email de Productos enviado correctamente',
+                        'lead_id' => $lead->id,
+                    ], 200);
+                } catch (\Exception $e) {
+                    EmailMessage::create([
+                        'lead_id' => $lead->id,
+                        'type' => 'popup',
+                        'subject' => 'Bienvenido a Yuntas',
+                        'body' => 'Email de productos',
+                        'status' => 'fallido',
+                        'sent_at' => now(),
+                        'error_message' => $e->getMessage(),
+                    ]);
+                    throw $e;
+                }
             } else {
                 Log::info('Lead no viene de Inicio ni Productos, no se envía email', [
                     'lead_id' => $lead->id,

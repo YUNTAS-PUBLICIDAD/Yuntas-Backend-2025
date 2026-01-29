@@ -10,7 +10,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
-
+use App\Models\EmailMessage;
+use App\Models\Lead;
 use Illuminate\Support\Facades\Log;
 
 
@@ -44,7 +45,46 @@ class SendProductEmailJob implements ShouldQueue
         return;
     }
 
-    Mail::to($this->cliente['correo'])
-        ->send(new ProductMailing1($seccion, $this->cliente));
+    $lead = Lead::where('email', $this->cliente['correo'])->first();
+
+    try {
+        Mail::to($this->cliente['correo'])
+            ->send(new ProductMailing1($seccion, $this->cliente));
+
+        if ($lead) {
+            EmailMessage::create([
+                'lead_id' => $lead->id,
+                'type' => 'popup',
+                'subject' => $seccion->titulo,
+                'body' => $seccion->parrafo1,
+                'status' => 'enviado',
+                'sent_at' => now(),
+            ]);
+        }
+
+        Log::info('Email de producto enviado', [
+            'correo' => $this->cliente['correo'],
+            'paso' => $this->paso,
+        ]);
+
+    } catch (\Exception $e) {
+            Log::error('Error enviando email de producto', [
+                'correo' => $this->cliente['correo'],
+                'paso' => $this->paso,
+                'error' => $e->getMessage(),
+            ]);
+
+            if ($lead) {
+                EmailMessage::create([
+                    'lead_id' => $lead->id,
+                    'type' => 'popup',
+                    'subject' => $seccion->titulo,
+                    'body' => $seccion->parrafo1,
+                    'status' => 'fallido',
+                    'sent_at' => now(),
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
+        }
 }
 }
