@@ -63,7 +63,7 @@ Route::prefix('whatsapp-popup')->group(function () {
 // ==============================================================================
 //                          ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(function () {
 
     // ------------------- USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
@@ -91,6 +91,11 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::get('/{id}', [App\Http\Controllers\Support\ClaimController::class, 'show']);
         Route::post('/{id}/reply', [App\Http\Controllers\Support\ClaimController::class, 'reply']);
         Route::put('/{id}/status', [App\Http\Controllers\Support\ClaimController::class, 'updateStatus']);
+    });
+
+    // ------------------- ROLES -------------------
+    Route::prefix('admin/roles')->group(function () {
+        Route::get('/', [App\Http\Controllers\Support\RoleController::class, 'index']);
     });
 
     // ------------------- MENSAJES DE CONTACTO -------------------
@@ -135,5 +140,4 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::post('/pedir-qr', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'pedirQR']);
         Route::post('/enviar-campana', [App\Http\Controllers\Whatsapp\WhatsappCampanaController::class, 'enviarCampana']);
     });
-
 });

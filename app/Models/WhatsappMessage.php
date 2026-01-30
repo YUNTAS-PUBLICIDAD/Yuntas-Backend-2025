@@ -12,6 +12,8 @@ class WhatsappMessage extends Model
 
     protected $fillable = [
         'lead_id',
+        'type',
+        'campaign_id',
         'body',
         'image_url',
         'status',
@@ -30,5 +32,25 @@ class WhatsappMessage extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    public function scopePopup($query)
+    {
+        return $query->where('type', 'popup');
+    }
+
+    public function scopeCampaign($query)
+    {
+        return $query->where('type', 'campaign');
+    }
+
+    public function scopeSuccess($query)
+    {
+        return $query->where('status', 'enviado');
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->where('status', 'fallido');
     }
 }
