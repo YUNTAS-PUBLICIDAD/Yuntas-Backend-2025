@@ -106,6 +106,9 @@ class Product extends Model
 
         try {
             \Illuminate\Support\Facades\Http::withToken($token)
+                ->withHeaders([
+                    'User-Agent' => 'Laravel-Deployment-Trigger'
+                ])
                 ->post("https://api.github.com/repos/{$repo}/dispatches", [
                     'event_type' => 'webhook-rebuild-frontend'
                 ]);
