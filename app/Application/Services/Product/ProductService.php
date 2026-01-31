@@ -69,9 +69,9 @@ class ProductService
 
             // 3. Gestionar Imagen Principal (Slot: 'List')
             if ($dto->main_image) {
-                // Tu código usaba 'List', el nuevo usaba 'Main'. 
+                $title = $dto->main_image_title ?? $product->name;
                 $alt = $dto->main_image_alt ?? $product->name;
-                $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
+                $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
             }
 
             // 4. Gestionar Galería con Mapa de Slots (Tu lógica específica)
@@ -134,10 +134,16 @@ class ProductService
             // Actualizar Imagen Principal
             if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
                 $this->deleteImagesBySlot($product, 'List');
+                $title = $dto->main_image_title ?? $product->name;
                 $alt = $dto->main_image_alt ?? $product->name;
-                $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
-            } elseif (isset($dto->main_image_alt)) {
-                $this->updateImageAlt($product, 'List', $dto->main_image_alt);
+                $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
+            } else {// solo actualizar título/alt si se proporcionan
+                if (isset($dto->main_image_title)) {
+                    $this->updateImageTitle($product, 'List', $dto->main_image_title);
+                }
+                if (isset($dto->main_image_alt)) {
+                    $this->updateImageAlt($product, 'List', $dto->main_image_alt);
+                }
             }
 
             // Actualizar Galería
@@ -187,7 +193,7 @@ class ProductService
     }
 
 
-    private function uploadImage(Product $product, $file, $slotName, $module, $altText = null)
+    private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
         // 1. Buscar o Crear el Slot
         $slot = ImageSlot::firstOrCreate(
@@ -201,9 +207,23 @@ class ProductService
         $product->images()->create([
             'slot_id' => $slot->id,
             'url' => '/storage/' . $path,
-            'title' => $product->name, 
+            'title' => $title,
             'alt_text' => $altText ?? $product->name,
         ]);
+    }
+
+    private function updateImageTitle(Product $product, string $slotName, string $title): void
+    {
+        // Buscar el Slot
+        $slot = ImageSlot::where(
+            ['name' => $slotName, 'module' => 'products']
+        )->first();
+
+        $image = $product->images()->where('slot_id', $slot->id)->first();
+        
+        if ($image) {
+            $image->update(['title' => $title]);
+        }
     }
 
     private function updateImageAlt(Product $product, string $slotName, string $alt): void

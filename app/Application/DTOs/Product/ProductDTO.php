@@ -20,6 +20,7 @@ class ProductDTO
         // Relaciones y Archivos
         public ?array $categories,        
         public $main_image,
+        public ?string $main_image_title,
         public ?string $main_image_alt, 
 
         public ?array $gallery, // [['slot' => 'Hero', 'image' => File, 'alt' => '...'], ...]   
@@ -48,6 +49,7 @@ class ProductDTO
             categories: $request->input('categories', []), 
             
             main_image: $request->file('main_image'),
+            main_image_title: $request->input('main_image_title'),
             main_image_alt: $request->input('main_image_alt'), 
 
             gallery: self::processGallery($request),
