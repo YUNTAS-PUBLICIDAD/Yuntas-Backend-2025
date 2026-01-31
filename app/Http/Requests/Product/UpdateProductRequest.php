@@ -37,6 +37,7 @@ class UpdateProductRequest extends FormRequest
             
             // Imagen Principal
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'main_image_title' => 'nullable|string|max:191',
             'main_image_alt' => 'nullable|string|max:191', 
 
             // Galería
