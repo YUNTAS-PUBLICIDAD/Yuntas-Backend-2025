@@ -115,4 +115,44 @@ class EmailProductController extends Controller
             'data' => $saved,
         ]);
     }
+    
+    // ELIMINAR PLANTILLA
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'producto_id' => 'required|integer|exists:products,id',
+            'paso' => 'required|integer|min:0|max:2',
+        ]);
+
+        $plantilla = EmailProducto::where('producto_id', $request->producto_id)
+            ->where('paso', $request->paso)
+            ->first();
+
+        if (!$plantilla) {
+            return response()->json([
+                'message' => 'Plantilla no encontrada'
+            ], 404);
+        }
+
+        // Eliminar imagen principal
+        if ($plantilla->imagen_principal) {
+            $oldPath = str_replace('storage/', '', $plantilla->imagen_principal);
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        // Eliminar imágenes secundarias
+        if ($plantilla->imagenes_secundarias) {
+            $oldImages = json_decode($plantilla->imagenes_secundarias, true) ?? [];
+            foreach ($oldImages as $oldImage) {
+                $oldPath = str_replace('storage/', '', $oldImage);
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
+
+        $plantilla->delete();
+
+        return response()->json([
+            'message' => 'Plantilla eliminada correctamente'
+        ]);
+    }
 }
