@@ -27,15 +27,6 @@ class ProductResource extends JsonResource
             'meta_title' => $this->meta_title,
             'meta_description' => $this->meta_description,
             'keywords' => $this->keywords,
-
-            'images' => $this->images->map(function ($img) {
-                return [
-                    'id' => $img->id,
-                    'url' => $img->url,
-                    'alt_text' => $img->alt_text, 
-                    'slot_name' => $img->slot?->name ?? 'Gallery', 
-                ];
-            }),
             
             'main_image' => $mainImage ? [
                 'url' => $mainImage->url, 
@@ -46,6 +37,7 @@ class ProductResource extends JsonResource
             'gallery' => $gallery->map(fn($img) => [
                 'url' => $img->url,
                 'alt' => $img->alt_text,
+                'title' => $img->title,
                 'slot' => $img->slot?->name 
             ]),
 
