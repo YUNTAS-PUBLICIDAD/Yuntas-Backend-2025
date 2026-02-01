@@ -201,10 +201,18 @@ class ProductService
             ['name' => $slotName, 'module' => $module]
         );
 
-        // 2. Subir Archivo
-        $path = $file->store('products/' . $product->id . '/' . strtolower($slotName), 'public');
+        // 2. Generar nombre basado en slug del producto
+        $slugName = Str::slug($product->name);
+        $slotLower = strtolower($slotName);
+        $extension = $file->extension();
 
-        // 3. Crear Registro en DB
+        // Formato por ejemplo: proyector-holografico-3d-hero-15.webp
+        $filename = "{$slugName}-{$slotLower}-{$product->id}.{$extension}";
+
+        // 3. Subir Archivo
+        $path = $file->storeAs('products/' . $product->id . '/' . $slotName, $filename, 'public');
+
+        // 4. Crear Registro en DB
         $product->images()->create([
             'slot_id' => $slot->id,
             'url' => '/storage/' . $path,
