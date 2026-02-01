@@ -8,6 +8,7 @@ use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductService
