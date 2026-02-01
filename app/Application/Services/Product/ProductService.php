@@ -12,11 +12,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductService
 {
-    public function __construct(
-        // Assuming you might want to keep the repository pattern, 
-        // but the code provided uses Eloquent directly for simplicity.
-        // If you strictly use repo, inject it here.
-    ) {}
+    public function __construct() {}
 
     public function getAll(int $perPage = 10)
     {
@@ -69,24 +65,25 @@ class ProductService
 
             // 3. Gestionar Imagen Principal (Slot: 'List')
             if ($dto->main_image) {
-                // Tu código usaba 'List', el nuevo usaba 'Main'. 
+                $title = $dto->main_image_title ?? $product->name;
                 $alt = $dto->main_image_alt ?? $product->name;
-                $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
+                $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
             }
 
-            // 4. Gestionar Galería con Mapa de Slots (Tu lógica específica)
+            // 4. Gestionar Galería con Mapa de Slots
             //$slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
             
             if (!empty($dto->gallery)) {
                 foreach ($dto->gallery as $item) {
                     $slotName = $item['slot'];
                     $image = $item['image'];
+                    $title = $item['title'] ?? $product->name;
                     $altText = $item['alt'] ?? $product->name;
 
                     // Validar que sea archivo
                     if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
 
-                    $this->uploadImage($product, $image, $slotName, 'products', $altText);
+                    $this->uploadImage($product, $image, $slotName, 'products', $title, $altText);
                 }
             }
 
@@ -134,10 +131,12 @@ class ProductService
             // Actualizar Imagen Principal
             if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
                 $this->deleteImagesBySlot($product, 'List');
+                $title = $dto->main_image_title ?? $product->name;
                 $alt = $dto->main_image_alt ?? $product->name;
-                $this->uploadImage($product, $dto->main_image, 'List', 'products', $alt);
-            } elseif (isset($dto->main_image_alt)) {
-                $this->updateImageAlt($product, 'List', $dto->main_image_alt);
+                $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
+            } else {
+                $this->updateImageTitle($product, 'List', $dto->main_image_title ?? $product->name);
+                $this->updateImageAlt($product, 'List', $dto->main_image_alt ?? $product->name);
             }
 
             // Actualizar Galería
@@ -145,6 +144,7 @@ class ProductService
                 foreach ($dto->gallery as $item) {
                     $slotName = $item['slot'];
                     $image = $item['image'] ?? null;
+                    $title = $item['title'] ?? $product->name;
                     $altText = $item['alt'] ?? $product->name;
 
                     if ($image instanceof \Illuminate\Http\UploadedFile) {
@@ -153,18 +153,25 @@ class ProductService
                         if (in_array($slotName, $uniqueSlots)) {
                             $this->deleteImagesBySlot($product, $slotName);
                         }
-                        $this->uploadImage($product, $image, $slotName, 'products', $altText);
+                        $this->uploadImage($product, $image, $slotName, 'products', $title, $altText);
                     } else {
-                        // Imagen existente: solo actualizar ALT si cambió
+                        $this->updateImageTitle($product, $slotName, $title);
                         $this->updateImageAlt($product, $slotName, $altText);
                     }
+                }
+            }
+
+            // Actualizar Títulos de la Galería
+            if (!empty($dto->gallery_title)) {
+                foreach ($dto->gallery_title as $slot => $title) {
+                    $this->updateImageTitle($product, $slot, $title ?? $product->name);
                 }
             }
             
             // solo para actualizar ALT de la galería
             if (!empty($dto->gallery_alt)) {
                 foreach ($dto->gallery_alt as $slot => $alt) {
-                    $this->updateImageAlt($product, $slot, $alt);
+                    $this->updateImageAlt($product, $slot, $alt ?? $product->name);
                 }
             }
 
@@ -187,7 +194,7 @@ class ProductService
     }
 
 
-    private function uploadImage(Product $product, $file, $slotName, $module, $altText = null)
+    private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
         // 1. Buscar o Crear el Slot
         $slot = ImageSlot::firstOrCreate(
@@ -201,9 +208,23 @@ class ProductService
         $product->images()->create([
             'slot_id' => $slot->id,
             'url' => '/storage/' . $path,
-            'title' => $product->name, 
+            'title' => $title,
             'alt_text' => $altText ?? $product->name,
         ]);
+    }
+
+    private function updateImageTitle(Product $product, string $slotName, string $title): void
+    {
+        // Buscar el Slot
+        $slot = ImageSlot::where(
+            ['name' => $slotName, 'module' => 'products']
+        )->first();
+
+        $image = $product->images()->where('slot_id', $slot->id)->first();
+        
+        if ($image) {
+            $image->update(['title' => $title]);
+        }
     }
 
     private function updateImageAlt(Product $product, string $slotName, string $alt): void

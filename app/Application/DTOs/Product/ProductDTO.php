@@ -20,9 +20,11 @@ class ProductDTO
         // Relaciones y Archivos
         public ?array $categories,        
         public $main_image,
+        public ?string $main_image_title,
         public ?string $main_image_alt, 
 
-        public ?array $gallery, // [['slot' => 'Hero', 'image' => File, 'alt' => '...'], ...]   
+        public ?array $gallery, // [['slot' => 'Hero', 'image' => File, 'alt' => '...'], ...]  
+        public ?array $gallery_title, // esto solo es cuando se actualiza title de imagenes existentes 
         public ?array $gallery_alt, // esto solo es cuando se actualiza alt de imagenes existentes
         
         // Contenido
@@ -48,9 +50,11 @@ class ProductDTO
             categories: $request->input('categories', []), 
             
             main_image: $request->file('main_image'),
+            main_image_title: $request->input('main_image_title'),
             main_image_alt: $request->input('main_image_alt'), 
 
             gallery: self::processGallery($request),
+            gallery_title: $request->input('gallery_title', []),
             gallery_alt: $request->input('gallery_alt', []),
             specifications: $request->input('specifications', []),
             benefits: $request->input('benefits', [])
@@ -69,6 +73,7 @@ class ProductDTO
                 $gallery[] = [
                     'slot' => $item['slot'] ?? 'Gallery',
                     'image' => $imageFile,
+                    'title' => $item['title'] ?? null,
                     'alt' => $item['alt'] ?? null
                 ];
             }
