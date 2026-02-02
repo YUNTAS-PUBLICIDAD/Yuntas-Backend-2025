@@ -124,7 +124,8 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
     Route::prefix('admin/email-productos')->group(function () { // gestión de plantillas de email para productos
         Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'indexByProduct']);
         Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
-    });
+        Route::delete('/', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
+});
     Route::prefix('admin/email-campanas')->group(function () {
         Route::post('/enviar-campana', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviarCampana']);
     });
