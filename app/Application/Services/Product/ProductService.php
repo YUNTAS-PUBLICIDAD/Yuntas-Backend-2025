@@ -8,6 +8,8 @@ use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -44,7 +46,7 @@ class ProductService
     // Crear Producto
     public function create(ProductDTO $dto)
     {
-        return DB::transaction(function () use ($dto) {
+        $product = DB::transaction(function () use ($dto) {
             // 1. Guardar datos básicos
             $product = Product::create([
                 'name' => $dto->name,
@@ -98,18 +100,21 @@ class ProductService
                 $this->saveContentItems($product, 'Beneficios', $dto->benefits);
             }
 
-            $result = $product->load('images', 'categories', 'contentItems');
+            return $product->load('images', 'categories', 'contentItems');
         
-            $this->triggerFrontendRebuild();
-            
-            return $result;
         });
+
+        if (app()->environment('production')) {
+            $this->triggerFrontendRebuild();
+        }
+
+        return $product;
     }
 
     // Actualizar Producto
     public function update(int $id, ProductDTO $dto)
     {
-        return DB::transaction(function () use ($id, $dto) {
+        $product = DB::transaction(function () use ($id, $dto) {
             $product = Product::findOrFail($id);
 
             $product->update([
@@ -188,19 +193,26 @@ class ProductService
                 $this->saveContentItems($product, 'Beneficios', $dto->benefits);
             }
 
-            $result = $product->refresh();
-
-            $this->triggerFrontendRebuild();
-        
-            return $result;
+            return $product->refresh();
         });
+
+        if (app()->environment('production')) {
+            $this->triggerFrontendRebuild();
+        }
+
+        return $product;
     }
 
     public function delete(int $id): void
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
-        $this->triggerFrontendRebuild();
+        DB::transaction(function () use ($id) {
+            $product = Product::findOrFail($id);
+            $product->delete();
+        });
+
+        if (app()->environment('production')) {
+            $this->triggerFrontendRebuild();
+        }
     }
 
 
@@ -350,7 +362,7 @@ class ProductService
     {
         try {
             $token = $this->getGitHubAppToken();
-            $repo = 'YUNTAS-PUBLICIDAD/Yuntas-Frontend-2025';
+            $repo = env('GITHUB_REPO');
 
             $response = Http::withHeaders([
                 'Accept' => 'application/vnd.github+json',
@@ -374,6 +386,7 @@ class ProductService
         }
     }
 
+    // NOTA: no usamos firebase/php-jwt porque da muchos errores al instalarlo en nuestro caso, asi que lo hacemos manualmente
     private function generateJWT(string $privateKey, int $appId): string
     {
         $header = json_encode(['typ' => 'JWT', 'alg' => 'RS256']);
@@ -383,19 +396,28 @@ class ProductService
             'iss' => $appId,
         ]);
 
-        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
-        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+        $base64UrlHeader = $this->base64UrlEncode($header);
+        $base64UrlPayload = $this->base64UrlEncode($payload);
 
         $signature = '';
-        openssl_sign(
+        $success = openssl_sign(
             $base64UrlHeader . "." . $base64UrlPayload,
             $signature,
             $privateKey,
             OPENSSL_ALGO_SHA256
         );
 
-        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+        if (!$success) {
+            throw new \Exception('Failed to sign JWT token');
+        }
+
+        $base64UrlSignature = $this->base64UrlEncode($signature);
 
         return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+    }
+
+    private function base64UrlEncode(string $data): string
+    {
+        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($data));
     }
 }
