@@ -328,32 +328,6 @@ class ProductService
         return $ids;
     }
 
-    private function getGitHubAppToken(): string
-    {
-        $appId = env('GITHUB_APP_ID');
-        $installationId = env('GITHUB_APP_INSTALLATION_ID');
-        
-        $privateKeyPath = env('GITHUB_APP_PRIVATE_KEY_PATH');
-        if ($privateKeyPath && file_exists($privateKeyPath)) {
-            $privateKey = file_get_contents($privateKeyPath);
-        } else {
-            $privateKey = env('GITHUB_APP_PRIVATE_KEY');
-        }
-
-        $jwt = $this->generateJWT($privateKey, $appId);
-
-        $response = Http::withHeaders([
-            'Authorization' => "Bearer {$jwt}",
-            'Accept' => 'application/vnd.github+json',
-            'X-GitHub-Api-Version' => '2022-11-28',
-        ])->post("https://api.github.com/app/installations/{$installationId}/access_tokens");
-
-        if (!$response->successful()) {
-            throw new \Exception('Failed to get GitHub App token: ' . $response->body());
-        }
-
-        return $response->json()['token'];
-    }
 
     /**
      * Trigger GitHub Action for Frontend Rebuild
@@ -377,13 +351,65 @@ class ProductService
             ]);
 
             if ($response->successful()) {
-                Log::info('Frontend rebuild triggered successfully');
+                Log::info('Rebuild del frontend activado correctamente');
             } else {
-                Log::warning('GitHub webhook response: ' . $response->status() . ' - ' . $response->body());
+                Log::warning('Respuesta del webhook de GitHub: ' . $response->status() . ' - ' . $response->body());
             }
         } catch (\Exception $e) {
-            Log::error('Failed to trigger frontend rebuild: ' . $e->getMessage());
+            Log::error('Error al activar el rebuild del frontend: ' . $e->getMessage());
         }
+    }
+
+    private function getGitHubAppToken(): string
+    {
+        $appId = env('GITHUB_APP_ID');
+        $installationId = env('GITHUB_APP_INSTALLATION_ID');
+
+        if (!$appId || !$installationId) {
+            throw new \Exception('Credenciales GITHUB_APP_ID o GITHUB_APP_INSTALLATION_ID no configuradas');
+        }
+        
+        $privateKey = null;
+
+        // Intentar cargar desde archivo
+        $privateKeyPath = env('GITHUB_APP_PRIVATE_KEY_PATH');
+        
+        if ($privateKeyPath) {
+            if (strpos($privateKeyPath, '/') !== 0) {
+                $privateKeyPath = base_path($privateKeyPath);
+            }
+            
+            if (file_exists($privateKeyPath)) {
+                $privateKey = file_get_contents($privateKeyPath);
+            }
+        }
+        
+        if (!$privateKey) { // Intentar cargar desde variable de entorno
+            $privateKey = env('GITHUB_APP_PRIVATE_KEY');
+        }
+        
+        if (!$privateKey) {
+            Log::error('Clave privada de GitHub App no encontrada', [
+                'path' => $privateKeyPath,
+                'exists' => file_exists($privateKeyPath ?? ''),
+                'base_path' => base_path()
+            ]);
+            throw new \Exception('Clave privada de GitHub App no encontrada');
+        }
+
+        $jwt = $this->generateJWT($privateKey, $appId);
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$jwt}",
+            'Accept' => 'application/vnd.github+json',
+            'X-GitHub-Api-Version' => '2022-11-28',
+        ])->post("https://api.github.com/app/installations/{$installationId}/access_tokens");
+
+        if (!$response->successful()) {
+            throw new \Exception('No se pudo obtener el token de la GitHub App: ' . $response->body());
+        }
+
+        return $response->json()['token'];
     }
 
     // NOTA: no usamos firebase/php-jwt porque da muchos errores al instalarlo en nuestro caso, asi que lo hacemos manualmente
@@ -408,7 +434,7 @@ class ProductService
         );
 
         if (!$success) {
-            throw new \Exception('Failed to sign JWT token');
+            throw new \Exception('Error al firmar el token JWT');
         }
 
         $base64UrlSignature = $this->base64UrlEncode($signature);
