@@ -98,7 +98,11 @@ class ProductService
                 $this->saveContentItems($product, 'Beneficios', $dto->benefits);
             }
 
-            return $product->load('images', 'categories', 'contentItems');
+            $result = $product->load('images', 'categories', 'contentItems');
+        
+            $this->triggerFrontendRebuild();
+            
+            return $result;
         });
     }
 
@@ -184,7 +188,11 @@ class ProductService
                 $this->saveContentItems($product, 'Beneficios', $dto->benefits);
             }
 
-            return $product->refresh();
+            $result = $product->refresh();
+
+            $this->triggerFrontendRebuild();
+        
+            return $result;
         });
     }
 
@@ -192,6 +200,7 @@ class ProductService
     {
         $product = Product::findOrFail($id);
         $product->delete();
+        $this->triggerFrontendRebuild();
     }
 
 
@@ -305,5 +314,88 @@ class ProductService
             $ids[] = $category->id;
         }
         return $ids;
+    }
+
+    private function getGitHubAppToken(): string
+    {
+        $appId = env('GITHUB_APP_ID');
+        $installationId = env('GITHUB_APP_INSTALLATION_ID');
+        
+        $privateKeyPath = env('GITHUB_APP_PRIVATE_KEY_PATH');
+        if ($privateKeyPath && file_exists($privateKeyPath)) {
+            $privateKey = file_get_contents($privateKeyPath);
+        } else {
+            $privateKey = env('GITHUB_APP_PRIVATE_KEY');
+        }
+
+        $jwt = $this->generateJWT($privateKey, $appId);
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$jwt}",
+            'Accept' => 'application/vnd.github+json',
+            'X-GitHub-Api-Version' => '2022-11-28',
+        ])->post("https://api.github.com/app/installations/{$installationId}/access_tokens");
+
+        if (!$response->successful()) {
+            throw new \Exception('Failed to get GitHub App token: ' . $response->body());
+        }
+
+        return $response->json()['token'];
+    }
+
+    /**
+     * Trigger GitHub Action for Frontend Rebuild
+     */
+    private function triggerFrontendRebuild(): void
+    {
+        try {
+            $token = $this->getGitHubAppToken();
+            $repo = 'YUNTAS-PUBLICIDAD/Yuntas-Frontend-2025';
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/vnd.github+json',
+                'Authorization' => "Bearer {$token}",
+                'X-GitHub-Api-Version' => '2022-11-28',
+            ])->post("https://api.github.com/repos/{$repo}/dispatches", [
+                'event_type' => 'rebuild-frontend',
+                'client_payload' => [
+                    'triggered_by' => 'product_update',
+                    'timestamp' => now()->toIso8601String(),
+                ],
+            ]);
+
+            if ($response->successful()) {
+                Log::info('Frontend rebuild triggered successfully');
+            } else {
+                Log::warning('GitHub webhook response: ' . $response->status() . ' - ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to trigger frontend rebuild: ' . $e->getMessage());
+        }
+    }
+
+    private function generateJWT(string $privateKey, int $appId): string
+    {
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'RS256']);
+        $payload = json_encode([
+            'iat' => time(),
+            'exp' => time() + 600,
+            'iss' => $appId,
+        ]);
+
+        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+
+        $signature = '';
+        openssl_sign(
+            $base64UrlHeader . "." . $base64UrlPayload,
+            $signature,
+            $privateKey,
+            OPENSSL_ALGO_SHA256
+        );
+
+        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+
+        return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
     }
 }
