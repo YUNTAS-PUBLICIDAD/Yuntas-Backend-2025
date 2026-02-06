@@ -12,12 +12,14 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue:work --queue=default --stop-when-empty --max-time=50')
                  ->everyMinute()
                  ->withoutOverlapping()
-                 ->runInBackground();
+                 ->runInBackground()
+                 ->sendOutputTo('/dev/null');
 
         $schedule->command('queue:work --queue=deployments --stop-when-empty --max-time=50')
                  ->everyMinute()
                  ->withoutOverlapping()
-                 ->runInBackground();
+                 ->runInBackground()
+                 ->sendOutputTo('/dev/null');
     }
 
     protected function commands()
