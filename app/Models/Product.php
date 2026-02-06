@@ -90,39 +90,4 @@ class Product extends Model
     {
         return $this->hasMany(Claim::class);
     }
-
-    /**
-     * Trigger GitHub Action for Frontend Rebuild
-     */
-    public static function triggerDeployment()
-    {
-        $token = env('GH_TOKEN');
-        $repo = env('GH_FRONTEND_REPO'); // example: owner/repo
-
-        if (!$token || !$repo) {
-            \Log::warning('Deployment trigger skipped: GH_TOKEN or GH_FRONTEND_REPO not set.');
-            return;
-        }
-
-        try {
-            \Illuminate\Support\Facades\Http::withToken($token)
-                ->post("https://api.github.com/repos/{$repo}/dispatches", [
-                    'event_type' => 'webhook-rebuild-frontend'
-                ]);
-            \Log::info("Deployment trigger sent to GitHub for repo: {$repo}");
-        } catch (\Exception $e) {
-            \Log::error("Failed to trigger deployment: " . $e->getMessage());
-        }
-    }
-
-    protected static function booted()
-    {
-        static::saved(function ($product) {
-            self::triggerDeployment();
-        });
-
-        static::deleted(function ($product) {
-            self::triggerDeployment();
-        });
-    }
 }

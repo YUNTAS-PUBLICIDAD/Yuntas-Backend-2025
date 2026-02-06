@@ -8,6 +8,9 @@ use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductService
@@ -43,7 +46,7 @@ class ProductService
     // Crear Producto
     public function create(ProductDTO $dto)
     {
-        return DB::transaction(function () use ($dto) {
+        $product = DB::transaction(function () use ($dto) {
             // 1. Guardar datos básicos
             $product = Product::create([
                 'name' => $dto->name,
@@ -98,13 +101,20 @@ class ProductService
             }
 
             return $product->load('images', 'categories', 'contentItems');
+        
         });
+
+        if (app()->environment('production')) {
+            $this->triggerFrontendRebuild();
+        }
+
+        return $product;
     }
 
     // Actualizar Producto
     public function update(int $id, ProductDTO $dto)
     {
-        return DB::transaction(function () use ($id, $dto) {
+        $product = DB::transaction(function () use ($id, $dto) {
             $product = Product::findOrFail($id);
 
             $product->update([
@@ -185,12 +195,24 @@ class ProductService
 
             return $product->refresh();
         });
+
+        if (app()->environment('production')) {
+            $this->triggerFrontendRebuild();
+        }
+
+        return $product;
     }
 
     public function delete(int $id): void
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        DB::transaction(function () use ($id) {
+            $product = Product::findOrFail($id);
+            $product->delete();
+        });
+
+        if (app()->environment('production')) {
+            $this->triggerFrontendRebuild();
+        }
     }
 
 
@@ -201,10 +223,18 @@ class ProductService
             ['name' => $slotName, 'module' => $module]
         );
 
-        // 2. Subir Archivo
-        $path = $file->store('products/' . $product->id . '/' . strtolower($slotName), 'public');
+        // 2. Generar nombre basado en slug del producto
+        $slugName = Str::slug($product->name);
+        $slotLower = strtolower($slotName);
+        $extension = $file->extension();
 
-        // 3. Crear Registro en DB
+        // Formato por ejemplo: proyector-holografico-3d-hero-15.webp
+        $filename = "{$slugName}-{$slotLower}-{$product->id}.{$extension}";
+
+        // 3. Subir Archivo
+        $path = $file->storeAs('products/' . $product->id . '/' . $slotName, $filename, 'public');
+
+        // 4. Crear Registro en DB
         $product->images()->create([
             'slot_id' => $slot->id,
             'url' => '/storage/' . $path,
@@ -296,5 +326,124 @@ class ProductService
             $ids[] = $category->id;
         }
         return $ids;
+    }
+
+
+    /**
+     * Trigger GitHub Action for Frontend Rebuild
+     */
+    private function triggerFrontendRebuild(): void
+    {
+        try {
+            $token = $this->getGitHubAppToken();
+            $repo = env('GITHUB_REPO');
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/vnd.github+json',
+                'Authorization' => "Bearer {$token}",
+                'X-GitHub-Api-Version' => '2022-11-28',
+            ])->post("https://api.github.com/repos/{$repo}/dispatches", [
+                'event_type' => 'rebuild-frontend',
+                'client_payload' => [
+                    'triggered_by' => 'product_update',
+                    'timestamp' => now()->toIso8601String(),
+                ],
+            ]);
+
+            if ($response->successful()) {
+                Log::info('Rebuild del frontend activado correctamente');
+            } else {
+                Log::warning('Respuesta del webhook de GitHub: ' . $response->status() . ' - ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al activar el rebuild del frontend: ' . $e->getMessage());
+        }
+    }
+
+    private function getGitHubAppToken(): string
+    {
+        $appId = env('GITHUB_APP_ID');
+        $installationId = env('GITHUB_APP_INSTALLATION_ID');
+
+        if (!$appId || !$installationId) {
+            throw new \Exception('Credenciales GITHUB_APP_ID o GITHUB_APP_INSTALLATION_ID no configuradas');
+        }
+        
+        $privateKey = null;
+
+        // Intentar cargar desde archivo
+        $privateKeyPath = env('GITHUB_APP_PRIVATE_KEY_PATH');
+        
+        if ($privateKeyPath) {
+            if (strpos($privateKeyPath, '/') !== 0) {
+                $privateKeyPath = base_path($privateKeyPath);
+            }
+            
+            if (file_exists($privateKeyPath)) {
+                $privateKey = file_get_contents($privateKeyPath);
+            }
+        }
+        
+        if (!$privateKey) { // Intentar cargar desde variable de entorno
+            $privateKey = env('GITHUB_APP_PRIVATE_KEY');
+        }
+        
+        if (!$privateKey) {
+            Log::error('Clave privada de GitHub App no encontrada', [
+                'path' => $privateKeyPath,
+                'exists' => file_exists($privateKeyPath ?? ''),
+                'base_path' => base_path()
+            ]);
+            throw new \Exception('Clave privada de GitHub App no encontrada');
+        }
+
+        $jwt = $this->generateJWT($privateKey, $appId);
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$jwt}",
+            'Accept' => 'application/vnd.github+json',
+            'X-GitHub-Api-Version' => '2022-11-28',
+        ])->post("https://api.github.com/app/installations/{$installationId}/access_tokens");
+
+        if (!$response->successful()) {
+            throw new \Exception('No se pudo obtener el token de la GitHub App: ' . $response->body());
+        }
+
+        return $response->json()['token'];
+    }
+
+    // NOTA: no usamos firebase/php-jwt porque da muchos errores al instalarlo en nuestro caso, asi que lo hacemos manualmente
+    private function generateJWT(string $privateKey, int $appId): string
+    {
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'RS256']);
+        $payload = json_encode([
+            'iat' => time(),
+            'exp' => time() + 600,
+            'iss' => $appId,
+        ]);
+
+        $base64UrlHeader = $this->base64UrlEncode($header);
+        $base64UrlPayload = $this->base64UrlEncode($payload);
+
+        $signature = '';
+        $success = openssl_sign(
+            $base64UrlHeader . "." . $base64UrlPayload,
+            $signature,
+            $privateKey,
+            OPENSSL_ALGO_SHA256
+        );
+
+        if (!$success) {
+            throw new \Exception('Error al firmar el token JWT');
+        }
+
+        $base64UrlSignature = $this->base64UrlEncode($signature);
+
+        return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+    }
+
+    private function base64UrlEncode(string $data): string
+    {
+        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($data));
     }
 }
