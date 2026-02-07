@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Jobs\RebuildFrontendJob;
+use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
@@ -103,11 +104,7 @@ class ProductService
         
         });
 
-        if (app()->environment('production')) {
-            RebuildFrontendJob::dispatch()
-                ->delay(now()->addMinutes(2))
-                ->onQueue('deployments');
-        }
+        $this->scheduleRebuild();
 
         return $product;
     }
@@ -197,11 +194,7 @@ class ProductService
             return $product->refresh();
         });
 
-        if (app()->environment('production')) {
-            RebuildFrontendJob::dispatch()
-                ->delay(now()->addMinutes(2))
-                ->onQueue('deployments');
-        }
+        $this->scheduleRebuild();
 
         return $product;
     }
@@ -213,11 +206,7 @@ class ProductService
             $product->delete();
         });
 
-        if (app()->environment('production')) {
-            RebuildFrontendJob::dispatch()
-                ->delay(now()->addMinutes(2))
-                ->onQueue('deployments');
-        }
+        $this->scheduleRebuild();
     }
 
 
@@ -331,5 +320,32 @@ class ProductService
             $ids[] = $category->id;
         }
         return $ids;
+    }
+
+    /**
+     * Encola rebuild
+     */
+    private function scheduleRebuild(): void
+    {
+        if (!app()->environment('production')) {
+            return;
+        }
+
+        Cache::put('frontend_needs_rebuild', true, 3600); // 1 hora
+
+        // Solo encolar si NO hay job pendiente o ejecutándose
+        if (Cache::add('rebuild_job_pending', true, 600)) { // 10 min
+            try {
+                RebuildFrontendJob::dispatch()
+                    ->delay(now()->addMinutes(2)); // para agrupar múltiples cambios en un mismo rebuild, se programa con 2 minutos de delay
+
+                Log::info('Rebuild del frontend programado (se ejecutará en 2 minutos)');
+            } catch (\Exception $e) {
+                Cache::forget('rebuild_job_pending');
+                Log::error('SError al programar rebuild:' . $e->getMessage());
+            }
+        } else {
+            Log::info('Rebuild ya programado, cambio será incluido automáticamente');
+        }
     }
 }

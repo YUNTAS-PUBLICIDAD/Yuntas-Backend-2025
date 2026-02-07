@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 // ==============================================================================
-// 1. AUTENTICACIÓN (IAM)
+//                      AUTENTICACIÓN
 // ==============================================================================
 // ------------------- AUTHENTICATION -------------------
 Route::prefix('auth')->group(function () {
@@ -16,7 +16,7 @@ Route::prefix('auth')->group(function () {
     });
 });
 // ==============================================================================
-// 2. GESTIÓN DE CONTENIDO (CMS)
+//                       GESTIÓN DE CONTENIDO 
 // ==============================================================================
 
 // ------------------- BLOGS -------------------
@@ -41,7 +41,7 @@ Route::prefix('categorias')->group(function () {
 });
 
 // ==============================================================================
-// 3. FORMULARIOS PÚBLICOS (CRM & SOPORTE)
+//                         FORMULARIOS PÚBLICOS
 // ==============================================================================
 // ------------------- RECLAMOS (Claims) -------------------
 Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'store']);
@@ -58,6 +58,33 @@ Route::prefix('email-popup')->group(function () {
 // ------------------- POPUP: WHATSAPP -------------------
 Route::prefix('whatsapp-popup')->group(function () { 
     Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappPopupController::class, 'enviar']);
+});
+
+// ==============================================================================
+//                              WEBHOOKS
+// ==============================================================================
+// ------------------- DEPLOY FRONTEND -------------------
+Route::post('/webhooks/deploy-frontend-complete', function (Request $request) {
+    $token = $request->header('X-GitHub-Token');
+    
+    if ($token !== env('GITHUB_WEBHOOK_TOKEN')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    $status = $request->input('status', 'unknown');
+
+    Cache::forget('rebuild_job_pending');
+    
+    if ($status === 'success') {
+        Log::info('Deploy completado exitosamente');
+    } else {
+        Log::warning('Deploy falló o fue cancelado', ['status' => $status]);
+        Cache::forget('frontend_needs_rebuild');
+    }
+
+    return response()->json([
+        'message' => 'Webhook procesado correctamente'
+    ]);
 });
 
 // ==============================================================================
@@ -125,7 +152,7 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'indexByProduct']);
         Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
         Route::delete('/', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
-});
+    });
     Route::prefix('admin/email-campanas')->group(function () {
         Route::post('/enviar-campana', [App\Http\Controllers\Email\EmailCampanaController::class, 'enviarCampana']);
     });
