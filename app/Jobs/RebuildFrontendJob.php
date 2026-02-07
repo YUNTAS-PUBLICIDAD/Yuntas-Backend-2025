@@ -15,49 +15,22 @@ class RebuildFrontendJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct()
-    {
-        $this->onQueue('deployments'); // job unico para evitar colisiones con otros jobs
-    }
+    public function __construct() {}
 
     public function handle(): void
     {
-        
-
-        try {
-            $token = $this->getGitHubAppToken();
-            $repo = 'YUNTAS-PUBLICIDAD/Yuntas-Frontend-2025';
-
-            Http::withHeaders([
-                'Accept' => 'application/vnd.github+json',
-                'Authorization' => "Bearer {$token}",
-                'X-GitHub-Api-Version' => '2022-11-28',
-            ])->post("https://api.github.com/repos/{$repo}/dispatches", [
-                'event_type' => 'rebuild-frontend',
-                'client_payload' => [
-                    'triggered_by' => 'scheduled_job',
-                    'timestamp' => now()->toIso8601String(),
-                ],
-            ]);
-
-            Log::info('Frontend rebuild triggered successfully');
-        } catch (\Exception $e) {
-            Log::error('Failed to trigger frontend rebuild: ' . $e->getMessage());
-        } finally {
-            optional($lock)->release();
+        // Se verificar si hay cambios pendientes
+        if (!Cache::get('frontend_needs_rebuild')) {
+            Log::info('No hay cambios pendientes');
+            Cache::forget('rebuild_job_pending');
+            return;
         }
-    }
 
-     /**
-     * Trigger GitHub Action for Frontend Rebuild
-     */
-    private function triggerFrontendRebuild(): void
-    {
-        // Lock para evitar builds simultáneos
-        $lock = Cache::lock('frontend-rebuild', 180); // 1 job cada 3 minutos como máximo
+        $lock = Cache::lock('frontend-rebuild-executing', 60); // bloqueo de 1 minuto para evitar ejecuciones concurrentes
 
         if (!$lock->get()) {
-            Log::info('Frontend rebuild skipped: another build in progress');
+            Log::info('Otro build en ejecución, reintentando...');
+            $this->release(60); // Reintenta en 1 min
             return;
         }
 
@@ -72,21 +45,40 @@ class RebuildFrontendJob implements ShouldQueue
             ])->post("https://api.github.com/repos/{$repo}/dispatches", [
                 'event_type' => 'rebuild-frontend',
                 'client_payload' => [
-                    'triggered_by' => 'product_update',
+                    'triggered_by' => 'scheduled_job',
                     'timestamp' => now()->toIso8601String(),
                 ],
             ]);
 
             if ($response->successful()) {
                 Log::info('Rebuild del frontend activado correctamente');
+                Cache::forget('frontend_needs_rebuild');
             } else {
                 Log::warning('Respuesta del webhook de GitHub: ' . $response->status() . ' - ' . $response->body());
             }
         } catch (\Exception $e) {
-            Log::error('Error al activar el rebuild del frontend: ' . $e->getMessage());
+            Log::error('Error al disparar rebuild', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            Cache::forget('rebuild_job_pending');
+            $this->release(120); // Reintenta en 2 min
         } finally {
             optional($lock)->release();
         }
+    }
+
+    /**
+     * Se ejecuta si el job falla completamente después de todos los reintentos
+     */
+    public function failed(\Throwable $exception)
+    {
+        Log::error('RebuildFrontendJob falló definitivamente', [
+            'error' => $exception->getMessage(),
+        ]);
+        
+        Cache::forget('rebuild_job_pending');
+        Cache::forget('frontend_needs_rebuild');
     }
 
     private function getGitHubAppToken(): string
