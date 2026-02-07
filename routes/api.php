@@ -64,27 +64,8 @@ Route::prefix('whatsapp-popup')->group(function () {
 //                              WEBHOOKS
 // ==============================================================================
 // ------------------- DEPLOY FRONTEND -------------------
-Route::post('/webhooks/deploy-frontend-complete', function (Request $request) {
-    $token = $request->header('X-GitHub-Token');
-    
-    if ($token !== env('WEBHOOK_TOKEN')) {
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
-
-    $status = $request->input('status', 'unknown');
-
-    Cache::forget('rebuild_job_pending');
-    
-    if ($status === 'success') {
-        Log::info('Deploy completado exitosamente');
-    } else {
-        Log::warning('Deploy falló o fue cancelado', ['status' => $status]);
-        Cache::forget('frontend_needs_rebuild');
-    }
-
-    return response()->json([
-        'message' => 'Webhook procesado correctamente'
-    ]);
+Route::prefix('webhooks')-> group(function () {
+    Route::post('/deploy-frontend-complete', [App\Http\Controllers\Webhooks\WebhooksController::class, 'deployFrontend']);
 });
 
 // ==============================================================================
