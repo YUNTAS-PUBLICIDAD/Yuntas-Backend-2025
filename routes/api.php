@@ -67,7 +67,7 @@ Route::prefix('whatsapp-popup')->group(function () {
 Route::post('/webhooks/deploy-frontend-complete', function (Request $request) {
     $token = $request->header('X-GitHub-Token');
     
-    if ($token !== env('GITHUB_WEBHOOK_TOKEN')) {
+    if ($token !== env('WEBHOOK_TOKEN')) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
