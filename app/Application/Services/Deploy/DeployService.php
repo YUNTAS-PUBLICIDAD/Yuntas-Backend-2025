@@ -1,40 +1,45 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Application\Services\Deploy;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
-class RebuildFrontendJob implements ShouldQueue
+class DeployService
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    private const DEPLOY_IN_PROGRESS_KEY = 'deploy_en_proceso';
+    private const DEPLOY_LOCK_TTL = 360; // 6 minutos máximo si algo sale mal
 
-    public function __construct() {}
-
-    public function handle(): void
+    public function triggerDeploy(): array
     {
-        // Se verificar si hay cambios pendientes
-        if (!Cache::get('frontend_needs_rebuild')) {
-            Log::info('No hay cambios pendientes');
-            Cache::forget('rebuild_job_pending');
-            return;
+
+        // Verificar si hay un deploy en progreso
+        if ($this->isDeployInProgress()) {
+            $startedAt = \Carbon\Carbon::parse(Cache::get(self::DEPLOY_IN_PROGRESS_KEY));
+            $elapsed = $startedAt->diffInSeconds(now());
+            $elapsedMinutes = (int) ($elapsed / 60);
+            $elapsedSeconds = $elapsed % 60;
+            
+            Log::info('Intento de deploy bloqueado - Deploy en progreso', [
+                'started_at' => $startedAt->toIso8601String(),
+                'now' => now()->toIso8601String(),
+                'elapsed_seconds' => $elapsed
+            ]);
+
+            $timeText = $elapsedMinutes > 0 
+                ? "{$elapsedMinutes}m {$elapsedSeconds}s"
+                : "{$elapsedSeconds}s";
+            
+            return [
+                'success' => false,
+                'message' => "Ya hay un deploy en progreso. Por favor espera a que termine. Tiempo transcurrido: {$timeText}."
+            ];
         }
-
-        $lock = Cache::lock('frontend-rebuild-executing', 60); // bloqueo de 1 minuto para evitar ejecuciones concurrentes
-
-        if (!$lock->get()) {
-            Log::info('Otro build en ejecución, reintentando...');
-            $this->release(60); // Reintenta en 1 min
-            return;
-        }
-
         try {
+            // Marcar inicio del deploy
+            $this->markDeployInProgress();
+
             $token = $this->getGitHubAppToken();
             $repo = env('GITHUB_REPO');
 
@@ -45,40 +50,59 @@ class RebuildFrontendJob implements ShouldQueue
             ])->post("https://api.github.com/repos/{$repo}/dispatches", [
                 'event_type' => 'rebuild-frontend',
                 'client_payload' => [
-                    'triggered_by' => 'scheduled_job',
+                    'triggered_by' => 'manual',
                     'timestamp' => now()->toIso8601String(),
                 ],
             ]);
 
             if ($response->successful()) {
-                Log::info('Rebuild del frontend activado correctamente');
-                Cache::forget('frontend_needs_rebuild');
-            } else {
-                Log::warning('Respuesta del webhook de GitHub: ' . $response->status() . ' - ' . $response->body());
+                Log::info('Deploy del frontend activado correctamente');
+                return [
+                    'success' => true,
+                    'message' => 'Deploy iniciado correctamente. El proceso puede tardar minutos.',
+                ];
             }
+
+            // Si falla la petición, liberar el lock
+            $this->releaseDeployLock();
+
+            Log::warning('Respuesta del webhook de GitHub', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al iniciar deploy',
+            ];
+
         } catch (\Exception $e) {
-            Log::error('Error al disparar rebuild', [
+            $this->releaseDeployLock();
+            Log::error('Error al disparar deploy', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            Cache::forget('rebuild_job_pending');
-            $this->release(120); // Reintenta en 2 min
-        } finally {
-            optional($lock)->release();
+
+            return [
+                'success' => false,
+                'message' => 'Error al iniciar deploy: ' . $e->getMessage()
+            ];
         }
     }
 
-    /**
-     * Se ejecuta si el job falla completamente después de todos los reintentos
-     */
-    public function failed(\Throwable $exception)
+    public function isDeployInProgress(): bool
     {
-        Log::error('RebuildFrontendJob falló definitivamente', [
-            'error' => $exception->getMessage(),
-        ]);
-        
-        Cache::forget('rebuild_job_pending');
-        Cache::forget('frontend_needs_rebuild');
+        return Cache::has(self::DEPLOY_IN_PROGRESS_KEY);
+    }
+
+    public function markDeployInProgress(): void
+    {
+        Cache::put(self::DEPLOY_IN_PROGRESS_KEY, now()->toIso8601String(), self::DEPLOY_LOCK_TTL);
+    }
+
+    public function releaseDeployLock(): void
+    {
+        Cache::forget(self::DEPLOY_IN_PROGRESS_KEY);
     }
 
     private function getGitHubAppToken(): string
