@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
+use App\Application\Services\Deploy\DeployService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class WebhooksController extends Controller
 {
+    public function __construct(
+        private DeployService $deployService
+    ) {}
+
     public function deployFrontend(Request $request)
     {
         $token = $request->header('X-GitHub-Token');
@@ -19,17 +23,17 @@ class WebhooksController extends Controller
 
         $status = $request->input('status', 'unknown');
 
-        Cache::forget('rebuild_job_pending');
+        $this->deployService->releaseDeployLock(); 
         
         if ($status === 'success') {
             Log::info('Deploy completado exitosamente');
         } else {
             Log::warning('Deploy falló o fue cancelado', ['status' => $status]);
-            Cache::forget('frontend_needs_rebuild');
         }
 
         return response()->json([
-            'message' => 'Webhook procesado correctamente'
+            'message' => 'Webhook procesado correctamente',
+            'status' => $status
         ]);
     }
 }
