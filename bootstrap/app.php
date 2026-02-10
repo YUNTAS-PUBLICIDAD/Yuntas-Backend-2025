@@ -15,7 +15,30 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+        
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                abort(401, 'No autenticado.');
+            }
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'No autenticado. Token inválido o expirado.',
+                    'error' => 'Unauthenticated'
+                ], 401);
+            }
+        });
+        
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Endpoint no encontrado.',
+                    'error' => 'Not Found'
+                ], 404);
+            }
+        });
     })->create();
