@@ -22,10 +22,7 @@ Route::prefix('auth')->group(function () {
 // ------------------- BLOGS -------------------
 Route::prefix('blogs')->group(function () {
     Route::get('/', [App\Http\Controllers\Blog\BlogController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Blog\BlogController::class, 'store']);
     Route::get('/{slug}', [App\Http\Controllers\Blog\BlogController::class, 'show']);
-    Route::delete('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'destroy']);
-    Route::put('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
 });
 
 // ------------------- PRODUCTOS -------------------
@@ -119,6 +116,13 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::get('/', [App\Http\Controllers\CRM\LeadController::class, 'index']);  
         Route::put('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\CRM\LeadController::class, 'destroy']);
+    });
+
+    // ------------------- BLOGS -------------------
+    Route::prefix('admin/blogs')->group(function () {
+        Route::post('/', [App\Http\Controllers\Blog\BlogController::class, 'store']);
+        Route::delete('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'destroy']);
+        Route::put('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
     });
 
     // ------------------- PRODUCTOS -------------------
