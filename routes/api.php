@@ -5,8 +5,7 @@ use Illuminate\Support\Facades\Route;
 // ==============================================================================
 //                      AUTENTICACIÓN
 // ==============================================================================
-// ------------------- AUTHENTICATION -------------------
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     // público
     Route::post('login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
     // Rutas protegidas (Requieren Token)
@@ -20,20 +19,19 @@ Route::prefix('auth')->group(function () {
 // ==============================================================================
 
 // ------------------- BLOGS -------------------
-Route::prefix('blogs')->group(function () {
+Route::prefix('blogs')->middleware('throttle:public')->group(function () {
     Route::get('/', [App\Http\Controllers\Blog\BlogController::class, 'index']);
     Route::get('/{slug}', [App\Http\Controllers\Blog\BlogController::class, 'show']);
 });
 
 // ------------------- PRODUCTOS -------------------
-Route::prefix('productos')->group(function () {
+Route::prefix('productos')->middleware('throttle:public')->group(function () {
     Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
     Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
 });
 
 // ------------------- CATEGORÍAS (Público) -------------------
-Route::prefix('categorias')->group(function () {
-    // Endpoints públicos de categorías (listado, detalle, etc.)
+Route::prefix('categorias')->middleware('throttle:public')->group(function () {
     Route::get('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'index']);
 });
 
@@ -41,19 +39,19 @@ Route::prefix('categorias')->group(function () {
 //                         FORMULARIOS PÚBLICOS
 // ==============================================================================
 // ------------------- RECLAMOS (Claims) -------------------
-Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'store']);
+Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'store'])->middleware('throttle:forms');
 // ------------------- CONTACTO (Soporte) -------------------
-Route::prefix('contacto')->group(function () {
-Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
+Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
+    Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
 });
 
 // ------------------- POPUP: EMAIL -------------------
-Route::prefix('email-popup')->group(function () {
+Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
     Route::post('/enviar', [App\Http\Controllers\Email\EmailPopupController::class, 'enviar']);
 });
 
 // ------------------- POPUP: WHATSAPP -------------------
-Route::prefix('whatsapp-popup')->group(function () { 
+Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () { 
     Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappPopupController::class, 'enviar']);
 });
 
@@ -61,14 +59,14 @@ Route::prefix('whatsapp-popup')->group(function () {
 //                              WEBHOOKS
 // ==============================================================================
 // ------------------- DEPLOY FRONTEND -------------------
-Route::prefix('webhooks')-> group(function () {
+Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
     Route::post('/deploy-frontend-complete', [App\Http\Controllers\Webhooks\WebhooksController::class, 'deployFrontend']);
 });
 
 // ==============================================================================
 //                          ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
-Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admin'])->group(function () {
 
     // ------------------- USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
@@ -77,8 +75,6 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::get('/{id}', [App\Http\Controllers\Admin\UserController::class, 'show']);
         Route::put('/{id}', [App\Http\Controllers\Admin\UserController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy']);
-        
-        // Asignar rol manualmente
         Route::post('/{id}/role', [App\Http\Controllers\Admin\UserController::class, 'assignRole']);
     });
 
@@ -126,7 +122,7 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
     });
 
     // ------------------- PRODUCTOS -------------------
-    Route::prefix('admin/productos')->group(function () {
+    Route::prefix('admin/productos')->middleware('throttle:uploads')->group(function () {
         Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
         Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
         Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
