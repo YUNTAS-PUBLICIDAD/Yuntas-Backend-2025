@@ -13,9 +13,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Jobs\RebuildFrontendJob;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Traits\ValidatesImageSecurity;
 
 class ProductService
 {
+    use ValidatesImageSecurity;
+    
     public function __construct() {}
 
     public function getAll(int $perPage = 10)
@@ -208,6 +211,9 @@ class ProductService
 
     private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
+        // Validar seguridad de la imagen
+        $this->validateImageSecurity($file);
+
         // 1. Buscar o Crear el Slot
         $slot = ImageSlot::firstOrCreate(
             ['name' => $slotName, 'module' => $module]
@@ -239,6 +245,7 @@ class ProductService
         $slot = ImageSlot::where(
             ['name' => $slotName, 'module' => 'products']
         )->first();
+        if (!$slot) return;
 
         $image = $product->images()->where('slot_id', $slot->id)->first();
         
@@ -253,6 +260,8 @@ class ProductService
         $slot = ImageSlot::where(
             ['name' => $slotName, 'module' => 'products']
         )->first();
+
+        if (!$slot) return;
 
         $image = $product->images()->where('slot_id', $slot->id)->first();
         
