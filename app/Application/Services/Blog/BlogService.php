@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use App\Traits\ValidatesImageSecurity;
 
 class BlogService
 {
+    use ValidatesImageSecurity;
+
     public function __construct(
         private BlogRepositoryInterface $repository
     ) {}
@@ -133,6 +136,8 @@ class BlogService
 
     private function saveMainImage($blog, UploadedFile $image, ?string $altText)
     {
+        $this->validateImageSecurity($image);
+
         $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'blogs']);
         
         // Borrar anterior
@@ -158,6 +163,8 @@ class BlogService
         
         foreach ($images as $index => $img) {
             if (!$img instanceof UploadedFile) continue;
+            
+            $this->validateImageSecurity($img);
             
             $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
             $altText = $alts[$index] ?? $blog->title; 
@@ -193,6 +200,8 @@ class BlogService
     foreach ($images as $index => $img) {
         if (!$img instanceof UploadedFile) continue;
 
+        $this->validateImageSecurity($img);
+        
         $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
         $altText = $alts[$index] ?? $blog->title;
 

@@ -1,3 +1,4 @@
 *
 !plantillas/
 !.gitignore
+!.htaccess
