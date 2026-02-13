@@ -288,8 +288,8 @@ class ProductService
         }
 
         // Validar tamaño
-        if ($file->getSize() > 5242880) { // 5MB
-            throw new \InvalidArgumentException('La imagen es demasiado grande. Máximo 5MB.');
+        if ($file->getSize() > 2097152) { //2MB
+            throw new \InvalidArgumentException('La imagen es demasiado grande. 2MB.');
         }
 
         // Validar dimensiones máximas
