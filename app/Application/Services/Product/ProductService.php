@@ -51,6 +51,7 @@ class ProductService
     // Crear Producto
     public function create(ProductDTO $dto)
     {
+        $this->preValidateImages($dto);
         $dto = $this->sanitizeProductInput($dto);
 
         $product = DB::transaction(function () use ($dto) {
@@ -117,6 +118,7 @@ class ProductService
     // Actualizar Producto
     public function update(int $id, ProductDTO $dto)
     {
+        $this->preValidateImages($dto);
         $dto = $this->sanitizeProductInput($dto);
 
         $product = DB::transaction(function () use ($id, $dto) {
@@ -219,9 +221,6 @@ class ProductService
         $slotName = $this->validateProductSlot($slotName);
         $title = $this->sanitizeText($title);
         $altText = $this->sanitizeText($altText);
-
-        // Validar seguridad de la imagen
-        $this->validateImageSecurity($file);
 
         // 1. Buscar o Crear el Slot
         $slot = ImageSlot::firstOrCreate(
@@ -334,6 +333,23 @@ class ProductService
             $ids[] = $category->id;
         }
         return $ids;
+    }
+
+    private function preValidateImages(ProductDTO $dto): void
+    {
+        // Validar imagen principal
+        if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
+            $this->validateImageSecurity($dto->main_image);
+        }
+
+        // Validar imágenes de galería
+        if (!empty($dto->gallery)) {
+            foreach ($dto->gallery as $item) {
+                if (isset($item['image']) && $item['image'] instanceof \Illuminate\Http\UploadedFile) {
+                    $this->validateImageSecurity($item['image']);
+                }
+            }
+        }
     }
 
     // Sanitización de Inputs específicos para Producto
