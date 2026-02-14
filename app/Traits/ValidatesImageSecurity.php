@@ -81,7 +81,6 @@ trait ValidatesImageSecurity
                 
                 foreach ($suspiciousPatterns as $pattern) {
                     if (strpos($searchContent, strtolower($pattern)) !== false) {
-                        // NO hacer fclose() aquí - se maneja en finally
                         Log::warning("Contenido malicioso detectado: {$pattern} en archivo", [
                             'file' => basename($filePath),
                             'position' => $position,
@@ -99,7 +98,6 @@ trait ValidatesImageSecurity
                 }
             }
         } finally {
-            // Solo cerrar si el handle sigue siendo válido
             if (is_resource($handle)) {
                 fclose($handle);
             }

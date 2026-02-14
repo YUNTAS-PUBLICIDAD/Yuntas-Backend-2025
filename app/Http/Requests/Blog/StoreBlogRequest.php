@@ -25,13 +25,13 @@ class StoreBlogRequest extends FormRequest
 
             // Imagen Principal
             'imagen_principal' => 'required|image|mimes:webp|max:5120',
-            'imagen_principal_alt' => 'nullable|string|max:191',
+            'imagen_principal_alt' => 'nullable|string|max:80',
 
             // Galería
             'imagenes' => 'nullable|array', 
             'imagenes.*' => 'image|mimes:webp|max:5120',
             'imagenes_alts' => 'nullable|array', 
-            'imagenes_alts.*' => 'nullable|string|max:191',
+            'imagenes_alts.*' => 'nullable|string|max:80',
 
             // Categorías
             'categorias' => 'nullable|array', 
