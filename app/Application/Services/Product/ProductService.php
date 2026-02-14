@@ -14,10 +14,11 @@ use App\Jobs\RebuildFrontendJob;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use App\Traits\ValidatesImageSecurity;
+use App\Traits\SanitizesInput;
 
 class ProductService
 {
-    use ValidatesImageSecurity;
+    use ValidatesImageSecurity, SanitizesInput;
     
     public function __construct() {}
 
@@ -50,6 +51,8 @@ class ProductService
     // Crear Producto
     public function create(ProductDTO $dto)
     {
+        $dto = $this->sanitizeProductInput($dto);
+
         $product = DB::transaction(function () use ($dto) {
             // 1. Guardar datos básicos
             $product = Product::create([
@@ -114,6 +117,8 @@ class ProductService
     // Actualizar Producto
     public function update(int $id, ProductDTO $dto)
     {
+        $dto = $this->sanitizeProductInput($dto);
+
         $product = DB::transaction(function () use ($id, $dto) {
             $product = Product::findOrFail($id);
 
@@ -211,6 +216,10 @@ class ProductService
 
     private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
+        $slotName = $this->validateProductSlot($slotName);
+        $title = $this->sanitizeText($title);
+        $altText = $this->sanitizeText($altText);
+
         // Validar seguridad de la imagen
         $this->validateImageSecurity($file);
 
@@ -325,5 +334,39 @@ class ProductService
             $ids[] = $category->id;
         }
         return $ids;
+    }
+
+    // Sanitización de Inputs específicos para Producto
+    private function sanitizeProductInput(ProductDTO $dto): ProductDTO
+    {
+        // Sanitizar campos de texto
+        $dto->name = $this->sanitizeText($dto->name);
+        $dto->hero_title = $this->sanitizeText($dto->hero_title);
+        $dto->description = $this->sanitizeHtml($dto->description);
+        $dto->meta_title = $this->sanitizeText($dto->meta_title);
+        $dto->meta_description = $this->sanitizeText($dto->meta_description);
+        $dto->keywords = $this->sanitizeKeywords($dto->keywords);
+        $dto->slug = $this->sanitizeSlug($dto->slug);
+        $dto->price = $this->sanitizeFloat($dto->price);
+
+        // Sanitizar arrays
+        if ($dto->specifications) {
+            $dto->specifications = $this->sanitizeArray($dto->specifications);
+        }
+        if ($dto->benefits) {
+            $dto->benefits = $this->sanitizeArray($dto->benefits);
+        }
+        if ($dto->categories) {
+            $dto->categories = $this->sanitizeArray($dto->categories);
+        }
+
+        return $dto;
+    }
+
+    // Validación específica para slots de productos
+    private function validateProductSlot(string $slotName): string
+    {
+        $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'Popups', 'Gallery'];
+        return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
     }
 }
