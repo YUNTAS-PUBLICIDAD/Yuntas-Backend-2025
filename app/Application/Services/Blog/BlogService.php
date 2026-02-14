@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use App\Traits\ValidatesImageSecurity;
+use Illuminate\Support\Facades\Log;
 
 class BlogService
 {
@@ -34,6 +35,9 @@ class BlogService
 
     public function create(BlogDTO $dto)
     {
+        $this->preValidateBlogImages($dto);
+        $dto = $this->sanitizeBlogInput($dto);
+
         return DB::transaction(function () use ($dto) {
             // 1. Crear Datos Básicos
             $blog = $this->repository->save([
@@ -75,6 +79,9 @@ class BlogService
 
     public function update(int $id, BlogDTO $dto)
     {
+        $this->preValidateBlogImages($dto);
+        $dto = $this->sanitizeBlogInput($dto);
+
         return DB::transaction(function () use ($id, $dto) {
             $blog = $this->repository->findById($id);
             if (!$blog) throw new ModelNotFoundException("Artículo de blog no encontrado");
@@ -252,5 +259,54 @@ class BlogService
                 ]);
             }
         }
+    }
+
+    /**
+     * Pre-validación de seguridad de imágenes antes del procesamiento
+     */
+    private function preValidateBlogImages(BlogDTO $dto): void
+    {
+        // Validar imagen principal
+        if ($dto->main_image instanceof UploadedFile) {
+            $this->validateImageSecurity($dto->main_image);
+        }
+
+        // Validar imágenes de galería
+        if (!empty($dto->gallery_images)) {
+            foreach ($dto->gallery_images as $image) {
+                if ($image instanceof UploadedFile) {
+                    $this->validateImageSecurity($image);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sanitización completa de todos los campos del BlogDTO
+     */
+    private function sanitizeBlogInput(BlogDTO $dto): BlogDTO
+    {
+        $dto->title = $this->sanitizeText($dto->title);
+        $dto->slug = $this->sanitizeSlug($dto->slug);
+        $dto->cover_subtitle = $this->sanitizeText($dto->cover_subtitle);
+        $dto->meta_title = $this->sanitizeText($dto->meta_title);
+        $dto->meta_description = $this->sanitizeText($dto->meta_description);
+        $dto->content = $this->sanitizeHtml($dto->content);
+
+        if ($dto->video_url) {
+            $dto->video_url = $this->sanitizeUrl($dto->video_url);
+        }
+
+        if ($dto->product_id) {
+            $dto->product_id = $this->sanitizeInteger($dto->product_id);
+        }
+
+        if ($dto->main_image_alt) {
+            $dto->main_image_alt = $this->sanitizeText($dto->main_image_alt);
+        }
+
+        /** FALTA SANITIZAR MAS CAMPOS, PERO POR AHORA SOLO ESTOS */
+
+        return $dto;
     }
 }
