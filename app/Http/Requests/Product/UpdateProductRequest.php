@@ -36,13 +36,15 @@ class UpdateProductRequest extends FormRequest
             'keywords' => 'nullable', 
             
             // Imagen Principal
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'main_image' => 'nullable|image|mimes:webp|max:5120',
+            'main_image_title' => 'nullable|string|max:191',
             'main_image_alt' => 'nullable|string|max:191', 
 
             // Galería
             'gallery' => 'nullable|array',
             'gallery.*.slot' => 'nullable|string|in:Hero,Specs,Benefits,Popups,Gallery',
-            'gallery.*.image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'gallery.*.image' => 'nullable|image|mimes:webp|max:5120',
+            'gallery.*.title' => 'nullable|string|max:191',
             'gallery.*.alt' => 'nullable|string|max:191',
             'gallery_alt.*' => 'nullable|string|max:255',
 
