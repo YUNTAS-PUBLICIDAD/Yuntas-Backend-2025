@@ -21,11 +21,11 @@ class UpdateBlogRequest extends FormRequest
 
             'etiqueta' => 'nullable',
 
-            'imagen_principal' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'imagen_principal' => 'image|mimes:webp|max:5120',
             'imagen_principal_alt' => 'nullable|string|max:191',
 
             'imagenes' => 'nullable|array',
-            'imagenes.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'imagenes.*' => 'image|mimes:webp|max:5120',
 
             'imagenes_alts' => 'nullable|array',
             'imagenes_alts.*' => 'nullable|string|max:191',

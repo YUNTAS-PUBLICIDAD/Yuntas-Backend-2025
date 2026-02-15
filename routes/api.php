@@ -19,10 +19,9 @@ use App\Http\Controllers\Whatsapp\WhatsappCampanaController;
 use App\Http\Controllers\Admin\MessageStatsController;
 
 // ==============================================================================
-// 1. AUTENTICACIÓN (IAM)
+//                      AUTENTICACIÓN
 // ==============================================================================
-// ------------------- AUTHENTICATION -------------------
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     // público
     Route::post('login', [AuthController::class, 'login']);
     // Rutas protegidas (Requieren Token)
@@ -32,62 +31,67 @@ Route::prefix('auth')->group(function () {
     });
 });
 // ==============================================================================
-// 2. GESTIÓN DE CONTENIDO (CMS)
+//                       GESTIÓN DE CONTENIDO 
 // ==============================================================================
 
 // ------------------- BLOGS -------------------
-Route::prefix('blogs')->group(function () {
-    Route::get('/', [BlogController::class, 'index']);
-    Route::get('/{slug}', [BlogController::class, 'show']);
+Route::prefix('blogs')->middleware('throttle:public')->group(function () {
+    Route::get('/', [App\Http\Controllers\Blog\BlogController::class, 'index']);
+    Route::get('/{slug}', [App\Http\Controllers\Blog\BlogController::class, 'show']);
 });
 
 // ------------------- PRODUCTOS -------------------
-Route::prefix('productos')->group(function () {
-    Route::get('/', [ProductController::class, 'index']); 
-    Route::get('/{slug}', [ProductController::class, 'show']);
+Route::prefix('productos')->middleware('throttle:public')->group(function () {
+    Route::get('/', [App\Http\Controllers\Product\ProductController::class, 'index']); 
+    Route::get('/{slug}', [App\Http\Controllers\Product\ProductController::class, 'show']);
 });
 
 // ------------------- CATEGORÍAS (Público) -------------------
-Route::prefix('categorias')->group(function () {
-    // Endpoints públicos de categorías (listado, detalle, etc.)
-    Route::get('/', [CategoryController::class, 'index']);
+Route::prefix('categorias')->middleware('throttle:public')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\Category\CategoryController::class, 'index']);
 });
 
 // ==============================================================================
-// 3. FORMULARIOS PÚBLICOS (CRM & SOPORTE)
+//                         FORMULARIOS PÚBLICOS
 // ==============================================================================
 // ------------------- RECLAMOS (Claims) -------------------
-Route::post('claims', [ClaimController::class, 'store']);
+Route::post('claims', [App\Http\Controllers\Support\ClaimController::class, 'store'])->middleware('throttle:forms');
 // ------------------- CONTACTO (Soporte) -------------------
-Route::prefix('contacto')->group(function () {
-    Route::post('/', [ContactMessageController::class, 'store']);
+Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
+    Route::post('/', [App\Http\Controllers\Support\ContactMessageController::class, 'store']);
 });
 
 // ------------------- POPUP: EMAIL -------------------
-Route::prefix('email-popup')->group(function () {
-    Route::post('/enviar', [EmailPopupController::class, 'enviar']);
+Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
+    Route::post('/enviar', [App\Http\Controllers\Email\EmailPopupController::class, 'enviar']);
 });
 
 // ------------------- POPUP: WHATSAPP -------------------
-Route::prefix('whatsapp-popup')->group(function () { 
-    Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
+Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () { 
+    Route::post('/enviar', [App\Http\Controllers\Whatsapp\WhatsappPopupController::class, 'enviar']);
+});
+
+// ==============================================================================
+//                              WEBHOOKS
+// ==============================================================================
+// ------------------- DEPLOY FRONTEND -------------------
+Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
+    Route::post('/deploy-frontend-complete', [App\Http\Controllers\Webhooks\WebhooksController::class, 'deployFrontend']);
 });
 
 // ==============================================================================
 //                          ADMINISTRACIÓN (ADMIN PANEL)
 // ==============================================================================
-Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admin'])->group(function () {
 
     // ------------------- USUARIOS -------------------
     Route::prefix('admin/users')->group(function () {
-        Route::get('/', [UserController::class, 'index']);
-        Route::post('/', [UserController::class, 'store']);
-        Route::get('/{id}', [UserController::class, 'show']);
-        Route::put('/{id}', [UserController::class, 'update']);
-        Route::delete('/{id}', [UserController::class, 'destroy']);
-        
-        // Asignar rol manualmente
-        Route::post('/{id}/role', [UserController::class, 'assignRole']);
+        Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\Admin\UserController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\Admin\UserController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\Admin\UserController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy']);
+        Route::post('/{id}/role', [App\Http\Controllers\Admin\UserController::class, 'assignRole']);
     });
 
     // ------------------- CATEGORÍAS -------------------
@@ -126,24 +130,25 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::delete('/{id}', [LeadController::class, 'destroy']);
     });
 
-    // ------------------- PRODUCTOS -------------------
-    Route::prefix('admin/productos')->group(function () {
-        Route::post('/', [ProductController::class, 'store']);
-        Route::post('/{id}', [ProductController::class, 'update']);
-        Route::delete('/{id}', [ProductController::class, 'destroy']);
-    });
-
     // ------------------- BLOGS -------------------
     Route::prefix('admin/blogs')->group(function () {
-        Route::post('/', [BlogController::class, 'store']);
-        Route::put('/{id}', [BlogController::class, 'update']);
-        Route::delete('/{id}', [BlogController::class, 'destroy']);
+        Route::post('/', [App\Http\Controllers\Blog\BlogController::class, 'store']);
+        Route::delete('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'destroy']);
+        Route::put('/{id}', [App\Http\Controllers\Blog\BlogController::class, 'update']);
+    });
+
+    // ------------------- PRODUCTOS -------------------
+    Route::prefix('admin/productos')->middleware('throttle:uploads')->group(function () {
+        Route::post('/', [App\Http\Controllers\Product\ProductController::class, 'store']);
+        Route::post('/{id}', [App\Http\Controllers\Product\ProductController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Product\ProductController::class, 'destroy']);
     });
 
     // ------------------- PRODUCTOS: EMAIL -------------------
     Route::prefix('admin/email-productos')->group(function () { // gestión de plantillas de email para productos
-        Route::get('/', [EmailProductController::class, 'indexByProduct']);
-        Route::post('/', [EmailProductController::class, 'store']);
+        Route::get('/', [App\Http\Controllers\Email\EmailProductController::class, 'indexByProduct']);
+        Route::post('/', [App\Http\Controllers\Email\EmailProductController::class, 'store']);
+        Route::delete('/', [App\Http\Controllers\Email\EmailProductController::class, 'destroy']);
     });
     Route::prefix('admin/email-campanas')->group(function () {
         Route::post('/enviar-campana', [EmailCampanaController::class, 'enviarCampana']);
@@ -161,9 +166,8 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas'])->group(functi
         Route::post('/enviar-campana', [WhatsappCampanaController::class, 'enviarCampana']);
     });
 
-    // ------------------- STATS DE MENSAJES (WHATSAPP Y EMAIL) -------------------
-    Route::prefix('admin/message-stats')->group(function () {
-        Route::get('/', [MessageStatsController::class, 'index']); // Stats por lead
-        Route::get('/totals', [MessageStatsController::class, 'totals']); // Stats globales
+    // ------------------- DEPLOY FRONTEND -------------------
+    Route::prefix('admin/deploy')->group(function () {
+        Route::post('/trigger', [App\Http\Controllers\Deploy\DeployController::class, 'trigger']);
     });
 });

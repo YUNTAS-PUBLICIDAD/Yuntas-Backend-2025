@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\InicioMailing;
 use App\Mail\ProductosMailing;
 use App\Models\Lead;
+use App\Models\EmailMessage;
 use Illuminate\Support\Facades\Log;
 
 class EmailPopupController extends Controller

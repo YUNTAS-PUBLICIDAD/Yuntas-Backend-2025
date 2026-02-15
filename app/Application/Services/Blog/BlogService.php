@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use App\Traits\ValidatesImageSecurity;
 
 class BlogService
 {
+    use ValidatesImageSecurity;
+
     public function __construct(
         private BlogRepositoryInterface $repository
     ) {}
@@ -99,11 +102,15 @@ class BlogService
                 $this->saveMainImage($blog, $dto->main_image, $dto->main_image_alt);
             }
 
-            // 4. Galería 
-            if (!empty($dto->gallery_images)) {
-                $this->saveGalleryImages($blog, $dto->gallery_images, $dto->gallery_alts);
-            }
-
+           
+           // 4. Galería (REEMPLAZAR)
+        if (is_array($dto->gallery_images)) {
+            $this->replaceGalleryImages(
+             $blog,
+              $dto->gallery_images,
+                $dto->gallery_alts
+    );
+}
             // 5. Contenido Dinámico 
             $this->saveContent($blog, $dto);
 
@@ -129,6 +136,8 @@ class BlogService
 
     private function saveMainImage($blog, UploadedFile $image, ?string $altText)
     {
+        $this->validateImageSecurity($image);
+
         $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'blogs']);
         
         // Borrar anterior
@@ -155,6 +164,8 @@ class BlogService
         foreach ($images as $index => $img) {
             if (!$img instanceof UploadedFile) continue;
             
+            $this->validateImageSecurity($img);
+            
             $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
             $altText = $alts[$index] ?? $blog->title; 
 
@@ -165,6 +176,44 @@ class BlogService
             ]);
         }
     }
+
+    private function replaceGalleryImages($blog, array $images, array $alts = [])
+{
+    $gallerySlot = ImageSlot::firstOrCreate([
+        'name' => 'Gallery',
+        'module' => 'blogs'
+    ]);
+
+    // 1. Eliminar imágenes anteriores (BD + storage)
+    $oldImages = $blog->images()
+        ->where('slot_id', $gallerySlot->id)
+        ->get();
+
+    foreach ($oldImages as $old) {
+        if (Storage::disk('public')->exists(str_replace('/storage/', '', $old->url))) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $old->url));
+        }
+        $old->delete();
+    }
+
+    // 2. Guardar nuevas imágenes
+    foreach ($images as $index => $img) {
+        if (!$img instanceof UploadedFile) continue;
+
+        $this->validateImageSecurity($img);
+        
+        $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
+        $altText = $alts[$index] ?? $blog->title;
+
+        $blog->images()->create([
+            'slot_id' => $gallerySlot->id,
+            'url' => '/storage/' . $path,
+            'alt_text' => $altText
+        ]);
+    }
+}
+
+
 
     private function saveContent($blog, BlogDTO $dto) 
     {

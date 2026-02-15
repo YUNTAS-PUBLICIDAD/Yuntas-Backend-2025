@@ -13,6 +13,7 @@ class EmailMessage extends Model
     protected $fillable = [
         'lead_id',
         'type',
+        'campaign_id',
         'subject',
         'body',
         'status',
