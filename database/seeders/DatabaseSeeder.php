@@ -43,9 +43,9 @@ class DatabaseSeeder extends Seeder
         ProductContentSlot::firstOrCreate(['name' => 'Especificaciones'], ['data_type' => 'list', 'position' => 1]);
         ProductContentSlot::firstOrCreate(['name' => 'Beneficios'], ['data_type' => 'list', 'position' => 2]);
 
-        BlogContentSlot::firstOrCreate(['name' => 'Parrafos'], ['data_type' => 'text', 'position' => 1]);
+        BlogContentSlot::firstOrCreate(['name' => 'Descripciones'], ['data_type' => 'text', 'position' => 1]);
         BlogContentSlot::firstOrCreate(['name' => 'Beneficios'], ['data_type' => 'list', 'position' => 2]);
-        BlogContentSlot::firstOrCreate(['name' => 'Bloques'], ['data_type' => 'block', 'position' => 3]);
+        BlogContentSlot::firstOrCreate(['name' => 'Testimonios'], ['data_type' => 'text', 'position' => 3]);
 
         // 5. Fuentes de Leads
         LeadSource::firstOrCreate(['name' => 'Inicio']);

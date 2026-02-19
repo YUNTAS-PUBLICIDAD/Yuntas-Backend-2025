@@ -47,7 +47,6 @@ class BlogService
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,
 
-                //  AQUÍ
                 'product_id' => $dto->product_id,
 
                 'meta_title' => $dto->meta_title,

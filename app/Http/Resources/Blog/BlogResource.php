@@ -14,7 +14,7 @@ class BlogResource extends JsonResource
         $gallery = $this->images->filter(fn($img) => $img->slot?->name === 'Gallery')->values();
 
         // 2. Filtrar Contenido Dinámico por Slot
-        $paragraphs = $this->contentTexts
+        $des = $this->contentTexts
             ->filter(fn($t) => $t->slot?->name === 'Parrafos')
             ->map(fn($t) => $t->content)
             ->values();
@@ -40,13 +40,13 @@ class BlogResource extends JsonResource
 
             // PRODUCTO ASOCIADO 
             'product' => $this->when(
-            $this->product,
-            fn () => [
-            'id' => $this->product->id,
-            'name' => $this->product->name ?? $this->product->nombre,
-            'slug' => $this->product->slug ?? null,
-    ]
-),
+                    $this->product, 
+                    fn () => [
+                        'id' => $this->product->id,
+                        'name' => $this->product->name ?? $this->product->nombre,
+                        'slug' => $this->product->slug ?? null,
+                    ]
+            ),
             
             // IMAGEN PRINCIPAL (Objeto completo con ALT)
             'main_image' => $mainImage ? [
@@ -61,7 +61,7 @@ class BlogResource extends JsonResource
             ]),
             
             // CONTENIDO DINÁMICO
-            'paragraphs' => $paragraphs,
+            'des' => $des,
             'benefits' => $benefits,
         ];
     }
