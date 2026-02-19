@@ -33,7 +33,6 @@ readonly class BlogDTO
         // Contenido Dinámico
         public array $paragraphs = [],  
         public array $benefits = [],     
-        public array $content_blocks = []
     ) {}
 
     public static function fromRequest($request): self
@@ -50,7 +49,6 @@ readonly class BlogDTO
             status: 'published', 
             video_url: $request->validated('url_video') ?? $request->input('url_video'),
 
-            //  AQUÍ
             product_id: $request->validated('product_id') ?? null,
             
             meta_title: $seo['meta_titulo'] ?? null,
@@ -66,7 +64,6 @@ readonly class BlogDTO
             
             paragraphs: $request->input('parrafos', []),
             benefits: $request->input('beneficios', []),
-            content_blocks: $request->input('bloques', [])
         );
     }
 }

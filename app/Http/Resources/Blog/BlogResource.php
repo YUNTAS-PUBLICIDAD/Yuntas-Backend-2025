@@ -79,7 +79,6 @@ class BlogResource extends JsonResource
             // CONTENIDO DINÁMICO
             'paragraphs' => $paragraphs,
             'benefits' => $benefits,
-            'content_blocks' => $blocks,
         ];
     }
 }
