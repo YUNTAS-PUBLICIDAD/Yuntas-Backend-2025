@@ -14,26 +14,40 @@ class UpdateBlogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:150',
-            'subtitulo' => 'nullable|string|max:255',
+            // Datos Básicos
+            'name' => 'required|string|max:150',
+            'slug' => 'required|string|max:150|unique:blogs,slug,',
+            'hero_title' => 'required|string|max:150',
+            'cover_subtitle' => 'required|string|max:255',
             'video_url' => 'nullable|url',
 
-            'etiqueta' => 'nullable',
+            // SEO 
+            'meta_title' => 'required|string|max:70', 
+            'meta_description' => 'required|string|max:160',
 
-            'imagen_principal' => 'image|mimes:webp|max:5120',
-            'imagen_principal_alt' => 'nullable|string|max:80',
+            // Imagen Principal
+            'main_image' => 'nullable|image|mimes:webp|max:5120',
+            'main_image_title' => 'nullable|string|max:50',
+            'main_image_alt' => 'nullable|string|max:80',
 
-            'imagenes' => 'nullable|array',
-            'imagenes.*' => 'image|mimes:webp|max:5120',
+            // Galería
+            'gallery' => 'nullable|array',
+            'gallery.*.slot' => 'nullable|string|in:Hero,Description,Benefits,Testimonial',
+            'gallery.*.image' => 'nullable|image|mimes:webp|max:5120',
+            'gallery.*.title' => 'nullable|string|max:50',
+            'gallery.*.alt' => 'nullable|string|max:80',
+            'gallery_alt.*' => 'nullable|string|max:255',
 
-            'imagenes_alts' => 'nullable|array',
-            'imagenes_alts.*' => 'nullable|string|max:80',
+            // Contenido Dinámico
+            'description' => 'required|string',
+            
+            'benefits' => 'required|array',
+            'benefits.*' => 'string|max:150',
 
+            'testimonial' => 'nullable|string|max:255',
+
+            // Producto asociado
             'product_id' => 'nullable|integer|exists:products,id',
-
-            'descripciones' => 'nullable|array',
-            'beneficios' => 'nullable|array',
-            'testimonios' => 'nullable|array',
         ];
     }
 }
