@@ -23,12 +23,4 @@ class ProductContentSlot extends Model
     {
         return $this->hasMany(ProductContentItem::class, 'slot_id');
     }
-
-    /**
-     * Get the content texts for the slot.
-     */
-    public function contentTexts(): HasMany
-    {
-        return $this->hasMany(ProductContentText::class, 'slot_id');
-    }
 }
