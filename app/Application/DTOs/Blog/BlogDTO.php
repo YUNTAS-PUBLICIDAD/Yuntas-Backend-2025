@@ -52,8 +52,6 @@ readonly class BlogDTO
             meta_title: $seo['meta_titulo'] ?? null,
             meta_description: $seo['meta_descripcion'] ?? null,
 
-            categories: $request->input('categorias', []),
-
             main_image: $request->file('imagen_principal'),
             main_image_alt: $request->input('imagen_principal_alt'),
 

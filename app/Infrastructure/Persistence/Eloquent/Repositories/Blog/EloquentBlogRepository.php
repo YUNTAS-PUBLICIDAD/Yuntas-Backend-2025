@@ -9,7 +9,7 @@ class EloquentBlogRepository implements BlogRepositoryInterface
 {
     public function paginate(int $perPage = 10)
     {
-        return Blog::with(['images.slot', 'categories'])
+        return Blog::with(['images.slot'])
             ->latest()
             ->paginate($perPage);
     }
@@ -18,7 +18,6 @@ class EloquentBlogRepository implements BlogRepositoryInterface
     {
         return Blog::with([
             'images.slot',        
-            'categories',         
             'contentTexts.slot',  
             'contentItems.slot',
         ])->where('slug', $slug)->first();
@@ -26,7 +25,7 @@ class EloquentBlogRepository implements BlogRepositoryInterface
 
     public function findById(int $id): ?Blog
     {
-        return Blog::with(['images.slot', 'categories'])->find($id);
+        return Blog::with(['images.slot'])->find($id);
     }
 
     public function save(array $data): Blog

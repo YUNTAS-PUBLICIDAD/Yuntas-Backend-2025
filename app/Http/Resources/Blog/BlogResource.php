@@ -38,13 +38,6 @@ class BlogResource extends JsonResource
             'meta_title' => $this->meta_title,
             'meta_description' => $this->meta_description,
 
-            // CATEGORÍAS 
-            'categories' => $this->categories->map(fn($cat) => [
-                'id' => $cat->id,
-                'name' => $cat->name,
-                'slug' => $cat->slug
-            ]),
-
             // PRODUCTO ASOCIADO 
             'product' => $this->when(
             $this->product,

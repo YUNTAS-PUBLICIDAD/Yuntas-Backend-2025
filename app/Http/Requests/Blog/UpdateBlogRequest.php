@@ -16,7 +16,6 @@ class UpdateBlogRequest extends FormRequest
         return [
             'titulo' => 'required|string|max:150',
             'subtitulo' => 'nullable|string|max:255',
-            'contenido' => 'nullable|string',
             'url_video' => 'nullable|url',
 
             'etiqueta' => 'nullable',
@@ -30,15 +29,10 @@ class UpdateBlogRequest extends FormRequest
             'imagenes_alts' => 'nullable|array',
             'imagenes_alts.*' => 'nullable|string|max:80',
 
-            'categorias' => 'nullable|array',
-            'categorias.*' => 'integer|exists:categories,id',
-
-            // 🔑 PRODUCTO (nuevo)
             'product_id' => 'nullable|integer|exists:products,id',
 
             'parrafos' => 'nullable|array',
             'beneficios' => 'nullable|array',
-            'bloques' => 'nullable|array',
         ];
     }
 }
