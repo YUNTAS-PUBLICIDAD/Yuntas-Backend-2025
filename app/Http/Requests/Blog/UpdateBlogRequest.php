@@ -15,7 +15,6 @@ class UpdateBlogRequest extends FormRequest
     {
         return [
             // Datos Básicos
-            'name' => 'required|string|max:150',
             'slug' => 'required|string|max:150|unique:blogs,slug,',
             'hero_title' => 'required|string|max:150',
             'cover_subtitle' => 'required|string|max:255',
@@ -47,7 +46,7 @@ class UpdateBlogRequest extends FormRequest
             'testimonial' => 'nullable|string|max:255',
 
             // Producto asociado
-            'product_id' => 'nullable|integer|exists:products,id',
+            'product_id' => 'required|integer|exists:products,id', // titulo (nombre) en card
         ];
     }
 }

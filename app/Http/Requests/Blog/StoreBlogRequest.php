@@ -15,7 +15,6 @@ class StoreBlogRequest extends FormRequest
     {
         return [
             // Datos Básicos
-            'name' => 'required|string|max:150', // titulo en card
             'slug' => 'nullable|string|max:150|unique:blogs,slug', // slug
             'hero_title' => 'required|string|max:150', // titulo hero en detalle
             'cover_subtitle' => 'required|string|max:255', // subtitulo en card y detalle
@@ -46,7 +45,7 @@ class StoreBlogRequest extends FormRequest
             'testimonial' => 'nullable|string|max:255', // testimonio en detalle
 
             // Producto asociado
-            'product_id' => 'nullable|exists:products,id',
+            'product_id' => 'required|integer|exists:products,id', // titulo (nombre) en card
         ];
     }
 }
