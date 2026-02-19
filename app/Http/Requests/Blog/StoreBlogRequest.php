@@ -17,7 +17,6 @@ class StoreBlogRequest extends FormRequest
             // Datos Básicos
             'titulo' => 'required|string|max:150',
             'subtitulo' => 'nullable|string|max:255',
-            'contenido' => 'nullable|string', 
             'url_video' => 'nullable|url',
             
             // SEO (Puede venir como JSON string o array, validamos keys si es array)
@@ -33,18 +32,12 @@ class StoreBlogRequest extends FormRequest
             'imagenes_alts' => 'nullable|array', 
             'imagenes_alts.*' => 'nullable|string|max:80',
 
-            // Categorías
-            'categorias' => 'nullable|array', 
-            'categorias.*' => 'string|max:150', 
-
             // Contenido Dinámico
             'parrafos' => 'nullable|array',
             'parrafos.*' => 'string',
             
             'beneficios' => 'nullable|array',
             'beneficios.*' => 'string',
-
-            'bloques' => 'nullable|array', 
 
             // Producto asociado
             'product_id' => 'nullable|exists:products,id',
