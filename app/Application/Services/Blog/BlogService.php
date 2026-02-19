@@ -44,7 +44,6 @@ class BlogService
                 'title' => $dto->title,
                 'slug' => $dto->slug,
                 'cover_subtitle' => $dto->cover_subtitle,
-                'content' => $dto->content,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,
 
@@ -91,7 +90,6 @@ class BlogService
                 'title' => $dto->title,
                 'slug' => $dto->slug,
                 'cover_subtitle' => $dto->cover_subtitle,
-                'content' => $dto->content,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,                
                 'product_id' => $dto->product_id, 
@@ -277,7 +275,6 @@ class BlogService
         $dto->cover_subtitle = $this->sanitizeText($dto->cover_subtitle);
         $dto->meta_title = $this->sanitizeText($dto->meta_title);
         $dto->meta_description = $this->sanitizeText($dto->meta_description);
-        $dto->content = $this->sanitizeHtml($dto->content);
 
         if ($dto->video_url) {
             $dto->video_url = $this->sanitizeUrl($dto->video_url);

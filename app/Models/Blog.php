@@ -16,7 +16,6 @@ class Blog extends Model
         'title',
         'slug',
         'cover_subtitle',
-        'content',
         'status',
         'meta_title',
         'meta_description',
@@ -47,14 +46,6 @@ class Blog extends Model
     public function contentItems(): HasMany
     {
         return $this->hasMany(BlogContentItem::class);
-    }
-
-    /**
-     * Get the content blocks for the blog.
-     */
-    public function contentBlocks(): HasMany
-    {
-        return $this->hasMany(BlogContentBlock::class);
     }
 
     public function product()
