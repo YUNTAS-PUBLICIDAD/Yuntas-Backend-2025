@@ -245,20 +245,6 @@ class BlogService
                 $blog->contentItems()->create(['slot_id' => $listSlot->id, 'text' => $item, 'position' => 0]);
             }
         }
-
-        // Bloques
-        if (!empty($dto->content_blocks)) {
-            $blockSlot = BlogContentSlot::firstOrCreate(['name' => 'Bloques', 'data_type' => 'block']);
-            $blog->contentBlocks()->where('slot_id', $blockSlot->id)->delete();
-            
-            foreach ($dto->content_blocks as $block) {
-                $blog->contentBlocks()->create([
-                    'slot_id' => $blockSlot->id,
-                    'title' => $block['title'] ?? '',
-                    'content' => $block['content'] ?? '',
-                ]);
-            }
-        }
     }
 
     /**
