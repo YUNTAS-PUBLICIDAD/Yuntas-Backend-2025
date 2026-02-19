@@ -57,14 +57,6 @@ class Blog extends Model
         return $this->hasMany(BlogContentBlock::class);
     }
 
-    /**
-     * Get the categories for the blog.
-     */
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(Category::class, 'category_blog');
-    }
-
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
