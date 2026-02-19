@@ -9,8 +9,7 @@ readonly class BlogDTO
     public function __construct(
         public string $title,
         public string $slug,
-        public ?string $cover_subtitle, 
-        public string $content,        
+        public ?string $cover_subtitle,       
         public string $status,
         public ?string $video_url,
 
@@ -45,7 +44,6 @@ readonly class BlogDTO
             title: $request->validated('titulo') ?? $request->input('titulo'), 
             slug: \Str::slug($request->validated('titulo') ?? $request->input('titulo')),
             cover_subtitle: $request->validated('subtitulo') ?? $request->input('subtitulo'),
-            content: $request->validated('contenido') ?? '', 
             status: 'published', 
             video_url: $request->validated('url_video') ?? $request->input('url_video'),
 

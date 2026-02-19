@@ -20,8 +20,7 @@ class EloquentBlogRepository implements BlogRepositoryInterface
             'images.slot',        
             'categories',         
             'contentTexts.slot',  
-            'contentItems.slot',  
-            'contentBlocks.slot'  
+            'contentItems.slot',
         ])->where('slug', $slug)->first();
     }
 

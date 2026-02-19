@@ -24,21 +24,12 @@ class BlogResource extends JsonResource
             ->map(fn($i) => $i->text)
             ->values();
 
-        $blocks = $this->contentBlocks
-            ->filter(fn($b) => $b->slot?->name === 'Bloques')
-            ->map(fn($b) => [
-                'title' => $b->title,
-                'content' => $b->content
-            ])
-            ->values();
-
         // 3. JSON
         return [
             'id' => $this->id,
             'title' => $this->title,
             'slug' => $this->slug,
             'cover_subtitle' => $this->cover_subtitle,
-            'content' => $this->content, 
             'video_url' => $this->video_url,
             'status' => $this->status,
             'created_at' => $this->created_at->toIso8601String(),
