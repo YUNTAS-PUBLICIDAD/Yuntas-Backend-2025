@@ -14,9 +14,9 @@ class UpdateBlogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'titulo' => 'required|string|max:150',
+            'title' => 'required|string|max:150',
             'subtitulo' => 'nullable|string|max:255',
-            'url_video' => 'nullable|url',
+            'video_url' => 'nullable|url',
 
             'etiqueta' => 'nullable',
 
@@ -31,8 +31,9 @@ class UpdateBlogRequest extends FormRequest
 
             'product_id' => 'nullable|integer|exists:products,id',
 
-            'parrafos' => 'nullable|array',
+            'descripciones' => 'nullable|array',
             'beneficios' => 'nullable|array',
+            'testimonios' => 'nullable|array',
         ];
     }
 }

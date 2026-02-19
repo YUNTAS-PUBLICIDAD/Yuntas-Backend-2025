@@ -15,29 +15,35 @@ class StoreBlogRequest extends FormRequest
     {
         return [
             // Datos Básicos
-            'titulo' => 'required|string|max:150',
-            'subtitulo' => 'nullable|string|max:255',
-            'url_video' => 'nullable|url',
+            'name' => 'required|string|max:150', // titulo en card
+            'slug' => 'nullable|string|max:150|unique:blogs,slug', // slug
+            'hero_title' => 'required|string|max:150', // titulo hero en detalle
+            'cover_subtitle' => 'nullable|string|max:255', // subtitulo en card y detalle
+            'video_url' => 'nullable|url', // url de video opcional
             
-            // SEO (Puede venir como JSON string o array, validamos keys si es array)
-            'etiqueta' => 'nullable', 
+            // SEO 
+            'meta_title' => 'nullable|string|max:70', 
+            'meta_description' => 'nullable|string|max:160',
 
             // Imagen Principal
-            'imagen_principal' => 'required|image|mimes:webp|max:5120',
-            'imagen_principal_alt' => 'nullable|string|max:80',
+            'main_image' => 'required|image|mimes:webp|max:5120', // imagen princial en card
+            'main_image_title' => 'nullable|string|max:50',
+            'main_image_alt' => 'nullable|string|max:80',
 
             // Galería
-            'imagenes' => 'nullable|array', 
-            'imagenes.*' => 'image|mimes:webp|max:5120',
-            'imagenes_alts' => 'nullable|array', 
-            'imagenes_alts.*' => 'nullable|string|max:80',
+            'gallery' => 'nullable|array', // imagen para hero, descripciones, beneficios o testimonios
+            'gallery.*.slot' => 'required|string|in:Hero,Description,Benefits,Testimonial',
+            'gallery.*.image' => 'required|image|mimes:webp|max:5120',
+            'gallery.*.title' => 'nullable|string|max:50',
+            'gallery.*.alt' => 'nullable|string|max:80',
 
             // Contenido Dinámico
-            'parrafos' => 'nullable|array',
-            'parrafos.*' => 'string',
+            'description' => 'nullable|string', // descripcion en detalle
             
-            'beneficios' => 'nullable|array',
-            'beneficios.*' => 'string',
+            'benefits' => 'nullable|array', // beneficios en detalle
+            'benefits.*' => 'string',
+
+            'testimonial' => 'nullable|string|max:255', // testimonio en detalle
 
             // Producto asociado
             'product_id' => 'nullable|exists:products,id',
