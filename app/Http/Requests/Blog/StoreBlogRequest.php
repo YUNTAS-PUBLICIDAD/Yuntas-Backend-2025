@@ -15,6 +15,7 @@ class StoreBlogRequest extends FormRequest
     {
         return [
             // Datos Básicos
+            'title' => 'required|string|max:150', // // titulo (nombre) en card
             'slug' => 'nullable|string|max:150|unique:blogs,slug', // slug
             'hero_title' => 'required|string|max:150', // titulo hero en detalle
             'cover_subtitle' => 'required|string|max:255', // subtitulo en card y detalle

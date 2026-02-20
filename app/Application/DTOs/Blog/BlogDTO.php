@@ -39,7 +39,7 @@ class BlogDTO
     public static function fromRequest(Request $request): self
     {
         return new self(
-            name: $request->validated('name') ?? $request->input('name'), 
+            title: $request->validated('title') ?? $request->input('title'), 
             slug: $request->validated('slug') ?? $request->input('slug'),
             hero_title: $request->validated('hero_title') ?? $request->input('hero_title'),
             cover_subtitle: $request->validated('cover_subtitle') ?? $request->input('cover_subtitle'),
