@@ -13,6 +13,7 @@ class Blog extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'title',
         'slug',
         'hero_title',
         'cover_subtitle',
