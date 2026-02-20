@@ -9,30 +9,16 @@ class BlogResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // 1. Separar Imagen Principal de la Galería
-        $mainImage = $this->images->first(fn($img) => $img->slot?->name === 'Main');
-        $gallery = $this->images->filter(fn($img) => $img->slot?->name === 'Gallery')->values();
+        $mainImage = $this->images->first(fn($img) => $img->slot?->name === 'List' || $img->slot?->name === 'Main');
+        $gallery = $this->images->filter(fn($img) => $img->slot?->name !== 'List' && $img->slot?->name !== 'Main')->values();
 
-        // 2. Filtrar Contenido Dinámico por Slot
-        $des = $this->contentTexts
-            ->filter(fn($t) => $t->slot?->name === 'Parrafos')
-            ->map(fn($t) => $t->content)
-            ->values();
-
-        $benefits = $this->contentItems
-            ->filter(fn($i) => $i->slot?->name === 'Beneficios')
-            ->map(fn($i) => $i->text)
-            ->values();
-
-        // 3. JSON
         return [
             'id' => $this->id,
             'title' => $this->title,
             'slug' => $this->slug,
+            'hero_title' => $this->hero_title,
             'cover_subtitle' => $this->cover_subtitle,
             'video_url' => $this->video_url,
-            'status' => $this->status,
-            'created_at' => $this->created_at->toIso8601String(),
             
             // SEO
             'meta_title' => $this->meta_title,
@@ -44,25 +30,41 @@ class BlogResource extends JsonResource
                     fn () => [
                         'id' => $this->product->id,
                         'name' => $this->product->name ?? $this->product->nombre,
-                        'slug' => $this->product->slug ?? null,
                     ]
             ),
             
-            // IMAGEN PRINCIPAL (Objeto completo con ALT)
+            // IMAGEN PRINCIPAL
             'main_image' => $mainImage ? [
-                'url' => $mainImage->url,
+                'url' => $mainImage->url, 
                 'alt' => $mainImage->alt_text,
+                'title' => $mainImage->title,
             ] : null,
             
             // GALERÍA
             'gallery' => $gallery->map(fn($img) => [
                 'url' => $img->url,
-                'alt' => $img->alt_text
+                'alt' => $img->alt_text,
+                'title' => $img->title,
+                'slot' => $img->slot?->name 
             ]),
             
             // CONTENIDO DINÁMICO
-            'des' => $des,
-            'benefits' => $benefits,
+            'description' => $this->contentTexts
+                ->filter(fn($t) => $t->slot?->name === 'Descripciones')
+                ->map(fn($t) => $t->content)
+                ->values()->first(),
+
+            'testimonial' => $this->contentTexts
+                ->filter(fn($t) => $t->slot?->name === 'Testimonios')
+                ->map(fn($t) => $t->content)
+                ->values()->first(),
+
+            'benefits' => $this->contentItems
+                ->filter(fn($i) => $i->slot?->name === 'Beneficios')
+                ->map(fn($i) => $i->text)
+                ->values(),
+
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }
