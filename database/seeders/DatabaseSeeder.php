@@ -36,8 +36,16 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Slots de Imágenes
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Main'], ['position' => 1]);
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Gallery'], ['position' => 2]);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Desc']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Benefits']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Testimonial']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'List']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Hero']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Specs']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Benefits']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Popups']);
 
         // 4. Slots de Contenido
         ProductContentSlot::firstOrCreate(['name' => 'Especificaciones'], ['data_type' => 'list', 'position' => 1]);
