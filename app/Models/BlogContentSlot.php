@@ -12,8 +12,6 @@ class BlogContentSlot extends Model
 
     protected $fillable = [
         'name',
-        'data_type',
-        'position',
     ];
 
     /**
