@@ -3,19 +3,22 @@
 namespace App\Application\Services\Blog;
 
 use App\Application\DTOs\Blog\BlogDTO;
+use App\Models\Blog;
 use App\Domain\Repositories\Blog\BlogRepositoryInterface;
+use Illuminate\Support\Str;
 use App\Models\ImageSlot;
 use App\Models\BlogContentSlot;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
-use App\Traits\ValidatesImageSecurity;
 use Illuminate\Support\Facades\Log;
+use App\Traits\ValidatesImageSecurity;
+use App\Traits\SanitizesInput;
 
 class BlogService
 {
-    use ValidatesImageSecurity;
+    use ValidatesImageSecurity, SanitizesInput;
 
     public function __construct(
         private BlogRepositoryInterface $repository
@@ -35,7 +38,7 @@ class BlogService
 
     public function create(BlogDTO $dto)
     {
-        $this->preValidateBlogImages($dto);
+        $this->preValidateImages($dto);
         $dto = $this->sanitizeBlogInput($dto);
 
         return DB::transaction(function () use ($dto) {
@@ -43,6 +46,7 @@ class BlogService
             $blog = $this->repository->save([
                 'title' => $dto->title,
                 'slug' => $dto->slug,
+                'hero_title' => $dto->hero_title,
                 'cover_subtitle' => $dto->cover_subtitle,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,
@@ -53,23 +57,41 @@ class BlogService
                 'meta_description' => $dto->meta_description,
             ]);
 
-            // 2. Sincronizar Categorías
-            if (!empty($dto->categories)) {
-                $blog->categories()->sync($dto->categories);
+            // 2. Guardar Items 
+            if (!empty($dto->benefits)) {
+                $this->saveContentItems($blog, 'Beneficios', $dto->benefits);
             }
 
-            // 3. Imagen Principal
+            // 3. Guardar Texts 
+            if (!empty($dto->description)) {
+                $this->saveContentTexts($blog, 'Descripciones', $dto->description);
+            }
+
+            if (!empty($dto->testimonial)) {
+                $this->saveContentTexts($blog, 'Testimonios', $dto->testimonial);
+            }
+
+            // 5. Imagen Principal
             if ($dto->main_image) {
-                $this->saveMainImage($blog, $dto->main_image, $dto->main_image_alt);
+                $title = $dto->main_image_title ?? $blog->title;
+                $alt = $dto->main_image_alt ?? $blog->title;
+                $this->uploadImage($blog, $dto->main_image, 'List', 'blogs', $title, $alt);
             }
 
-            // 4. Galería
-            if (!empty($dto->gallery_images)) {
-                $this->saveGalleryImages($blog, $dto->gallery_images, $dto->gallery_alts);
-            }
+            // 6. Gestionar Galería con Mapa de Slots
+            if (!empty($dto->gallery)) {
+                foreach ($dto->gallery as $item) {
+                    $slotName = $item['slot'];
+                    $image = $item['image'];
+                    $title = $item['title'] ?? $blog->title;
+                    $altText = $item['alt'] ?? $blog->title;
 
-            // 5. Contenido Dinámico 
-            $this->saveContent($blog, $dto);
+                    // Validar que sea archivo
+                    if (!$image instanceof UploadedFile) continue;
+
+                    $this->uploadImage($blog, $image, $slotName, 'blogs', $title, $altText);
+                }
+            }
 
             return $blog->refresh();
         });
@@ -77,7 +99,7 @@ class BlogService
 
     public function update(int $id, BlogDTO $dto)
     {
-        $this->preValidateBlogImages($dto);
+        $this->preValidateImages($dto);
         $dto = $this->sanitizeBlogInput($dto);
 
         return DB::transaction(function () use ($id, $dto) {
@@ -88,35 +110,68 @@ class BlogService
             $blog->update([
                 'title' => $dto->title,
                 'slug' => $dto->slug,
+                'hero_title' => $dto->hero_title,
                 'cover_subtitle' => $dto->cover_subtitle,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,                
                 'product_id' => $dto->product_id, 
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
+                'description' => $dto->description,
+                'testimonial' => $dto->testimonial,
             ]);
 
-            // 2. Sincronizar Categorías
-            if (isset($dto->categories)) {
-                $blog->categories()->sync($dto->categories);
+            // 2. Beneficios
+            if (isset($dto->benefits)) {
+                $this->saveContentItems($blog, 'Beneficios', $dto->benefits);
             }
 
-            // 3. Imagen Principal 
-            if ($dto->main_image) {
-                $this->saveMainImage($blog, $dto->main_image, $dto->main_image_alt);
+            // 3. Actualizar Imagen Principal
+            if ($dto->main_image instanceof UploadedFile) {
+                $this->deleteImagesBySlot($blog, 'List');
+                $title = $dto->main_image_title ?? $blog->title;
+                $alt = $dto->main_image_alt ?? $blog->title;
+                $this->uploadImage($blog, $dto->main_image, 'List', 'blogs', $title, $alt);
+            } else {
+                $this->updateImageTitle($blog, 'List', $dto->main_image_title ?? $blog->title);
+                $this->updateImageAlt($blog, 'List', $dto->main_image_alt ?? $blog->title);
             }
 
-           
-           // 4. Galería (REEMPLAZAR)
-        if (is_array($dto->gallery_images)) {
-            $this->replaceGalleryImages(
-             $blog,
-              $dto->gallery_images,
-                $dto->gallery_alts
-    );
-}
-            // 5. Contenido Dinámico 
-            $this->saveContent($blog, $dto);
+           // 4. Actualizar Galería
+            if (!empty($dto->gallery)) {
+                foreach ($dto->gallery as $item) {
+                    $slotName = $item['slot'];
+                    $image = $item['image'] ?? null;
+                    $title = $item['title'] ?? $blog->title;
+                    $altText = $item['alt'] ?? $blog->title;
+
+                    if ($image instanceof UploadedFile) {
+                        // Nueva imagen: borrar anterior y subir nueva
+                        $uniqueSlots = ['Hero', 'Desc', 'Benefits', 'Testimonial'];
+                        if (in_array($slotName, $uniqueSlots)) {
+                            $this->deleteImagesBySlot($blog, $slotName);
+                        }
+                        $this->uploadImage($blog, $image, $slotName, 'blogs', $title, $altText);
+                    } else {
+                        $this->updateImageTitle($blog, $slotName, $title);
+                        $this->updateImageAlt($blog, $slotName, $altText);
+                    }
+                }
+            }
+
+            // Actualizar Títulos de la Galería
+            if (!empty($dto->gallery_title)) {
+                foreach ($dto->gallery_title as $slot => $title) {
+                    $this->updateImageTitle($blog, $slot, $title ?? $blog->title);
+                }
+            }
+            
+            // solo para actualizar ALT de la galería
+            if (!empty($dto->gallery_alt)) {
+                foreach ($dto->gallery_alt as $slot => $alt) {
+                    $this->updateImageAlt($blog, $slot, $alt ?? $blog->title);
+                }
+            }
 
             return $blog->refresh();
         });
@@ -127,127 +182,121 @@ class BlogService
         $blog = $this->repository->findById($id);
         if (!$blog) throw new ModelNotFoundException("Blog no encontrado");
         
-        foreach ($blog->images as $img) {
-            if (Storage::disk('public')->exists(str_replace('/storage/', '', $img->url))) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $img->url));
-            }
-        }
-        
         $this->repository->delete($id);
     }
 
-    // --- Helpers Privados para Limpieza de Código ---
-
-    private function saveMainImage($blog, UploadedFile $image, ?string $altText)
+    private function uploadImage(Blog $blog, $file, $slotName, $module, $title, $altText = null)
     {
-        $this->validateImageSecurity($image);
+        $slotName = $this->validateSlot($slotName);
+        $title = $this->sanitizeText($title);
+        $altText = $this->sanitizeText($altText);
 
-        $mainSlot = ImageSlot::firstOrCreate(['name' => 'Main', 'module' => 'blogs']);
-        
-        // Borrar anterior
-        $oldImage = $blog->images()->where('slot_id', $mainSlot->id)->first();
-        if ($oldImage) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $oldImage->url));
-            $oldImage->delete();
-        }
+        // 1. Buscar o Crear el Slot
+        $slot = ImageSlot::firstOrCreate(
+            ['name' => $slotName, 'module' => $module]
+        );
 
-        $path = $image->store('blogs/' . $blog->id, 'public');
-        
+        // 2. Generar nombre basado en slug del blog
+        $slugName = $blog->slug;
+        $slotLower = strtolower($slotName);
+        $extension = $file->extension();
+
+        // Formato por ejemplo: proyector-holografico-3d-hero-15.webp
+        $filename = "{$slugName}-{$slotLower}-{$blog->id}.{$extension}";
+
+        // 3. Subir Archivo
+        $path = $file->storeAs('blogs/' . $blog->id . '/' . $slotName, $filename, 'public');
+
+        // 4. Crear Registro en DB
         $blog->images()->create([
-            'slot_id' => $mainSlot->id,
+            'slot_id' => $slot->id,
             'url' => '/storage/' . $path,
-            'title' => $blog->title,
-            'alt_text' => $altText ?? $blog->title 
+            'title' => $title,
+            'alt_text' => $altText ?? $blog->title,
         ]);
     }
 
-    private function saveGalleryImages($blog, array $images, array $alts)
+    private function updateImageTitle(Blog $blog, string $slotName, string $title): void
     {
-        $gallerySlot = ImageSlot::firstOrCreate(['name' => 'Gallery', 'module' => 'blogs']);
-        
-        foreach ($images as $index => $img) {
-            if (!$img instanceof UploadedFile) continue;
-            
-            $this->validateImageSecurity($img);
-            
-            $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
-            $altText = $alts[$index] ?? $blog->title; 
+        // Buscar el Slot
+        $slot = ImageSlot::where(
+            ['name' => $slotName, 'module' => 'blogs']
+        )->first();
+        if (!$slot) return;
 
-            $blog->images()->create([
-                'slot_id' => $gallerySlot->id, 
-                'url' => '/storage/' . $path,
-                'alt_text' => $altText
+        $image = $blog->images()->where('slot_id', $slot->id)->first();
+        
+        if ($image) {
+            $image->update(['title' => $title]);
+        }
+    }
+
+    private function updateImageAlt(Blog $blog, string $slotName, string $alt): void
+    {   
+        // Buscar el Slot
+        $slot = ImageSlot::where(
+            ['name' => $slotName, 'module' => 'blogs']
+        )->first();
+
+        if (!$slot) return;
+
+        $image = $blog->images()->where('slot_id', $slot->id)->first();
+        
+        if ($image) {
+            $image->update(['alt_text' => $alt]);
+        }
+    }
+
+    private function deleteImagesBySlot(Blog $blog, $slotName)
+    {
+        $slot = ImageSlot::where('name', $slotName)->first();
+        if (!$slot) return;
+
+        $images = $blog->images()->where('slot_id', $slot->id)->get();
+        foreach ($images as $img) {
+            if (Storage::disk('public')->exists(str_replace('/storage/', '', $img->url))) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $img->url));
+            }
+            $img->delete();
+        }
+    }
+
+    private function saveContentItems(Blog $blog, $slotName, array $items)
+    {
+        $slot = BlogContentSlot::firstOrCreate(['name' => $slotName]);
+
+        $blog->contentItems()->where('slot_id', $slot->id)->delete();
+
+        foreach ($items as $index => $itemData) {
+            $text = is_string($index) ? "$index: $itemData" : $itemData;
+            
+            if(empty(trim($text))) continue;
+
+            $blog->contentItems()->create([
+                'slot_id' => $slot->id,
+                'text' => $text
             ]);
         }
     }
 
-    private function replaceGalleryImages($blog, array $images, array $alts = [])
-{
-    $gallerySlot = ImageSlot::firstOrCreate([
-        'name' => 'Gallery',
-        'module' => 'blogs'
-    ]);
-
-    // 1. Eliminar imágenes anteriores (BD + storage)
-    $oldImages = $blog->images()
-        ->where('slot_id', $gallerySlot->id)
-        ->get();
-
-    foreach ($oldImages as $old) {
-        if (Storage::disk('public')->exists(str_replace('/storage/', '', $old->url))) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $old->url));
-        }
-        $old->delete();
-    }
-
-    // 2. Guardar nuevas imágenes
-    foreach ($images as $index => $img) {
-        if (!$img instanceof UploadedFile) continue;
-
-        $this->validateImageSecurity($img);
-        
-        $path = $img->store('blogs/' . $blog->id . '/gallery', 'public');
-        $altText = $alts[$index] ?? $blog->title;
-
-        $blog->images()->create([
-            'slot_id' => $gallerySlot->id,
-            'url' => '/storage/' . $path,
-            'alt_text' => $altText
-        ]);
-    }
-}
-
-
-
-    private function saveContent($blog, BlogDTO $dto) 
+    private function saveContentTexts(Blog $blog, $slotName, string $content)
     {
-        // Párrafos
-        if (!empty($dto->paragraphs)) {
-            $textSlot = BlogContentSlot::firstOrCreate(['name' => 'Parrafos', 'data_type' => 'text']);
-            $blog->contentTexts()->where('slot_id', $textSlot->id)->delete();
-            
-            foreach ($dto->paragraphs as $text) {
-                if(empty(trim($text))) continue;
-                $blog->contentTexts()->create(['slot_id' => $textSlot->id, 'content' => $text]);
-            }
-        }
+        $slot = BlogContentSlot::firstOrCreate(['name' => $slotName]);
 
-        // Beneficios
-        if (!empty($dto->benefits)) {
-            $listSlot = BlogContentSlot::firstOrCreate(['name' => 'Beneficios', 'data_type' => 'list']);
-            $blog->contentItems()->where('slot_id', $listSlot->id)->delete();
-            
-            foreach ($dto->benefits as $item) {
-                if(empty(trim($item))) continue;
-                $blog->contentItems()->create(['slot_id' => $listSlot->id, 'text' => $item, 'position' => 0]);
-            }
+        $blog->contentTexts()->where('slot_id', $slot->id)->delete();
+
+        if (!empty(trim($content))) {
+            $blog->contentTexts()->create([
+                'slot_id' => $slot->id,
+                'content' => $content
+            ]);
         }
     }
 
     /**
      * Pre-validación de seguridad de imágenes antes del procesamiento
      */
-    private function preValidateBlogImages(BlogDTO $dto): void
+    private function preValidateImages(BlogDTO $dto): void
     {
         // Validar imagen principal
         if ($dto->main_image instanceof UploadedFile) {
@@ -255,10 +304,10 @@ class BlogService
         }
 
         // Validar imágenes de galería
-        if (!empty($dto->gallery_images)) {
-            foreach ($dto->gallery_images as $image) {
-                if ($image instanceof UploadedFile) {
-                    $this->validateImageSecurity($image);
+        if (!empty($dto->gallery)) {
+            foreach ($dto->gallery as $item) {
+                if (isset($item['image']) && $item['image'] instanceof UploadedFile) {
+                    $this->validateImageSecurity($item['image']);
                 }
             }
         }
@@ -271,9 +320,12 @@ class BlogService
     {
         $dto->title = $this->sanitizeText($dto->title);
         $dto->slug = $this->sanitizeSlug($dto->slug);
+        $dto->hero_title = $this->sanitizeText($dto->hero_title);
         $dto->cover_subtitle = $this->sanitizeText($dto->cover_subtitle);
         $dto->meta_title = $this->sanitizeText($dto->meta_title);
         $dto->meta_description = $this->sanitizeText($dto->meta_description);
+        $dto->description = $this->sanitizeHtml($dto->description);
+        $dto->testimonial = $this->sanitizeText($dto->testimonial);
 
         if ($dto->video_url) {
             $dto->video_url = $this->sanitizeUrl($dto->video_url);
@@ -283,12 +335,17 @@ class BlogService
             $dto->product_id = $this->sanitizeInteger($dto->product_id);
         }
 
-        if ($dto->main_image_alt) {
-            $dto->main_image_alt = $this->sanitizeText($dto->main_image_alt);
+        if ($dto->benefits) {
+            $dto->benefits = $this->sanitizeArray($dto->benefits);
         }
 
-        /** FALTA SANITIZAR MAS CAMPOS, PERO POR AHORA SOLO ESTOS */
-
         return $dto;
+    }
+
+    // Validación específica para slots de blog
+    private function validateSlot(string $slotName): string
+    {
+        $allowedSlots = ['List', 'Hero', 'Desc', 'Benefits', 'Testimonial'];
+        return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
     }
 }

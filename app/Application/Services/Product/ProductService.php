@@ -4,14 +4,13 @@ namespace App\Application\Services\Product;
 
 use App\Application\DTOs\Product\ProductDTO;
 use App\Models\Product;
+use Illuminate\Support\Str;
 use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use App\Jobs\RebuildFrontendJob;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use App\Traits\ValidatesImageSecurity;
 use App\Traits\SanitizesInput;
@@ -81,9 +80,7 @@ class ProductService
                 $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
             }
 
-            // 4. Gestionar Galería con Mapa de Slots
-            //$slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
-            
+            // 4. Gestionar Galería con Mapa de Slots           
             if (!empty($dto->gallery)) {
                 foreach ($dto->gallery as $item) {
                     $slotName = $item['slot'];
@@ -92,7 +89,7 @@ class ProductService
                     $altText = $item['alt'] ?? $product->name;
 
                     // Validar que sea archivo
-                    if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
+                    if (!$image instanceof UploadedFile) continue;
 
                     $this->uploadImage($product, $image, $slotName, 'products', $title, $altText);
                 }
@@ -146,7 +143,7 @@ class ProductService
             }
 
             // Actualizar Imagen Principal
-            if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
+            if ($dto->main_image instanceof UploadedFile) {
                 $this->deleteImagesBySlot($product, 'List');
                 $title = $dto->main_image_title ?? $product->name;
                 $alt = $dto->main_image_alt ?? $product->name;
@@ -164,7 +161,7 @@ class ProductService
                     $title = $item['title'] ?? $product->name;
                     $altText = $item['alt'] ?? $product->name;
 
-                    if ($image instanceof \Illuminate\Http\UploadedFile) {
+                    if ($image instanceof UploadedFile) {
                         // Nueva imagen: borrar anterior y subir nueva
                         $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'Popups'];
                         if (in_array($slotName, $uniqueSlots)) {
@@ -218,7 +215,7 @@ class ProductService
 
     private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
-        $slotName = $this->validateProductSlot($slotName);
+        $slotName = $this->validateSlot($slotName);
         $title = $this->sanitizeText($title);
         $altText = $this->sanitizeText($altText);
 
@@ -294,10 +291,7 @@ class ProductService
 
     private function saveContentItems(Product $product, $slotName, array $items)
     {
-        $slot = ProductContentSlot::firstOrCreate(
-            ['name' => $slotName],
-            ['data_type' => 'list', 'position' => 1]
-        );
+        $slot = ProductContentSlot::firstOrCreate(['name' => $slotName]);
 
         $product->contentItems()->where('slot_id', $slot->id)->delete();
 
@@ -308,8 +302,7 @@ class ProductService
 
             $product->contentItems()->create([
                 'slot_id' => $slot->id,
-                'text' => $text,
-                'position' => $index + 1
+                'text' => $text
             ]);
         }
     }
@@ -338,14 +331,14 @@ class ProductService
     private function preValidateImages(ProductDTO $dto): void
     {
         // Validar imagen principal
-        if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
+        if ($dto->main_image instanceof UploadedFile) {
             $this->validateImageSecurity($dto->main_image);
         }
 
         // Validar imágenes de galería
         if (!empty($dto->gallery)) {
             foreach ($dto->gallery as $item) {
-                if (isset($item['image']) && $item['image'] instanceof \Illuminate\Http\UploadedFile) {
+                if (isset($item['image']) && $item['image'] instanceof UploadedFile) {
                     $this->validateImageSecurity($item['image']);
                 }
             }
@@ -380,9 +373,9 @@ class ProductService
     }
 
     // Validación específica para slots de productos
-    private function validateProductSlot(string $slotName): string
+    private function validateSlot(string $slotName): string
     {
-        $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'Popups', 'Gallery'];
+        $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'Popups'];
         return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
     }
 }

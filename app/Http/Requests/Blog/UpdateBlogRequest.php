@@ -15,6 +15,7 @@ class UpdateBlogRequest extends FormRequest
     {
         return [
             // Datos Básicos
+            'title' => 'required|string|max:150',
             'slug' => 'required|string|max:150|unique:blogs,slug,',
             'hero_title' => 'required|string|max:150',
             'cover_subtitle' => 'required|string|max:255',
