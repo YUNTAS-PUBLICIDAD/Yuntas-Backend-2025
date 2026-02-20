@@ -12,8 +12,6 @@ class ProductContentSlot extends Model
     protected $table = 'product_content_slots';
     protected $fillable = [
         'name',
-        'data_type',
-        'position',
     ];
 
     /**
