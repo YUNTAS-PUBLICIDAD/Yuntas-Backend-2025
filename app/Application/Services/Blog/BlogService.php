@@ -338,7 +338,7 @@ class BlogService
         }
 
         if ($dto->testimonial) {
-            $dto->testimonial = $this->sanitizeText($dto->testimonial);
+            $dto->testimonial = $this->sanitizeHtml($dto->testimonial);
         }
 
         if ($dto->product_id) {
