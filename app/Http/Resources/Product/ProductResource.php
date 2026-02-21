@@ -10,8 +10,8 @@ class ProductResource extends JsonResource
     public function toArray(Request $request): array
     {
         
-        $mainImage = $this->images->first(fn($img) => $img->slot?->name === 'List' || $img->slot?->name === 'Main');
-        $gallery = $this->images->filter(fn($img) => $img->slot?->name !== 'List' && $img->slot?->name !== 'Main')->values();
+        $mainImage = $this->images->first(fn($img) => $img->slot->name === 'List' && $img->slot->module === 'products');
+        $gallery = $this->images->filter(fn($img) => $img->slot->name !== 'List' && $img->slot->module === 'products')->values();
 
         return [
             'id' => $this->id,
