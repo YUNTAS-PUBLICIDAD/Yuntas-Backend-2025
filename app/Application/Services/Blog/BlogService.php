@@ -117,13 +117,20 @@ class BlogService
                 'product_id' => $dto->product_id, 
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
-                'description' => $dto->description,
-                'testimonial' => $dto->testimonial,
             ]);
 
             // 2. Beneficios
             if (isset($dto->benefits)) {
                 $this->saveContentItems($blog, 'Beneficios', $dto->benefits);
+            }
+
+            // Guardar Texts 
+            if (!empty($dto->description)) {
+                $this->saveContentTexts($blog, 'Descripciones', $dto->description);
+            }
+
+            if (isset($dto->testimonial) || $dto->testimonial === null) {
+                $this->saveContentTexts($blog, 'Testimonios', $dto->testimonial ?? "");
             }
 
             // 3. Actualizar Imagen Principal
@@ -325,10 +332,13 @@ class BlogService
         $dto->meta_title = $this->sanitizeText($dto->meta_title);
         $dto->meta_description = $this->sanitizeText($dto->meta_description);
         $dto->description = $this->sanitizeHtml($dto->description);
-        $dto->testimonial = $this->sanitizeText($dto->testimonial);
 
         if ($dto->video_url) {
             $dto->video_url = $this->sanitizeUrl($dto->video_url);
+        }
+
+        if ($dto->testimonial) {
+            $dto->testimonial = $this->sanitizeText($dto->testimonial);
         }
 
         if ($dto->product_id) {
