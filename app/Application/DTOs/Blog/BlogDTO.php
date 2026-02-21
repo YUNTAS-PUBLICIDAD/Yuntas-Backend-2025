@@ -7,12 +7,12 @@ use Illuminate\Http\Request;
 class BlogDTO
 {
     public function __construct(
-        public string $name,
+        public string $title,
         public string $slug,
         public string $hero_title,
         public string $cover_subtitle,       
         public string $status,
-        public string $video_url,
+        public ?string $video_url,
 
         //  Producto
         public ?int $product_id,
@@ -33,7 +33,7 @@ class BlogDTO
         // Contenido Dinámico
         public string $description,  
         public array $benefits,   
-        public string $testimonial,
+        public ?string $testimonial,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -44,7 +44,7 @@ class BlogDTO
             hero_title: $request->validated('hero_title') ?? $request->input('hero_title'),
             cover_subtitle: $request->validated('cover_subtitle') ?? $request->input('cover_subtitle'),
             status: $request->input('status', 'published'),
-            video_url: $request->validated('video_url') ?? $request->input('video_url'),
+            video_url: $request->input('video_url') ?? null,
 
             product_id: $request->validated('product_id') ?? null,
 
@@ -61,7 +61,7 @@ class BlogDTO
             
             description: $request->validated('description') ?? $request->input('description'),
             benefits: $request->input('benefits', []),
-            testimonial: $request->validated('testimonial') ?? $request->input('testimonial'),
+            testimonial: $request->input('testimonial') ?? null,
         );
     }
 
