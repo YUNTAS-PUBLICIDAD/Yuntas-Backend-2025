@@ -141,8 +141,8 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     // ------------------- BLOGS -------------------
     Route::prefix('admin/blogs')->group(function () {
         Route::post('/', [BlogController::class, 'store']);
+        Route::post('/{id}', [BlogController::class, 'update']);
         Route::delete('/{id}', [BlogController::class, 'destroy']);
-        Route::put('/{id}', [BlogController::class, 'update']);
     });
 
     // ------------------- PRODUCTOS -------------------

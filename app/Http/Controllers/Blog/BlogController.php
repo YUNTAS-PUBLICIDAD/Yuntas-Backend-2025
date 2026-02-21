@@ -7,7 +7,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Application\Services\Blog\BlogService;
 use App\Application\DTOs\Blog\BlogDTO;
-// no existe la ruta use App\Http\Requests\PostBlog\PostStoreBlog;
 use App\Http\Resources\Blog\BlogResource;
 use App\Http\Requests\Blog\StoreBlogRequest;
 use App\Http\Requests\Blog\UpdateBlogRequest;
