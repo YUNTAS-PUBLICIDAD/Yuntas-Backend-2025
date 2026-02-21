@@ -84,7 +84,7 @@ trait SanitizesInput
         $html = $this->removeHtmlAttributes($html);
 
         // Lista de tags HTML permitidos (básicos para descripción)
-        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><h3><h4>';
+        $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><h3><h4><a>';
         
         // Eliminar tags no permitidos
         $html = strip_tags($html, $allowedTags);
