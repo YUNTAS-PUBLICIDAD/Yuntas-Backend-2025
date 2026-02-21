@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Blog;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateBlogRequest extends FormRequest
@@ -16,7 +17,12 @@ class UpdateBlogRequest extends FormRequest
         return [
             // Datos Básicos
             'title' => 'required|string|max:150',
-            'slug' => 'required|string|max:150|unique:blogs,slug,',
+            'slug' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('blogs', 'slug')->ignore($this->route('id'))
+            ],
             'hero_title' => 'required|string|max:150',
             'cover_subtitle' => 'required|string|max:255',
             'video_url' => 'nullable|url',
@@ -32,7 +38,7 @@ class UpdateBlogRequest extends FormRequest
 
             // Galería
             'gallery' => 'nullable|array',
-            'gallery.*.slot' => 'nullable|string|in:Hero,Description,Benefits,Testimonial',
+            'gallery.*.slot' => 'nullable|string|in:Hero,Desc,Benefits,Testimonial',
             'gallery.*.image' => 'nullable|image|mimes:webp|max:5120',
             'gallery.*.title' => 'nullable|string|max:50',
             'gallery.*.alt' => 'nullable|string|max:80',

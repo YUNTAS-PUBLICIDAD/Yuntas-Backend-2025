@@ -32,7 +32,7 @@ class StoreBlogRequest extends FormRequest
 
             // Galería
             'gallery' => 'required|array', // imagen para hero, descripciones, beneficios o testimonios
-            'gallery.*.slot' => 'required|string|in:Hero,Description,Benefits,Testimonial',
+            'gallery.*.slot' => 'required|string|in:Hero,Desc,Benefits,Testimonial',
             'gallery.*.image' => 'required|image|mimes:webp|max:5120',
             'gallery.*.title' => 'nullable|string|max:50',
             'gallery.*.alt' => 'nullable|string|max:80',
