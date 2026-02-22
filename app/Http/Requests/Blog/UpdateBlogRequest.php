@@ -50,7 +50,7 @@ class UpdateBlogRequest extends FormRequest
             'benefits' => 'required|array',
             'benefits.*' => 'string|max:150',
 
-            'testimonial' => 'nullable|string|max:255',
+            'testimonial' => 'required|string|max:255',
 
             // Producto asociado
             'product_id' => 'required|integer|exists:products,id', // titulo (nombre) en card
