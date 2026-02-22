@@ -43,7 +43,7 @@ class StoreBlogRequest extends FormRequest
             'benefits' => 'required|array', // beneficios en detalle
             'benefits.*' => 'string|max:150',
 
-            'testimonial' => 'nullable|string|max:255', // testimonio en detalle
+            'testimonial' => 'required|string|max:255', // testimonio en detalle
 
             // Producto asociado
             'product_id' => 'required|integer|exists:products,id', // titulo (nombre) en card

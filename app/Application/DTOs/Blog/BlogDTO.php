@@ -33,7 +33,7 @@ class BlogDTO
         // Contenido Dinámico
         public string $description,  
         public array $benefits,   
-        public ?string $testimonial,
+        public string $testimonial,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -61,7 +61,7 @@ class BlogDTO
             
             description: $request->validated('description') ?? $request->input('description'),
             benefits: $request->input('benefits', []),
-            testimonial: $request->input('testimonial') ?? null,
+            testimonial: $request->validated('testimonial') ?? $request->input('testimonial'),
         );
     }
 

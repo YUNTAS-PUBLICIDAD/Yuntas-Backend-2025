@@ -129,8 +129,8 @@ class BlogService
                 $this->saveContentTexts($blog, 'Descripciones', $dto->description);
             }
 
-            if (isset($dto->testimonial) || $dto->testimonial === null) {
-                $this->saveContentTexts($blog, 'Testimonios', $dto->testimonial ?? "");
+            if (!empty($dto->testimonial)) {
+                $this->saveContentTexts($blog, 'Testimonios', $dto->testimonial);
             }
 
             // 3. Actualizar Imagen Principal
@@ -332,22 +332,14 @@ class BlogService
         $dto->meta_title = $this->sanitizeText($dto->meta_title);
         $dto->meta_description = $this->sanitizeText($dto->meta_description);
         $dto->description = $this->sanitizeHtml($dto->description);
-
+        $dto->testimonial = $this->sanitizeHtml($dto->testimonial);
+        $dto->benefits = $this->sanitizeArray($dto->benefits);
+        
         if ($dto->video_url) {
             $dto->video_url = $this->sanitizeUrl($dto->video_url);
         }
 
-        if ($dto->testimonial) {
-            $dto->testimonial = $this->sanitizeHtml($dto->testimonial);
-        }
-
-        if ($dto->product_id) {
-            $dto->product_id = $this->sanitizeInteger($dto->product_id);
-        }
-
-        if ($dto->benefits) {
-            $dto->benefits = $this->sanitizeArray($dto->benefits);
-        }
+        $dto->product_id = $this->sanitizeInteger($dto->product_id);
 
         return $dto;
     }
