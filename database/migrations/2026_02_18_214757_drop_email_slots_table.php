@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::table('email_messages', function (Blueprint $table) {
+            $table->dropForeign(['slot_id']); // elimina la relación
+        });
+
         Schema::dropIfExists('email_slots');
     }
 
@@ -25,6 +29,13 @@ return new class extends Migration
             $table->string('description', 255)->nullable();
             $table->integer('position')->nullable();
             $table->timestamps();
+        });
+
+        Schema::table('email_messages', function (Blueprint $table) {
+            $table->foreign('slot_id')
+                  ->references('id')
+                  ->on('email_slots')
+                  ->onDelete('cascade');
         });
     }
 };
