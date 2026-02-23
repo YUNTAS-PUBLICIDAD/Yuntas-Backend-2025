@@ -2,15 +2,15 @@
 
 namespace App\Application\DTOs\Blog;
 
-use Illuminate\Http\UploadedFile;
+use Illuminate\Http\Request;
 
-readonly class BlogDTO
+class BlogDTO
 {
     public function __construct(
         public string $title,
         public string $slug,
-        public ?string $cover_subtitle, 
-        public string $content,        
+        public string $hero_title,
+        public string $cover_subtitle,       
         public string $status,
         public ?string $video_url,
 
@@ -18,55 +18,71 @@ readonly class BlogDTO
         public ?int $product_id,
         
         // SEO
-        public ?string $meta_title,
-        public ?string $meta_description,
+        public string $meta_title,
+        public string $meta_description, 
         
-        // Relaciones
-        public array $categories,      
-
-        // Archivos
-        public ?UploadedFile $main_image,
+        // Relaciones y Archivos
+        public $main_image,
+        public ?string $main_image_title,
         public ?string $main_image_alt, 
-        public array $gallery_images = [],
-        public array $gallery_alts = [],    
+
+        public ?array $gallery, // [['slot' => 'Hero', 'image' => File, 'alt' => '...'], ...]  
+        public ?array $gallery_title, // esto solo es cuando se actualiza title de imagenes existentes 
+        public ?array $gallery_alt, // esto solo es cuando se actualiza alt de imagenes existentes
         
         // Contenido Dinámico
-        public array $paragraphs = [],  
-        public array $benefits = [],     
-        public array $content_blocks = []
+        public string $description,  
+        public array $benefits,   
+        public string $testimonial,
     ) {}
 
-    public static function fromRequest($request): self
+    public static function fromRequest(Request $request): self
     {
-        $seo = is_string($request->input('etiqueta')) 
-            ? json_decode($request->input('etiqueta'), true) 
-            : $request->input('etiqueta', []);
-
         return new self(
-            title: $request->validated('titulo') ?? $request->input('titulo'), 
-            slug: \Str::slug($request->validated('titulo') ?? $request->input('titulo')),
-            cover_subtitle: $request->validated('subtitulo') ?? $request->input('subtitulo'),
-            content: $request->validated('contenido') ?? '', 
-            status: 'published', 
-            video_url: $request->validated('url_video') ?? $request->input('url_video'),
+            title: $request->validated('title') ?? $request->input('title'), 
+            slug: $request->validated('slug') ?? $request->input('slug'),
+            hero_title: $request->validated('hero_title') ?? $request->input('hero_title'),
+            cover_subtitle: $request->validated('cover_subtitle') ?? $request->input('cover_subtitle'),
+            status: $request->input('status', 'published'),
+            video_url: $request->input('video_url') ?? null,
 
-            //  AQUÍ
             product_id: $request->validated('product_id') ?? null,
+
+            meta_title: $request->validated('meta_title') ?? $request->input('meta_title'),
+            meta_description: $request->validated('meta_description') ?? $request->input('meta_description'),
+
+            main_image: $request->file('main_image'),
+            main_image_title: $request->input('main_image_title'),
+            main_image_alt: $request->input('main_image_alt'), 
+
+            gallery: self::processGallery($request),
+            gallery_title: $request->input('gallery_title', []),
+            gallery_alt: $request->input('gallery_alt', []),
             
-            meta_title: $seo['meta_titulo'] ?? null,
-            meta_description: $seo['meta_descripcion'] ?? null,
-
-            categories: $request->input('categorias', []),
-
-            main_image: $request->file('imagen_principal'),
-            main_image_alt: $request->input('imagen_principal_alt'),
-
-            gallery_images: $request->file('imagenes', []),
-            gallery_alts: $request->input('imagenes_alts', []),
-            
-            paragraphs: $request->input('parrafos', []),
-            benefits: $request->input('beneficios', []),
-            content_blocks: $request->input('bloques', [])
+            description: $request->validated('description') ?? $request->input('description'),
+            benefits: $request->input('benefits', []),
+            testimonial: $request->validated('testimonial') ?? $request->input('testimonial'),
         );
+    }
+
+    private static function processGallery(Request $request): array
+    {
+        $gallery = [];
+        $galleryData = $request->input('gallery', []);
+
+        foreach ($galleryData as $index => $item) {
+            $imageFile = $request->file("gallery.{$index}.image");
+            
+            if ($imageFile) {
+                $gallery[] = [
+                    'slot' => $item['slot'] ?? 'Gallery',
+                    'image' => $imageFile,
+                    'title' => $item['title'] ?? null,
+                    'alt' => $item['alt'] ?? null
+                ];
+            }
+        }
+
+        return $gallery;
     }
 }

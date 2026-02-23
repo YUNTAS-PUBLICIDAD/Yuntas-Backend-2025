@@ -12,8 +12,6 @@ class BlogContentSlot extends Model
 
     protected $fillable = [
         'name',
-        'data_type',
-        'position',
     ];
 
     /**
@@ -30,13 +28,5 @@ class BlogContentSlot extends Model
     public function contentItems(): HasMany
     {
         return $this->hasMany(BlogContentItem::class, 'slot_id');
-    }
-
-    /**
-     * Get the content blocks for the slot.
-     */
-    public function contentBlocks(): HasMany
-    {
-        return $this->hasMany(BlogContentBlock::class, 'slot_id');
     }
 }

@@ -4,20 +4,20 @@ namespace App\Application\Services\Product;
 
 use App\Application\DTOs\Product\ProductDTO;
 use App\Models\Product;
+use Illuminate\Support\Str;
 use App\Models\ImageSlot;
 use App\Models\ProductContentSlot;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use App\Jobs\RebuildFrontendJob;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use App\Traits\ValidatesImageSecurity;
+use App\Traits\SanitizesInput;
 
 class ProductService
 {
-    use ValidatesImageSecurity;
+    use ValidatesImageSecurity, SanitizesInput;
     
     public function __construct() {}
 
@@ -50,6 +50,9 @@ class ProductService
     // Crear Producto
     public function create(ProductDTO $dto)
     {
+        $this->preValidateImages($dto);
+        $dto = $this->sanitizeProductInput($dto);
+
         $product = DB::transaction(function () use ($dto) {
             // 1. Guardar datos básicos
             $product = Product::create([
@@ -77,9 +80,7 @@ class ProductService
                 $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
             }
 
-            // 4. Gestionar Galería con Mapa de Slots
-            //$slotMap = [0 => 'Hero', 1 => 'Specs', 2 => 'Benefits', 3 => 'Popups'];
-            
+            // 4. Gestionar Galería con Mapa de Slots           
             if (!empty($dto->gallery)) {
                 foreach ($dto->gallery as $item) {
                     $slotName = $item['slot'];
@@ -88,7 +89,7 @@ class ProductService
                     $altText = $item['alt'] ?? $product->name;
 
                     // Validar que sea archivo
-                    if (!$image instanceof \Illuminate\Http\UploadedFile) continue;
+                    if (!$image instanceof UploadedFile) continue;
 
                     $this->uploadImage($product, $image, $slotName, 'products', $title, $altText);
                 }
@@ -114,6 +115,9 @@ class ProductService
     // Actualizar Producto
     public function update(int $id, ProductDTO $dto)
     {
+        $this->preValidateImages($dto);
+        $dto = $this->sanitizeProductInput($dto);
+
         $product = DB::transaction(function () use ($id, $dto) {
             $product = Product::findOrFail($id);
 
@@ -139,7 +143,7 @@ class ProductService
             }
 
             // Actualizar Imagen Principal
-            if ($dto->main_image instanceof \Illuminate\Http\UploadedFile) {
+            if ($dto->main_image instanceof UploadedFile) {
                 $this->deleteImagesBySlot($product, 'List');
                 $title = $dto->main_image_title ?? $product->name;
                 $alt = $dto->main_image_alt ?? $product->name;
@@ -157,7 +161,7 @@ class ProductService
                     $title = $item['title'] ?? $product->name;
                     $altText = $item['alt'] ?? $product->name;
 
-                    if ($image instanceof \Illuminate\Http\UploadedFile) {
+                    if ($image instanceof UploadedFile) {
                         // Nueva imagen: borrar anterior y subir nueva
                         $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'Popups'];
                         if (in_array($slotName, $uniqueSlots)) {
@@ -211,8 +215,9 @@ class ProductService
 
     private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
-        // Validar seguridad de la imagen
-        $this->validateImageSecurity($file);
+        $slotName = $this->validateSlot($slotName);
+        $title = $this->sanitizeText($title);
+        $altText = $this->sanitizeText($altText);
 
         // 1. Buscar o Crear el Slot
         $slot = ImageSlot::firstOrCreate(
@@ -286,10 +291,7 @@ class ProductService
 
     private function saveContentItems(Product $product, $slotName, array $items)
     {
-        $slot = ProductContentSlot::firstOrCreate(
-            ['name' => $slotName],
-            ['data_type' => 'list', 'position' => 1]
-        );
+        $slot = ProductContentSlot::firstOrCreate(['name' => $slotName]);
 
         $product->contentItems()->where('slot_id', $slot->id)->delete();
 
@@ -300,8 +302,7 @@ class ProductService
 
             $product->contentItems()->create([
                 'slot_id' => $slot->id,
-                'text' => $text,
-                'position' => $index + 1
+                'text' => $text
             ]);
         }
     }
@@ -325,5 +326,56 @@ class ProductService
             $ids[] = $category->id;
         }
         return $ids;
+    }
+
+    private function preValidateImages(ProductDTO $dto): void
+    {
+        // Validar imagen principal
+        if ($dto->main_image instanceof UploadedFile) {
+            $this->validateImageSecurity($dto->main_image);
+        }
+
+        // Validar imágenes de galería
+        if (!empty($dto->gallery)) {
+            foreach ($dto->gallery as $item) {
+                if (isset($item['image']) && $item['image'] instanceof UploadedFile) {
+                    $this->validateImageSecurity($item['image']);
+                }
+            }
+        }
+    }
+
+    // Sanitización de Inputs específicos para Producto
+    private function sanitizeProductInput(ProductDTO $dto): ProductDTO
+    {
+        // Sanitizar campos de texto
+        $dto->name = $this->sanitizeText($dto->name);
+        $dto->hero_title = $this->sanitizeText($dto->hero_title);
+        $dto->description = $this->sanitizeHtml($dto->description);
+        $dto->meta_title = $this->sanitizeText($dto->meta_title);
+        $dto->meta_description = $this->sanitizeText($dto->meta_description);
+        $dto->keywords = $this->sanitizeKeywords($dto->keywords);
+        $dto->slug = $this->sanitizeSlug($dto->slug);
+        $dto->price = $this->sanitizeFloat($dto->price);
+
+        // Sanitizar arrays
+        if ($dto->specifications) {
+            $dto->specifications = $this->sanitizeArray($dto->specifications);
+        }
+        if ($dto->benefits) {
+            $dto->benefits = $this->sanitizeArray($dto->benefits);
+        }
+        if ($dto->categories) {
+            $dto->categories = $this->sanitizeArray($dto->categories);
+        }
+
+        return $dto;
+    }
+
+    // Validación específica para slots de productos
+    private function validateSlot(string $slotName): string
+    {
+        $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'Popups'];
+        return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
     }
 }

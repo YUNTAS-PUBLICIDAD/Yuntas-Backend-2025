@@ -14,7 +14,6 @@ class BlogContentItem extends Model
         'blog_id',
         'slot_id',
         'text',
-        'position',
     ];
 
     /**

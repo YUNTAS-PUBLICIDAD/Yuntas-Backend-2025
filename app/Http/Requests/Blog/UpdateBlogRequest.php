@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Blog;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateBlogRequest extends FormRequest
@@ -14,31 +15,45 @@ class UpdateBlogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'titulo' => 'required|string|max:150',
-            'subtitulo' => 'nullable|string|max:255',
-            'contenido' => 'nullable|string',
-            'url_video' => 'nullable|url',
+            // Datos Básicos
+            'title' => 'required|string|max:150',
+            'slug' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('blogs', 'slug')->ignore($this->route('id'))
+            ],
+            'hero_title' => 'required|string|max:150',
+            'cover_subtitle' => 'required|string|max:255',
+            'video_url' => 'nullable|url',
 
-            'etiqueta' => 'nullable',
+            // SEO 
+            'meta_title' => 'required|string|max:70', 
+            'meta_description' => 'required|string|max:160',
 
-            'imagen_principal' => 'image|mimes:webp|max:5120',
-            'imagen_principal_alt' => 'nullable|string|max:191',
+            // Imagen Principal
+            'main_image' => 'nullable|image|mimes:webp|max:5120',
+            'main_image_title' => 'nullable|string|max:50',
+            'main_image_alt' => 'nullable|string|max:80',
 
-            'imagenes' => 'nullable|array',
-            'imagenes.*' => 'image|mimes:webp|max:5120',
+            // Galería
+            'gallery' => 'nullable|array',
+            'gallery.*.slot' => 'nullable|string|in:Hero,Desc,Benefits,Testimonial',
+            'gallery.*.image' => 'nullable|image|mimes:webp|max:5120',
+            'gallery.*.title' => 'nullable|string|max:50',
+            'gallery.*.alt' => 'nullable|string|max:80',
+            'gallery_alt.*' => 'nullable|string|max:255',
 
-            'imagenes_alts' => 'nullable|array',
-            'imagenes_alts.*' => 'nullable|string|max:191',
+            // Contenido Dinámico
+            'description' => 'required|string',
+            
+            'benefits' => 'required|array',
+            'benefits.*' => 'string|max:150',
 
-            'categorias' => 'nullable|array',
-            'categorias.*' => 'integer|exists:categories,id',
+            'testimonial' => 'required|string|max:255',
 
-            // 🔑 PRODUCTO (nuevo)
-            'product_id' => 'nullable|integer|exists:products,id',
-
-            'parrafos' => 'nullable|array',
-            'beneficios' => 'nullable|array',
-            'bloques' => 'nullable|array',
+            // Producto asociado
+            'product_id' => 'required|integer|exists:products,id', // titulo (nombre) en card
         ];
     }
 }

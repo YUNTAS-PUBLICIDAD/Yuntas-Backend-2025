@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\WhatsappProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
+use App\Traits\ValidatesImageSecurity;
 
 class WhatsappProductController extends Controller
 {
+     use ValidatesImageSecurity;
+
     // OBTENER PLANTILLAS POR PRODUCTO
     public function indexByProduct(Request $request) {
         $request->validate([
@@ -56,6 +58,18 @@ class WhatsappProductController extends Controller
 
         // IMAGEN PRINCIPAL
         if ($request->hasFile('imagen_principal')) {
+            // Valida la imagen principal
+            try {
+                $this->validateImageSecurity($request->file('imagen_principal'));
+            } catch (\InvalidArgumentException $e) {
+                return response()->json([
+                    'message' => 'Imagen principal no válida: ',
+                    'errors' => [
+                        'imagen_principal' => [$e->getMessage()]
+                    ]
+                ], 422);
+            }
+
             // Eliminar imagen anterior si existe
             if ($plantilla && $plantilla->imagen_principal) {
                 $oldPath = str_replace('storage/', '', $plantilla->imagen_principal);

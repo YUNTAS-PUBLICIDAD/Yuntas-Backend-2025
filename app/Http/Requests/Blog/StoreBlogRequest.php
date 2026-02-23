@@ -15,39 +15,38 @@ class StoreBlogRequest extends FormRequest
     {
         return [
             // Datos Básicos
-            'titulo' => 'required|string|max:150',
-            'subtitulo' => 'nullable|string|max:255',
-            'contenido' => 'nullable|string', 
-            'url_video' => 'nullable|url',
+            'title' => 'required|string|max:150', // // titulo (nombre) en card
+            'slug' => 'nullable|string|max:150|unique:blogs,slug', // slug
+            'hero_title' => 'required|string|max:150', // titulo hero en detalle
+            'cover_subtitle' => 'required|string|max:255', // subtitulo en detalle
+            'video_url' => 'nullable|url', // url de video opcional
             
-            // SEO (Puede venir como JSON string o array, validamos keys si es array)
-            'etiqueta' => 'nullable', 
+            // SEO 
+            'meta_title' => 'required|string|max:70', 
+            'meta_description' => 'required|string|max:160',
 
             // Imagen Principal
-            'imagen_principal' => 'required|image|mimes:webp|max:5120',
-            'imagen_principal_alt' => 'nullable|string|max:191',
+            'main_image' => 'required|image|mimes:webp|max:5120', // imagen princial en card
+            'main_image_title' => 'nullable|string|max:50',
+            'main_image_alt' => 'nullable|string|max:80',
 
             // Galería
-            'imagenes' => 'nullable|array', 
-            'imagenes.*' => 'image|mimes:webp|max:5120',
-            'imagenes_alts' => 'nullable|array', 
-            'imagenes_alts.*' => 'nullable|string|max:191',
-
-            // Categorías
-            'categorias' => 'nullable|array', 
-            'categorias.*' => 'string|max:150', 
+            'gallery' => 'required|array', // imagen para hero, descripciones, beneficios o testimonios
+            'gallery.*.slot' => 'required|string|in:Hero,Desc,Benefits,Testimonial',
+            'gallery.*.image' => 'required|image|mimes:webp|max:5120',
+            'gallery.*.title' => 'nullable|string|max:50',
+            'gallery.*.alt' => 'nullable|string|max:80',
 
             // Contenido Dinámico
-            'parrafos' => 'nullable|array',
-            'parrafos.*' => 'string',
+            'description' => 'required|string', // descripcion en detalle
             
-            'beneficios' => 'nullable|array',
-            'beneficios.*' => 'string',
+            'benefits' => 'required|array', // beneficios en detalle
+            'benefits.*' => 'string|max:150',
 
-            'bloques' => 'nullable|array', 
+            'testimonial' => 'required|string|max:255', // testimonio en detalle
 
             // Producto asociado
-            'product_id' => 'nullable|exists:products,id',
+            'product_id' => 'required|integer|exists:products,id', // titulo (nombre) en card
         ];
     }
 }

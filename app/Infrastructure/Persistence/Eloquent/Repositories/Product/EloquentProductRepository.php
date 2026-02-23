@@ -38,7 +38,6 @@ class EloquentProductRepository implements ProductRepositoryInterface
             'images.slot',
             'categories',        
             'contentItems.slot', 
-            'contentTexts.slot'
         ])->find($id);
     }
 
@@ -52,7 +51,6 @@ class EloquentProductRepository implements ProductRepositoryInterface
             'images.slot',       
             'categories',        
             'contentItems.slot', 
-            'contentTexts.slot'
         ])->where('slug', $slug)->first();
     }
 
