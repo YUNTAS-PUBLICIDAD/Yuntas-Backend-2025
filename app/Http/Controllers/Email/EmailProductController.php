@@ -1,5 +1,4 @@
 <?php
-# solucionando el nombre de la carpeta Email con mayúscula
 namespace App\Http\Controllers\Email;
 
 use App\Http\Controllers\Controller;
@@ -8,10 +7,12 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-
+use App\Traits\ValidatesImageSecurity;
 
 class EmailProductController extends Controller
 {
+    use ValidatesImageSecurity;
+
     // OBTENER PLANTILLAS POR PRODUCTO
     public function indexByProduct(Request $request)
     {
@@ -61,6 +62,18 @@ class EmailProductController extends Controller
 
         // IMAGEN PRINCIPAL
         if ($request->hasFile('imagen_principal')) {
+
+            // Valida la imagen principal
+            try {
+                $this->validateImageSecurity($request->file('imagen_principal'));
+            } catch (\InvalidArgumentException $e) {
+                return response()->json([
+                    'message' => 'Imagen principal no válida: ',
+                    'errors' => [
+                        'imagen_principal' => [$e->getMessage()]
+                    ]
+                ], 422);
+            }
             // Eliminar imagen anterior si existe
             if ($plantilla && $plantilla->imagen_principal) {
                 $oldPath = str_replace('storage/', '', $plantilla->imagen_principal);
@@ -76,6 +89,21 @@ class EmailProductController extends Controller
 
         // IMÁGENES SECUNDARIAS
         if ($request->hasFile('imagenes_secundarias')) {
+
+            // Validar cada imagen secundaria
+            foreach ($request->file('imagenes_secundarias') as $index => $img) {
+                try {
+                    $this->validateImageSecurity($img);
+                } catch (\InvalidArgumentException $e) {
+                    return response()->json([
+                        'message' => "Imagen secundaria #" . ($index + 1) . " no válida",
+                        'errors' => [
+                            "imagenes_secundarias.{$index}" => [$e->getMessage()]
+                        ]
+                    ], 422);
+                }
+            }
+
             if ($plantilla && $plantilla->imagenes_secundarias) { // eliminar las anteriores si existen
                 $oldImages = json_decode($plantilla->imagenes_secundarias, true) ?? [];
                 foreach ($oldImages as $oldImage) {

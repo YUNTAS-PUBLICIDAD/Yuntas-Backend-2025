@@ -36,16 +36,24 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Slots de Imágenes
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Main'], ['position' => 1]);
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Gallery'], ['position' => 2]);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Desc']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Benefits']);
+        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Testimonial']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'List']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Hero']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Specs']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Benefits']);
+        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Popups']);
 
         // 4. Slots de Contenido
-        ProductContentSlot::firstOrCreate(['name' => 'Especificaciones'], ['data_type' => 'list', 'position' => 1]);
-        ProductContentSlot::firstOrCreate(['name' => 'Beneficios'], ['data_type' => 'list', 'position' => 2]);
+        ProductContentSlot::firstOrCreate(['name' => 'Especificaciones']);
+        ProductContentSlot::firstOrCreate(['name' => 'Beneficios']);
 
-        BlogContentSlot::firstOrCreate(['name' => 'Parrafos'], ['data_type' => 'text', 'position' => 1]);
-        BlogContentSlot::firstOrCreate(['name' => 'Beneficios'], ['data_type' => 'list', 'position' => 2]);
-        BlogContentSlot::firstOrCreate(['name' => 'Bloques'], ['data_type' => 'block', 'position' => 3]);
+        BlogContentSlot::firstOrCreate(['name' => 'Descripciones']);
+        BlogContentSlot::firstOrCreate(['name' => 'Beneficios']);
+        BlogContentSlot::firstOrCreate(['name' => 'Testimonios']);
 
         // 5. Fuentes de Leads
         LeadSource::firstOrCreate(['name' => 'Inicio']);

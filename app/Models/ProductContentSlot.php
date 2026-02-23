@@ -12,8 +12,6 @@ class ProductContentSlot extends Model
     protected $table = 'product_content_slots';
     protected $fillable = [
         'name',
-        'data_type',
-        'position',
     ];
 
     /**
@@ -22,13 +20,5 @@ class ProductContentSlot extends Model
     public function contentItems(): HasMany
     {
         return $this->hasMany(ProductContentItem::class, 'slot_id');
-    }
-
-    /**
-     * Get the content texts for the slot.
-     */
-    public function contentTexts(): HasMany
-    {
-        return $this->hasMany(ProductContentText::class, 'slot_id');
     }
 }
