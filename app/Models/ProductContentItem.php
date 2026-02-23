@@ -14,8 +14,7 @@ class ProductContentItem extends Model
     protected $fillable = [
         'product_id',
         'slot_id',
-        'text',
-        'position',
+        'text'
     ];
 
     /**

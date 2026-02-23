@@ -66,12 +66,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(ClaimResponse::class, 'admin_id');
     }
-
-    /**
-     * Get the audit logs for the user.
-     */
-    public function auditLogs(): HasMany
-    {
-        return $this->hasMany(AuditLog::class);
-    }
 }

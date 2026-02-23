@@ -23,21 +23,21 @@ class StoreProductRequest extends FormRequest
             'status' => 'nullable|in:active,inactive',
 
             // SEO
-            'meta_title' => 'nullable|string|max:191',
-            'meta_description' => 'nullable|string|max:191',
+            'meta_title' => 'nullable|string|max:70',
+            'meta_description' => 'nullable|string|max:160',
             'keywords' => 'nullable', 
             
             // Imagen Principal
             'main_image' => 'required|image|mimes:webp|max:5120',
-            'main_image_title' => 'nullable|string|max:191',
-            'main_image_alt' => 'nullable|string|max:191', 
+            'main_image_title' => 'nullable|string|max:50',
+            'main_image_alt' => 'nullable|string|max:80', 
 
             // Galería
             'gallery' => 'nullable|array',
             'gallery.*.slot' => 'required|string|in:Hero,Specs,Benefits,Popups,Gallery',
             'gallery.*.image' => 'required|image|mimes:webp|max:5120',
-            'gallery.*.title' => 'nullable|string|max:191',
-            'gallery.*.alt' => 'nullable|string|max:191',
+            'gallery.*.title' => 'nullable|string|max:50',
+            'gallery.*.alt' => 'nullable|string|max:80',
 
             // Relaciones
             'categories' => 'nullable|array', 
