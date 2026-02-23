@@ -13,8 +13,6 @@ class ImageSlot extends Model
     protected $fillable = [
         'module',
         'name',
-        'description',
-        'position',
     ];
 
     /**

@@ -76,11 +76,6 @@ class Product extends Model
         return $this->hasMany(ProductContentItem::class);
     }
 
-    public function contentTexts(): HasMany
-    {
-        return $this->hasMany(ProductContentText::class);
-    }
-
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_product');

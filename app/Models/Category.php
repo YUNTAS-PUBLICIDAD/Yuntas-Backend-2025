@@ -23,12 +23,4 @@ class Category extends Model
     {
         return $this->belongsToMany(Product::class, 'category_product');
     }
-
-    /**
-     * Get the blogs for the category.
-     */
-    public function blogs(): BelongsToMany
-    {
-        return $this->belongsToMany(Blog::class, 'category_blog');
-    }
 }
