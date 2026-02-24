@@ -28,6 +28,7 @@ use App\Http\Controllers\Deploy\DeployController;
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     // Público
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
 
     // Protegidas (Requieren Token)
     Route::middleware('auth:sanctum')->group(function () {
