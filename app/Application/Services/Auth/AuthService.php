@@ -51,4 +51,34 @@ class AuthService
     {
         return $user->load('role'); 
     }
+
+    /**
+     * Refresca el token de acceso (rota el token actual por uno nuevo).
+     */
+    public function refreshToken(string $bearerToken): array
+    {
+        $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($bearerToken);
+
+        if (!$accessToken) {
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(
+                401,
+                'Token inválido o no encontrado.'
+            );
+        }
+
+        $user = $accessToken->tokenable;
+        $tokenName = $accessToken->name ?? 'API Token';
+
+        // Eliminar el token viejo
+        $accessToken->delete();
+
+        // Crear uno nuevo
+        $newToken = $user->createToken($tokenName)->plainTextToken;
+
+        return [
+            'user'  => $user->load('role'),
+            'token' => $newToken,
+            'token_type' => 'Bearer',
+        ];
+    }
 }
