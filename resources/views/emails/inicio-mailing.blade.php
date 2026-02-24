@@ -13,18 +13,23 @@
     <div class="container">
         <img src="{{ asset('storage/plantillas/yuntas-bienvenida.webp') }}" alt="Yuntas Bienvenida" class="header-image">
         
-        <h1>¡Bienvenido/a a Yuntas!</h1>
+        <p>Estimado/a <strong>{{ $cliente['nombre'] }}</strong>:</p>
         
-        <p>Gracias por registrarte, <strong>{{ $cliente['nombre'] }}</strong>. Nos alegra tenerte con nosotros y que formes parte de nuestra comunidad.</p>
+        <p>Gracias por contactarnos y por su interés en nuestros servicios.</p>
         
-        <p>Desde ahora tendrás acceso a información sobre nuestros productos, novedades y soluciones en letreros acrílicos y señalización diseñadas para potenciar la imagen de tu negocio con un estilo moderno, profesional y duradero.</p>
+        <p>En <strong>Yuntas Publicidad</strong> somos su aliado en publicidad. Nos especializamos en brindar soluciones publicitarias personalizadas que ayudan a destacar su marca y potenciar su presencia en el mercado.</p>
         
-        <p>Si tienes alguna consulta o necesitas asesoría personalizada, no dudes en escribirnos. Estaremos encantados de ayudarte a encontrar la mejor opción para tu proyecto.</p>
+        <p>🔹 <strong>¿En qué podemos ayudarle?</strong></p>
+        <ul>
+            <li>Productos publicitarios personalizados</li>
+            <li>Cotizaciones sin compromiso</li>
+        </ul>
         
-        <p>Gracias por confiar en Yuntas.<br>
-        Tu marca merece destacar.</p>
+        <p>En breve recibirá información detallada en este correo. Si tiene alguna consulta adicional, no dude en escribirnos. Estaremos encantados de atenderle.</p>
         
-        <p><strong>Equipo Yuntas</strong></p>
+        <p>Saludos cordiales,<br>
+        <strong>Yuntas Publicidad ✨</strong><br>
+        912 849 782
     </div>
 </body>
 </html>
