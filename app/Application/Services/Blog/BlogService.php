@@ -208,8 +208,9 @@ class BlogService
         $slotLower = strtolower($slotName);
         $extension = $file->extension();
 
-        // Formato por ejemplo: proyector-holografico-3d-hero-15.webp
-        $filename = "{$slugName}-{$slotLower}-{$blog->id}.{$extension}";
+        // Formato por ejemplo: proyector-holografico-3d-hero-15-a1b2c3.webp
+        $uniqueSuffix = Str::lower(Str::random(6));
+        $filename = "{$slugName}-{$slotLower}-{$blog->id}-{$uniqueSuffix}.{$extension}";
 
         // 3. Subir Archivo
         $path = $file->storeAs('blogs/' . $blog->id . '/' . $slotName, $filename, 'public');
@@ -256,7 +257,7 @@ class BlogService
 
     private function deleteImagesBySlot(Blog $blog, $slotName)
     {
-        $slot = ImageSlot::where('name', $slotName)->first();
+        $slot = ImageSlot::where(['name' => $slotName, 'module' => 'blogs'])->first();
         if (!$slot) return;
 
         $images = $blog->images()->where('slot_id', $slot->id)->get();
