@@ -277,7 +277,7 @@ class ProductService
 
     private function deleteImagesBySlot(Product $product, $slotName)
     {
-        $slot = ImageSlot::where('name', $slotName)->first();
+        $slot = ImageSlot::where(['name' => $slotName, 'module' => 'products'])->first();
         if (!$slot) return;
 
         $images = $product->images()->where('slot_id', $slot->id)->get();
