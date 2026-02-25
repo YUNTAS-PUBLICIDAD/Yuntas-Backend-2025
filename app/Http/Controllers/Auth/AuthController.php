@@ -57,4 +57,37 @@ class AuthController extends Controller
             'data' => $user
         ]);
     }
+
+    public function refresh(Request $request): JsonResponse
+    {
+        try {
+            $token = $request->bearerToken();
+
+            if (!$token) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se proporcionó un token.'
+                ], 401);
+            }
+
+            $data = $this->authService->refreshToken($token);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Token refrescado exitosamente',
+                'data' => $data
+            ]);
+
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], $e->getStatusCode());
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al refrescar el token.'
+            ], 500);
+        }
+    }
 }
