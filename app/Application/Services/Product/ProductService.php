@@ -229,8 +229,9 @@ class ProductService
         $slotLower = strtolower($slotName);
         $extension = $file->extension();
 
-        // Formato por ejemplo: proyector-holografico-3d-hero-15.webp
-        $filename = "{$slugName}-{$slotLower}-{$product->id}.{$extension}";
+        // Formato por ejemplo: proyector-holografico-3d-hero-15-a1b2c3.webp
+        $uniqueSuffix = Str::lower(Str::random(6));
+        $filename = "{$slugName}-{$slotLower}-{$product->id}-{$uniqueSuffix}.{$extension}";
 
         // 3. Subir Archivo
         $path = $file->storeAs('products/' . $product->id . '/' . $slotName, $filename, 'public');
