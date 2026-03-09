@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\Support\StoreContactRequest;
+use App\Http\Requests\Support\UpdateContactRequest;
 use App\Application\Services\Support\ContactService;
 use App\Application\DTOs\Support\CreateContactDTO;
+use App\Application\DTOs\Support\UpdateContactDTO;
 
 class ContactMessageController extends Controller
 {
@@ -45,6 +47,22 @@ class ContactMessageController extends Controller
             return response()->json(['success' => true, 'data' => $contact]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+        }
+    }
+
+    public function update(UpdateContactRequest $request, $id): JsonResponse
+    {
+        try {
+            $dto = UpdateContactDTO::fromRequest($request);
+            $contact = $this->service->update($dto, $id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje actualizado.',
+                'data' => $contact
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
