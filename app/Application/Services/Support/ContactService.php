@@ -3,6 +3,7 @@
 namespace App\Application\Services\Support;
 
 use App\Application\DTOs\Support\CreateContactDTO;
+use App\Application\DTOs\Support\UpdateContactDTO;
 use App\Domain\Repositories\Support\ContactRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -38,9 +39,19 @@ class ContactService
         ]);
     }
 
+    public function update(UpdateContactDTO $dto, int $id)
+    {
+        $this->getById($id); // Verifica que exista
+        return $this->repository->update([
+            'phone' => $dto->phone,
+            'district' => $dto->district,
+            'message' => $dto->message,
+        ], $id);
+    }
+
     public function delete(int $id): void
     {
-        $this->getById($id); 
+        $this->getById($id);
         $this->repository->delete($id);
     }
 }
