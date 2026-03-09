@@ -22,6 +22,13 @@ class EloquentContactRepository implements ContactRepositoryInterface
         return ContactMessage::create($data);
     }
 
+    public function update(array $data, int $id): ContactMessage
+    {
+        $contact = ContactMessage::findOrFail($id);
+        $contact->update($data);
+        return $contact->fresh();
+    }
+
     public function delete(int $id): bool
     {
         return ContactMessage::destroy($id) > 0;
