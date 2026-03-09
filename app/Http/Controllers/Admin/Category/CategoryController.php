@@ -59,7 +59,7 @@ class CategoryController extends Controller
             $request->input('slug'),
             $request->input('description')
         );
-        $updated = $this->service->update($dto, $category);
+        $updated = $this->service->update($id, $dto);
         return new CategoryResource($updated);
     }
 
@@ -69,7 +69,7 @@ class CategoryController extends Controller
         if (!$category) {
             return response()->json(['message' => 'Categoría no encontrada'], 404);
         }
-        $this->service->delete($category);
+        $this->service->delete($id);
         return response()->json(['message' => 'Categoría eliminada correctamente']);
     }
 }
