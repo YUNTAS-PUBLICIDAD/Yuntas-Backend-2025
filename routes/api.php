@@ -49,7 +49,7 @@ Route::prefix('blogs')->middleware('throttle:public')->group(function () {
 
 // ------------------- PRODUCTOS -------------------
 Route::prefix('productos')->middleware('throttle:public')->group(function () {
-    Route::get('/', [ProductController::class, 'index']); 
+    Route::get('/', [ProductController::class, 'index']);
     Route::get('/{slug}', [ProductController::class, 'show']);
 });
 
@@ -76,7 +76,7 @@ Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
 });
 
 // ------------------- POPUP: WHATSAPP -------------------
-Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () { 
+Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
     Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
 });
 
@@ -128,13 +128,14 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::prefix('admin/contacto')->group(function () {
         Route::get('/', [ContactMessageController::class, 'index']);
         Route::get('/{id}', [ContactMessageController::class, 'show']);
+        Route::put('/{id}', [ContactMessageController::class, 'update']);
         Route::delete('/{id}', [ContactMessageController::class, 'destroy']);
     });
 
     // ------------------- LEADS -------------------
     Route::prefix('admin/leads')->group(function () {
         Route::post('/', [LeadController::class, 'store']);
-        Route::get('/', [LeadController::class, 'index']);  
+        Route::get('/', [LeadController::class, 'index']);
         Route::put('/{id}', [LeadController::class, 'update']);
         Route::delete('/{id}', [LeadController::class, 'destroy']);
     });
@@ -170,7 +171,7 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
         Route::post('/', [WhatsappProductController::class, 'store']);
     });
 
-    Route::prefix('admin/whatsapp-campanas')->group(function () { 
+    Route::prefix('admin/whatsapp-campanas')->group(function () {
         Route::get('/status', [WhatsappCampanaController::class, 'getStatus']);
         Route::post('/reset', [WhatsappCampanaController::class, 'resetSession']);
         Route::post('/pedir-qr', [WhatsappCampanaController::class, 'pedirQR']);
