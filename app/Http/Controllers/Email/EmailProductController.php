@@ -31,6 +31,7 @@ class EmailProductController extends Controller
         $request->validate([
             'producto_id' => 'required|integer|exists:products,id',
             'paso' => 'required|integer|min:0|max:2',
+            'asunto' => 'required|string|max:250',
             'titulo' => 'required|string|max:250',
             'parrafo1' => 'nullable|string|max:250',
 
@@ -56,6 +57,7 @@ class EmailProductController extends Controller
         $data = [
             'producto_id' => $request->producto_id,
             'paso'        => $request->paso,
+            'asunto'      => $request->asunto,
             'titulo'      => $request->titulo,
             'parrafo1'    => $request->parrafo1,
         ];
