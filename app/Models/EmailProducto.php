@@ -10,7 +10,6 @@ class EmailProducto extends Model
 
     protected $fillable = [
         'producto_id',
-        'asunto',
         'paso',
         'titulo',
         'parrafo1',
