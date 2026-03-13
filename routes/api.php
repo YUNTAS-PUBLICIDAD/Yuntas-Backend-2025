@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChatbotController;
 use Illuminate\Support\Facades\Route;
 
 // Importación de Controladores
@@ -26,15 +27,15 @@ use App\Http\Controllers\Deploy\DeployController;
 //                              AUTENTICACIÓN
 // ==============================================================================
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
-    // Público
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('refresh', [AuthController::class, 'refresh']);
+  // Público
+  Route::post('login', [AuthController::class, 'login']);
+  Route::post('refresh', [AuthController::class, 'refresh']);
 
-    // Protegidas (Requieren Token)
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('me', [AuthController::class, 'me']);
-        Route::post('logout', [AuthController::class, 'logout']);
-    });
+  // Protegidas (Requieren Token)
+  Route::middleware('auth:sanctum')->group(function () {
+    Route::get('me', [AuthController::class, 'me']);
+    Route::post('logout', [AuthController::class, 'logout']);
+  });
 });
 
 // ==============================================================================
@@ -43,19 +44,19 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
 
 // ------------------- BLOGS -------------------
 Route::prefix('blogs')->middleware('throttle:public')->group(function () {
-    Route::get('/', [BlogController::class, 'index']);
-    Route::get('/{slug}', [BlogController::class, 'show']);
+  Route::get('/', [BlogController::class, 'index']);
+  Route::get('/{slug}', [BlogController::class, 'show']);
 });
 
 // ------------------- PRODUCTOS -------------------
 Route::prefix('productos')->middleware('throttle:public')->group(function () {
-    Route::get('/', [ProductController::class, 'index']);
-    Route::get('/{slug}', [ProductController::class, 'show']);
+  Route::get('/', [ProductController::class, 'index']);
+  Route::get('/{slug}', [ProductController::class, 'show']);
 });
 
 // ------------------- CATEGORÍAS (Público) -------------------
 Route::prefix('categorias')->middleware('throttle:public')->group(function () {
-    Route::get('/', [CategoryController::class, 'index']);
+  Route::get('/', [CategoryController::class, 'index']);
 });
 
 // ==============================================================================
@@ -67,17 +68,17 @@ Route::post('claims', [ClaimController::class, 'store'])->middleware('throttle:f
 
 // ------------------- CONTACTO (Soporte) -------------------
 Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
-    Route::post('/', [ContactMessageController::class, 'store']);
+  Route::post('/', [ContactMessageController::class, 'store']);
 });
 
 // ------------------- POPUP: EMAIL -------------------
 Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
-    Route::post('/enviar', [EmailPopupController::class, 'enviar']);
+  Route::post('/enviar', [EmailPopupController::class, 'enviar']);
 });
 
 // ------------------- POPUP: WHATSAPP -------------------
 Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
-    Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
+  Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
 });
 
 // ==============================================================================
@@ -85,7 +86,7 @@ Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function ()
 // ==============================================================================
 // ------------------- DEPLOY FRONTEND -------------------
 Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
-    Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
+  Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
 });
 
 // ==============================================================================
@@ -93,99 +94,105 @@ Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
 // ==============================================================================
 Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admin'])->group(function () {
 
-    // ------------------- USUARIOS -------------------
-    Route::prefix('admin/users')->group(function () {
-        Route::get('/', [UserController::class, 'index']);
-        Route::post('/', [UserController::class, 'store']);
-        Route::get('/{id}', [UserController::class, 'show']);
-        Route::put('/{id}', [UserController::class, 'update']);
-        Route::delete('/{id}', [UserController::class, 'destroy']);
-        Route::post('/{id}/role', [UserController::class, 'assignRole']);
-    });
+  // ------------------- USUARIOS -------------------
+  Route::prefix('admin/users')->group(function () {
+    Route::get('/', [UserController::class, 'index']);
+    Route::post('/', [UserController::class, 'store']);
+    Route::get('/{id}', [UserController::class, 'show']);
+    Route::put('/{id}', [UserController::class, 'update']);
+    Route::delete('/{id}', [UserController::class, 'destroy']);
+    Route::post('/{id}/role', [UserController::class, 'assignRole']);
+  });
 
-    // ------------------- CATEGORÍAS -------------------
-    Route::prefix('admin/categorias')->group(function () {
-        Route::post('/', [CategoryController::class, 'store']);
-        Route::put('/{id}', [CategoryController::class, 'update']);
-        Route::delete('/{id}', [CategoryController::class, 'destroy']);
-        Route::get('/{id}', [CategoryController::class, 'show']);
-    });
+  // ------------------- CATEGORÍAS -------------------
+  Route::prefix('admin/categorias')->group(function () {
+    Route::post('/', [CategoryController::class, 'store']);
+    Route::put('/{id}', [CategoryController::class, 'update']);
+    Route::delete('/{id}', [CategoryController::class, 'destroy']);
+    Route::get('/{id}', [CategoryController::class, 'show']);
+  });
 
-    // ------------------- RECLAMOS (Claims) -------------------
-    Route::prefix('admin/claims')->group(function () {
-        Route::get('/', [ClaimController::class, 'index']);
-        Route::get('/{id}', [ClaimController::class, 'show']);
-        Route::post('/{id}/reply', [ClaimController::class, 'reply']);
-        Route::put('/{id}/status', [ClaimController::class, 'updateStatus']);
-    });
+  // ------------------- RECLAMOS (Claims) -------------------
+  Route::prefix('admin/claims')->group(function () {
+    Route::get('/', [ClaimController::class, 'index']);
+    Route::get('/{id}', [ClaimController::class, 'show']);
+    Route::post('/{id}/reply', [ClaimController::class, 'reply']);
+    Route::put('/{id}/status', [ClaimController::class, 'updateStatus']);
+  });
 
-    // ------------------- ROLES -------------------
-    Route::prefix('admin/roles')->group(function () {
-        Route::get('/', [RoleController::class, 'index']);
-    });
+  // ------------------- ROLES -------------------
+  Route::prefix('admin/roles')->group(function () {
+    Route::get('/', [RoleController::class, 'index']);
+  });
 
-    // ------------------- MENSAJES DE CONTACTO -------------------
-    Route::prefix('admin/contacto')->group(function () {
-        Route::get('/', [ContactMessageController::class, 'index']);
-        Route::get('/{id}', [ContactMessageController::class, 'show']);
-        Route::put('/{id}', [ContactMessageController::class, 'update']);
-        Route::delete('/{id}', [ContactMessageController::class, 'destroy']);
-    });
+  // ------------------- MENSAJES DE CONTACTO -------------------
+  Route::prefix('admin/contacto')->group(function () {
+    Route::get('/', [ContactMessageController::class, 'index']);
+    Route::get('/{id}', [ContactMessageController::class, 'show']);
+    Route::put('/{id}', [ContactMessageController::class, 'update']);
+    Route::delete('/{id}', [ContactMessageController::class, 'destroy']);
+  });
 
-    // ------------------- LEADS -------------------
-    Route::prefix('admin/leads')->group(function () {
-        Route::post('/', [LeadController::class, 'store']);
-        Route::get('/', [LeadController::class, 'index']);
-        Route::put('/{id}', [LeadController::class, 'update']);
-        Route::delete('/{id}', [LeadController::class, 'destroy']);
-    });
+  // ------------------- LEADS -------------------
+  Route::prefix('admin/leads')->group(function () {
+    Route::post('/', [LeadController::class, 'store']);
+    Route::get('/', [LeadController::class, 'index']);
+    Route::put('/{id}', [LeadController::class, 'update']);
+    Route::delete('/{id}', [LeadController::class, 'destroy']);
+  });
 
-    // ------------------- BLOGS -------------------
-    Route::prefix('admin/blogs')->group(function () {
-        Route::post('/', [BlogController::class, 'store']);
-        Route::post('/{id}', [BlogController::class, 'update']);
-        Route::delete('/{id}', [BlogController::class, 'destroy']);
-    });
+  // ------------------- BLOGS -------------------
+  Route::prefix('admin/blogs')->group(function () {
+    Route::post('/', [BlogController::class, 'store']);
+    Route::post('/{id}', [BlogController::class, 'update']);
+    Route::delete('/{id}', [BlogController::class, 'destroy']);
+  });
 
-    // ------------------- PRODUCTOS -------------------
-    Route::prefix('admin/productos')->middleware('throttle:uploads')->group(function () {
-        Route::post('/', [ProductController::class, 'store']);
-        Route::post('/{id}', [ProductController::class, 'update']);
-        Route::delete('/{id}', [ProductController::class, 'destroy']);
-    });
+  // ------------------- PRODUCTOS -------------------
+  Route::prefix('admin/productos')->middleware('throttle:uploads')->group(function () {
+    Route::post('/', [ProductController::class, 'store']);
+    Route::post('/{id}', [ProductController::class, 'update']);
+    Route::delete('/{id}', [ProductController::class, 'destroy']);
+  });
 
-    // ------------------- PRODUCTOS: EMAIL -------------------
-    Route::prefix('admin/email-productos')->group(function () {
-        Route::get('/', [EmailProductController::class, 'indexByProduct']);
-        Route::post('/', [EmailProductController::class, 'store']);
-        Route::delete('/', [EmailProductController::class, 'destroy']);
-    });
+  // ------------------- PRODUCTOS: EMAIL -------------------
+  Route::prefix('admin/email-productos')->group(function () {
+    Route::get('/', [EmailProductController::class, 'indexByProduct']);
+    Route::post('/', [EmailProductController::class, 'store']);
+    Route::delete('/', [EmailProductController::class, 'destroy']);
+  });
 
-    Route::prefix('admin/email-campanas')->group(function () {
-        Route::post('/enviar-campana', [EmailCampanaController::class, 'enviarCampana']);
-    });
+  Route::prefix('admin/email-campanas')->group(function () {
+    Route::post('/enviar-campana', [EmailCampanaController::class, 'enviarCampana']);
+  });
 
-    // ------------------- PRODUCTOS: WHATSAPP -------------------
-    Route::prefix('admin/whatsapp-productos')->group(function () {
-        Route::get('/', [WhatsappProductController::class, 'indexByProduct']);
-        Route::post('/', [WhatsappProductController::class, 'store']);
-    });
+  // ------------------- PRODUCTOS: WHATSAPP -------------------
+  Route::prefix('admin/whatsapp-productos')->group(function () {
+    Route::get('/', [WhatsappProductController::class, 'indexByProduct']);
+    Route::post('/', [WhatsappProductController::class, 'store']);
+  });
 
-    Route::prefix('admin/whatsapp-campanas')->group(function () {
-        Route::get('/status', [WhatsappCampanaController::class, 'getStatus']);
-        Route::post('/reset', [WhatsappCampanaController::class, 'resetSession']);
-        Route::post('/pedir-qr', [WhatsappCampanaController::class, 'pedirQR']);
-        Route::post('/enviar-campana', [WhatsappCampanaController::class, 'enviarCampana']);
-    });
+  Route::prefix('admin/whatsapp-campanas')->group(function () {
+    Route::get('/status', [WhatsappCampanaController::class, 'getStatus']);
+    Route::post('/reset', [WhatsappCampanaController::class, 'resetSession']);
+    Route::post('/pedir-qr', [WhatsappCampanaController::class, 'pedirQR']);
+    Route::post('/enviar-campana', [WhatsappCampanaController::class, 'enviarCampana']);
+  });
 
-    // ------------------- STATS DE MENSAJES -------------------
-    Route::prefix('admin/message-stats')->group(function () {
-        Route::get('/', [MessageStatsController::class, 'index']);
-        Route::get('/totals', [MessageStatsController::class, 'totals']);
-    });
+  // ------------------- STATS DE MENSAJES -------------------
+  Route::prefix('admin/message-stats')->group(function () {
+    Route::get('/', [MessageStatsController::class, 'index']);
+    Route::get('/totals', [MessageStatsController::class, 'totals']);
+  });
 
-    // ------------------- DEPLOY FRONTEND -------------------
-    Route::prefix('admin/deploy')->group(function () {
-        Route::post('/trigger', [DeployController::class, 'trigger']);
-    });
+  // ------------------- DEPLOY FRONTEND -------------------
+  Route::prefix('admin/deploy')->group(function () {
+    Route::post('/trigger', [DeployController::class, 'trigger']);
+  });
+
+  // Chatbot
+});
+Route::prefix('chatbot')->middleware('throttle:forms')->group(function () {
+  Route::post('/message', [ChatbotController::class, 'message']);
+  Route::get('/history/{sessionId}', [ChatbotController::class, 'history']);
 });
