@@ -22,7 +22,6 @@ class ProductMailing1 extends Mailable
             : [];
 
         $this->data = [
-            'asunto' => $seccion->asunto,
             'titulo' => $seccion->titulo,
             'paso' => $seccion->paso,
             'parrafo1' => $seccion->parrafo1,
@@ -46,7 +45,7 @@ class ProductMailing1 extends Mailable
 
     public function build()
     {
-        return $this->subject($this->data['asunto'] ?? $this->data['titulo'])
+        return $this->subject($this->data['titulo'])
             ->view($this->viewName)
             ->with([
                 'data' => $this->data,
