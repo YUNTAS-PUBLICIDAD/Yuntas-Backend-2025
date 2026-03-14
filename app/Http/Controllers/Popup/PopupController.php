@@ -22,6 +22,14 @@ class PopupController extends Controller
     $this->imageService = $imageService;
   }
 
+  /**
+   * @OA\Get(
+   *     path="/api/admin/popups",
+   *     tags={"Popups"},
+   *     summary="Obtener todos los popups",
+   *     @OA\Response(response=200, description="Lista de popups")
+   * )
+   */
   public function index()
   {
     return Popup::orderBy('priority')->get();
