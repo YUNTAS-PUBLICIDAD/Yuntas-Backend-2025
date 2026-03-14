@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
                 'role_id' => $adminRole->id,
             ]
         );
-
+        
         // 3. Slots de Imágenes
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
@@ -54,7 +54,7 @@ class DatabaseSeeder extends Seeder
         BlogContentSlot::firstOrCreate(['name' => 'Descripciones']);
         BlogContentSlot::firstOrCreate(['name' => 'Beneficios']);
         BlogContentSlot::firstOrCreate(['name' => 'Testimonios']);
-
+        
         // 5. Fuentes de Leads
         LeadSource::firstOrCreate(['name' => 'Inicio']);
         LeadSource::firstOrCreate(['name' => 'Productos']);
@@ -65,17 +65,17 @@ class DatabaseSeeder extends Seeder
         $inicioSource = LeadSource::where('name', 'Inicio')->first();
         $productosSource = LeadSource::where('name', 'Productos')->first();
         $detalleSource = LeadSource::where('name', 'Producto detalle')->first();
-        WhatsappPopup::firstOrCreate(
+        WhatsappPopup::updateOrCreate(
             ['lead_source_id' => $inicioSource->id],    
             [
                 'nombre' => 'Popup Inicio',
-                'mensaje' => "¡Bienvenido/a a Yuntas!\n\n" .
-                            "Gracias por registrarte, *{nombre}*. Nos alegra tenerte con nosotros y que formes parte de nuestra comunidad.\n\n" .
-                            "Desde ahora tendrás acceso a información sobre nuestros productos, novedades y soluciones en letreros acrílicos y señalización diseñadas para potenciar la imagen de tu negocio con un estilo moderno, profesional y duradero.\n\n" .
-                            "Si tienes alguna consulta o necesitas asesoría personalizada, no dudes en escribirnos. Estaremos encantados de ayudarte a encontrar la mejor opción para tu proyecto.\n\n" .
-                            "Gracias por confiar en Yuntas.\n" .
-                            "Tu marca merece destacar.\n\n" .
-                            "*Equipo Yuntas*",
+                'mensaje' => "👋 ¡Bienvenido(a) a *Yuntas Publicidad*!\n\n" .
+                             "Hola *{nombre}*, gracias por escribirnos.\n\n" .
+                             "Brindamos *servicios publicitarios personalizados para hacer crecer tu negocio.*\n\n" .
+                             "📌 *Puedes consultarnos sobre:*\n" .
+                             "• Productos publicitarios\n" .
+                             "• Cotizaciones\n\n" .
+                             "¡Estamos listos para ayudarte! 😊",
                 'variables' => ['nombre'],
                 'imagen_url' => 'storage/plantillas/yuntas-bienvenida.webp',
                 'activo' => true,
