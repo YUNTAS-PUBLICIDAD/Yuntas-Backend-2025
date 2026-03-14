@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class Popup extends Model
+{
+  protected $fillable = [
+    'slug',
+    'title',
+    'button_text',
+    'image',
+    'image_alt',
+    'image_title',
+    'page_target',
+    'delay_seconds',
+    'priority',
+    'start_date',
+    'end_date',
+    'active'
+  ];
+
+  protected $casts = [
+    'active' => 'boolean',
+    'start_date' => 'datetime',
+    'end_date' => 'datetime',
+    'delay_seconds' => 'integer',
+    'priority' => 'integer'
+  ];
+
+  public function scopeActive(Builder $query)
+  {
+    return $query->where('active', true);
+  }
+
+  public function scopeForPage(Builder $query, string $page)
+  {
+    return $query->where(function ($q) use ($page) {
+      $q->where('page_target', $page)
+        ->orWhere('page_target', 'all');
+    });
+  }
+
+  public function scopeInSchedule(Builder $query)
+  {
+    return $query->where(function ($q) {
+      $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+    })->where(function ($q) {
+      $q->whereNull('end_date')
+        ->orWhere('end_date', '>=', now());
+    });
+  }
+
+  public function getImageUrlAttribute()
+  {
+    return asset($this->image);
+  }
+
+  protected static function booted()
+  {
+    static::creating(function ($popup) {
+      if (empty($popup->slug)) {
+        // Slug a partir del titulo, único
+        $baseSlug = Str::slug($popup->title);
+        $slug = $baseSlug;
+        $i = 1;
+        // Este while comprueba la base de datos
+        while (Popup::where('slug', $slug)->exists()) {
+          $slug = $baseSlug.'-'.$i++;
+        }
+        $popup->slug = $slug;
+      }
+    });
+  }
+
+}
