@@ -19,7 +19,7 @@ class InicioMailing extends Mailable
 
     public function build()
     {
-        return $this->subject('Gracias por contactarnos')
+        return $this->subject('Bienvenido(a) a Yuntas Publicidad ✨')
             ->view('emails.inicio-mailing')
             ->with(['cliente' => $this->cliente]);
     }
