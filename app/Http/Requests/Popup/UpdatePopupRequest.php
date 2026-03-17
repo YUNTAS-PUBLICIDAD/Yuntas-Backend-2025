@@ -24,6 +24,7 @@ class UpdatePopupRequest extends FormRequest
     return [
       'title' => 'sometimes|string|max:255',
       'button_text' => 'sometimes|string|max:255',
+      'button_color' => ['sometimes', 'nullable', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
       'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
       'image_alt' => 'sometimes|string|max:255',
       'image_title' => 'nullable|string|max:255',

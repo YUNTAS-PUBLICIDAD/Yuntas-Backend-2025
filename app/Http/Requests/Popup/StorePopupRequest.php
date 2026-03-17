@@ -24,6 +24,7 @@ class StorePopupRequest extends FormRequest
     return [
       'title' => 'required|string|max:255',
       'button_text' => 'required|string|max:255',
+      'button_color' => ['nullable', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
       'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
       'image_alt' => 'required|string|max:255',
       'image_title' => 'nullable|string|max:255',
@@ -32,7 +33,7 @@ class StorePopupRequest extends FormRequest
       'priority' => 'required|integer|min:1|max:10',
       'start_date' => 'nullable|date',
       'end_date' => 'nullable|date',
-      'active' => 'sometimes|boolean'
+      'active' => 'sometimes|boolean',
     ];
   }
 }
