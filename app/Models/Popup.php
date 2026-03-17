@@ -32,8 +32,6 @@ class Popup extends Model
     'priority' => 'integer'
   ];
 
-  protected $appends = ['image_url'];
-
   public function scopeActive(Builder $query)
   {
     return $query->where('active', true);
