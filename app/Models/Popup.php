@@ -12,6 +12,7 @@ class Popup extends Model
     'slug',
     'title',
     'button_text',
+    'button_color',
     'image',
     'image_alt',
     'image_title',
@@ -74,6 +75,19 @@ class Popup extends Model
         $popup->slug = $slug;
       }
     });
+  }
+
+  public function setButtonColorAttribute($value)
+  {
+    // if($value){
+    //   $value = strtolower($value);
+    // }
+    // $this->attributes['button_color'] = $value;
+    if($value !== null) {
+      $this->attributes['button_color'] = strtolower(trim($value));
+    }else{
+      $this->attributes['button_color'] = null;
+    }
   }
 
 }
