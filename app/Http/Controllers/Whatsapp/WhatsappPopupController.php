@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Whatsapp;
 
+use App\Application\Services\Template\TemplateService;
 use App\Http\Controllers\Controller;
 use App\Models\WhatsappMessage;
 use App\Models\Lead;
-use App\Models\WhatsappPopup;
-use App\Models\Product;
-use App\Models\WhatsappProducto;
+// use App\Models\WhatsappPopup;
+// use App\Models\Product;
+// use App\Models\WhatsappProducto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,9 +17,11 @@ use Illuminate\Support\Facades\Storage;
 class WhatsappPopupController extends Controller
 {
     private $whatsappServiceUrl;
+    private $templateService;
 
-    public function __construct() {
+    public function __construct(TemplateService $templateService) {
         $this->whatsappServiceUrl = env('WHATSAPP_SERVICE_URL', 'http://localhost:3001');
+        $this->templateService = $templateService;
     }
 
     // Enviar mensaje de WhatsApp a un lead específico
@@ -33,11 +36,10 @@ class WhatsappPopupController extends Controller
             'source_id' => 'required|integer',
         ]);
 
-        // Buscar lead existente
+        // Buscar o crear lead
         $leadExistente = Lead::where('email', $request->email)->first();
         $phoneChanged = $leadExistente && $leadExistente->phone !== $request->phone;
 
-        // Actualizar o crear lead
         $lead = Lead::updateOrCreate(
             ['email' => $request->email],
             [
@@ -64,46 +66,69 @@ class WhatsappPopupController extends Controller
         }
 
         // Obtener plantilla según el popup del que viene el lead
-        $plantillaPopup = WhatsappPopup::activaPorSource($request->source_id);
-
-        if (!$plantillaPopup) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay plantilla configurada para esta fuente'
-            ], 500);
-        }
-
-        // variables para el mensaje
+        // $plantillaPopup = WhatsappPopup::activaPorSource($request->source_id);
+        // // variables para el mensaje
         $variables = [
             'nombre' => $lead->name,
         ];
-
-        // Si es detalle de producto, agregar variables y obtener imagen
-        $imagenUrl = null;
-        if ($lead->product_id && $lead->source->name === 'Producto detalle') {
-            $imagenUrl = $lead->product->images
-                                    ->where('slot_id', 5) // Slot de imagen principal
-                                    ->first()?->url;
-
-            // variables adicionales
-            $variables = array_merge($variables, [
+        
+        // if (!$plantillaPopup) {
+          //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'No hay plantilla configurada para esta fuente'
+            //     ], 500);
+            // }
+            
+            
+            // Si es detalle de producto, agregar variables y obtener imagen
+            // LÓGICA DE PRODUCTO
+            $imagenUrl = null;
+            if ($lead->product_id && $lead->source->name === 'Producto detalle') {
+              $imagenUrl = $lead->product->images
+              ->where('slot_id', 5) // Slot de imagen principal
+              ->first()?->url;
+              
+              // variables adicionales
+              $variables = array_merge($variables, [
                 'producto_nombre' => $lead->product->name ?? '',
                 'descripcion' => $lead->product->description ?? '',
                 'fecha' => now('America/Lima')->format('d/m/Y'),
                 'hora' => now('America/Lima')->format('H:i'),
                 'email' => $lead->email,
-            ]);
-        } else { // Para popup de Inicio y Productos, se usa imagen de la plantilla
-            $imagenUrl = $plantillaPopup->imagen_url;
-        }
+                ]);
+                } 
+                // else { // Para popup de Inicio y Productos, se usa imagen de la plantilla
+                //     $imagenUrl = $plantillaPopup->imagen_url;
+                // }
+                // Render Template
+                $templateData = $this->templateService->render(
+                  $request->source_id,
+                  'whatsapp',
+                  $variables
+                );
+        
+                if(!$templateData){
+                  return response()->json([
+                    'success' => false,
+                    'message' => 'No hay template configurado'
+                  ], 500);
+                }
+        
+                $mensaje = $templateData['message'];
+                if (!$imagenUrl) {
+                  $imagenUrl = $templateData['image_url'];
+                }
 
         // Enviar mensaje al lead
-        $resultado = $this->enviarWhatsappALead(
-            $lead, 
-            $plantillaPopup, 
-            $variables,
-            $imagenUrl
-        );
+        // $resultado = $this->enviarWhatsappALead(
+        //     $lead, 
+        //     $plantillaPopup, 
+        //     $variables,
+        //     $imagenUrl
+        // );
+
+        // Enviar
+        $resultado = $this->enviarWhatsappALead($lead, $mensaje, $imagenUrl);
 
         if (!$resultado['success']) {
             return response()->json([
@@ -123,12 +148,19 @@ class WhatsappPopupController extends Controller
         ]);
     }
 
-    private function enviarWhatsappALead($lead, $plantilla, array $variables, ?string $imagenProducto)
+    private function enviarWhatsappALead(
+      $lead,
+      // $plantilla,
+      string $mensaje,
+      ?string $imagenUrl
+      // array $variables,
+      // ?string $imagenProducto
+      )
     {
         try {
 
-            $mensaje = $plantilla->procesarVariables($variables);
-            $imagenUrl = $imagenProducto;
+            // $mensaje = $plantilla->procesarVariables($variables);
+            // $imagenUrl = $imagenProducto;
 
             // Verificar si podemos omitir validación en el servicio de WhatsApp
             $ultimoMensajeExitoso = WhatsappMessage::where('lead_id', $lead->id)

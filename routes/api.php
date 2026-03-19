@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Popup\PopupController;
+use App\Http\Controllers\Template\TemplateController;
 use Illuminate\Support\Facades\Route;
 
 // Importación de Controladores
@@ -198,6 +199,14 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::get('{id}', [PopupController::class, 'show']);
     Route::patch('{id}', [PopupController::class, 'update']);
     Route::delete('{id}', [PopupController::class, 'destroy']);
+  });
+
+  Route::prefix('admin/templates')->group(function() {
+    Route::get('/', [TemplateController::class, 'index']);
+    Route::get('/{id}', [TemplateController::class, 'show']);
+    Route::post('/', [TemplateController::class, 'store']);
+    Route::put('/{id}', [TemplateController::class, 'update']);
+    Route::delete('/{id}', [TemplateController::class, 'destroy']);
   });
 });
 
