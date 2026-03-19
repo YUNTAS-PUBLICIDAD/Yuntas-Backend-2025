@@ -28,7 +28,7 @@ class EmailProducto extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Product::class, 'producto_id' );
     }
 
     public static function buildImageUrl($value)
