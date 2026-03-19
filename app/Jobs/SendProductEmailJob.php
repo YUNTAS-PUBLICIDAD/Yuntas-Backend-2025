@@ -45,10 +45,12 @@ class SendProductEmailJob implements ShouldQueue
         return;
     }
 
-    $lead = Lead::where('email', $this->cliente['correo'])->first();
+    // $lead = Lead::where('email', $this->cliente['correo'])->first();
+    $lead = Lead::where('email', $this->cliente['email'])->first();
 
     try {
-        Mail::to($this->cliente['correo'])
+        // Mail::to($this->cliente['correo'])
+        Mail::to($this->cliente['email'])
             ->send(new ProductMailing1($seccion, $this->cliente));
 
         if ($lead) {
@@ -63,7 +65,8 @@ class SendProductEmailJob implements ShouldQueue
         }
 
         Log::info('Email de producto enviado', [
-            'correo' => $this->cliente['correo'],
+            // 'correo' => $this->cliente['correo'],
+            'corre' => $this->cliente['email'],
             'paso' => $this->paso,
         ]);
 
