@@ -40,11 +40,91 @@ class PopupController extends Controller
     ->get();
   }
 
+  /**
+ * @OA\Get(
+ *     path="/api/admin/popups/{id}",
+ *     tags={"Popups"},
+ *     summary="Obtener popup por ID",
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del popup",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Popup encontrado"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Popup no encontrado"
+ *     )
+ * )
+ */
   public function show($id)
   {
     // return Popup::findOrFail($id);
     return Popup::with('images')->findOrFail($id);
   }
+
+  /**
+ * @OA\Post(
+ *     path="/api/admin/popups",
+ *     tags={"Popups"},
+ *     summary="Crear popup",
+ *     security={{"sanctum":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 required={"lead_source_id","title","button_text","page_target","delay_seconds","priority","images"},
+ *                 
+ *                 @OA\Property(property="lead_source_id", type="integer", example=1),
+ *                 @OA\Property(property="title", type="string", example="Popup de prueba"),
+ *                 @OA\Property(property="button_text", type="string", example="Aceptar"),
+ *                 @OA\Property(property="button_color", type="string", example="#f54927"),
+ *                 @OA\Property(property="page_target", type="string", example="inicio"),
+ *                 @OA\Property(property="delay_seconds", type="integer", example=5),
+ *                 @OA\Property(property="priority", type="integer", example=1),
+ *                 @OA\Property(property="active", type="boolean", example=true),
+
+ *                 @OA\Property(
+ *                     property="images",
+ *                     type="array",
+ *                     @OA\Items(
+ *                         type="object",
+ *                         required={"file","device","slot"},
+ *                         
+ *                         @OA\Property(
+ *                             property="file",
+ *                             type="string",
+ *                             format="binary"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="device",
+ *                             type="string",
+ *                             enum={"desktop","mobile"},
+ *                             example="desktop"
+ *                         ),
+ *                         @OA\Property(
+ *                             property="slot",
+ *                             type="string",
+ *                             enum={"left","right","center"},
+ *                             example="left"
+ *                         ),
+ *                         @OA\Property(property="alt", type="string", example="Imagen izquierda"),
+ *                         @OA\Property(property="title", type="string", example="Promo izquierda")
+ *                     )
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(response=201, description="Popup creado correctamente"),
+ *     @OA\Response(response=422, description="Error de validación")
+ * )
+ */
 
   // Crear popup
   public function store(StorePopupRequest $request)
@@ -139,6 +219,35 @@ class PopupController extends Controller
     }
   }
 
+  /**
+ * @OA\Patch(
+ *     path="/api/admin/popups/{id}",
+ *     tags={"Popups"},
+ *     summary="Actualizar popup",
+ *     security={{"sanctum":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=false,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="title", type="string", example="Nuevo título"),
+ *             @OA\Property(property="button_text", type="string", example="Comprar"),
+ *             @OA\Property(property="button_color", type="string", example="#000000"),
+ *             @OA\Property(property="page_target", type="string", example="home"),
+ *             @OA\Property(property="delay_seconds", type="integer", example=3),
+ *             @OA\Property(property="priority", type="integer", example=2),
+ *             @OA\Property(property="active", type="boolean", example=true)
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="Popup actualizado"),
+ *     @OA\Response(response=404, description="No encontrado"),
+ *     @OA\Response(response=422, description="Error de validación")
+ * )
+ */
   public function update(UpdatePopupRequest $request, $id)
   {
 
@@ -200,6 +309,22 @@ class PopupController extends Controller
 
   }
 
+  /**
+ * @OA\Delete(
+ *     path="/api/admin/popups/{id}",
+ *     tags={"Popups"},
+ *     summary="Eliminar popup",
+ *     security={{"sanctum":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(response=200, description="Popup eliminado"),
+ *     @OA\Response(response=404, description="No encontrado")
+ * )
+ */
   public function destroy($id)
   {
     try {
@@ -231,6 +356,28 @@ class PopupController extends Controller
   }
 
   // Endpoint público
+  /**
+ * @OA\Get(
+ *     path="/api/popups",
+ *     tags={"Popups"},
+ *     summary="Obtener popup activo por página",
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=true,
+ *         description="Slug de la página",
+ *         @OA\Schema(type="string", example="inicio")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Popup activo"
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Parámetro page requerido"
+ *     )
+ * )
+ */
   public function getPopup(Request $request)
   {
     $page = $request->query('page');
