@@ -37,12 +37,12 @@ class UpdatePopupRequest extends FormRequest
       'end_date' => 'nullable|date',
       'active' => 'sometimes|boolean',
 
-        'images' => ['sometimes', 'array'],
-        'images.*.file' => 'required_with:images|image|mimes:jpg,jpeg,png,webp|max:2048',
-        'images.*.device' => ['required_with:images', Rule::in(['desktop', 'mobile'])],
-        'images.*.slot' => ['required_with:images', Rule::in(['left', 'right', 'center'])],
-        'images.*.alt' => 'nullable|string|max:255',
-        'images.*.title' => 'nullable|string|max:255',
+        // 'images' => ['sometimes', 'array'],
+        // 'images.*.file' => 'required_with:images|image|mimes:jpg,jpeg,png,webp|max:2048',
+        // 'images.*.device' => ['required_with:images', Rule::in(['desktop', 'mobile'])],
+        // 'images.*.slot' => ['required_with:images', Rule::in(['left', 'right', 'center'])],
+        // 'images.*.alt' => 'nullable|string|max:255',
+        // 'images.*.title' => 'nullable|string|max:255',
     ];
   }
 }
