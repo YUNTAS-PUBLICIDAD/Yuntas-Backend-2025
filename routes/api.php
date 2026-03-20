@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Popup\PopupController;
+use App\Http\Controllers\PopupImage\PopupImageController;
 use App\Http\Controllers\Template\TemplateController;
 use Illuminate\Support\Facades\Route;
 
@@ -207,6 +208,10 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::post('/', [TemplateController::class, 'store']);
     Route::put('/{id}', [TemplateController::class, 'update']);
     Route::delete('/{id}', [TemplateController::class, 'destroy']);
+  });
+  Route::prefix('admin/popup-images')->group(function(){
+    Route::post('{id}', [PopupImageController::class, 'update']);
+    Route::patch('{id}', [PopupController::class, 'update']);
   });
 });
 
