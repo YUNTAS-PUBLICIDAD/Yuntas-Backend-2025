@@ -192,7 +192,8 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::post('/trigger', [DeployController::class, 'trigger']);
   });
 
-  Route::prefix('admin/popups')->middleware('throttle:uploads')->group(function () {
+  
+  Route::prefix('admin/popups')->group(function () {
     Route::get('/', [PopupController::class, 'index']);
     Route::post('/', [PopupController::class, 'store']);
 
@@ -200,7 +201,6 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::patch('{id}', [PopupController::class, 'update']);
     Route::delete('{id}', [PopupController::class, 'destroy']);
   });
-
   Route::prefix('admin/templates')->group(function() {
     Route::get('/', [TemplateController::class, 'index']);
     Route::get('/{id}', [TemplateController::class, 'show']);
