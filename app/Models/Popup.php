@@ -14,9 +14,9 @@ class Popup extends Model
     'title',
     'button_text',
     'button_color',
-    'image',
-    'image_alt',
-    'image_title',
+    // 'image',
+    // 'image_alt',
+    // 'image_title',
     'page_target',
     'delay_seconds',
     'priority',
@@ -33,7 +33,6 @@ class Popup extends Model
     'priority' => 'integer'
   ];
 
-  protected $appends = ['image_url'];
 
   public function scopeActive(Builder $query)
   {
@@ -58,10 +57,6 @@ class Popup extends Model
     });
   }
 
-  public function getImageUrlAttribute()
-  {
-    return asset($this->image);
-  }
 
   protected static function booted()
   {
