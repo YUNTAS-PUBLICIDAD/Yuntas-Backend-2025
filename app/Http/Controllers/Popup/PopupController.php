@@ -159,31 +159,31 @@ class PopupController extends Controller
       //   );
       // }
 
-      // Solo tocar imágenes si vienen en request
-      if($request->has('images')){
-        // Eliminar archivos físicos
-        foreach ($popup->images as $image) {
-          $this->imageService->remove($image->image);
-        }
-        // Eliminar registros
-        $popup->images()->delete();
+      // // Solo tocar imágenes si vienen en request
+      // if($request->has('images')){
+      //   // Eliminar archivos físicos
+      //   foreach ($popup->images as $image) {
+      //     $this->imageService->remove($image->image);
+      //   }
+      //   // Eliminar registros
+      //   $popup->images()->delete();
 
-        // Recrear
-        foreach ($request->images as $img) {
-          $path = $this->imageService->store($img['file'], 'popups');
+      //   // Recrear
+      //   foreach ($request->images as $img) {
+      //     $path = $this->imageService->store($img['file'], 'popups');
 
-          $popup->images()->create([
-            'image' => $path,
-            'device' => $img['device'],
-            'slot' => $img['slot'],
-            'alt' => $img['alt'] ?? null,
-            'title' => $img['title'] ?? null
-          ]);
-        }
-      }
+      //     $popup->images()->create([
+      //       'image' => $path,
+      //       'device' => $img['device'],
+      //       'slot' => $img['slot'],
+      //       'alt' => $img['alt'] ?? null,
+      //       'title' => $img['title'] ?? null
+      //     ]);
+      //   }
+      // }
 
       $popup->update($data);
-DB::commit();
+      DB::commit();
 
       return response()->json($popup->load('images'));
 
