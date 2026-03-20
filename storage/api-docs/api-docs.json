@@ -9,6 +9,367 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/admin/popup-images/{id}": {
+            "patch": {
+                "tags": [
+                    "PopupImages"
+                ],
+                "summary": "Actualizar una imagen de popup (parcial)",
+                "description": "Permite actualizar imagen, device, slot, alt o title de forma independiente",
+                "operationId": "updatePopupImage",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la imagen",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "description": "Nueva imagen",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "device": {
+                                        "type": "string",
+                                        "enum": [
+                                            "desktop",
+                                            "mobile"
+                                        ]
+                                    },
+                                    "slot": {
+                                        "type": "string",
+                                        "enum": [
+                                            "left",
+                                            "right",
+                                            "center"
+                                        ]
+                                    },
+                                    "alt": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Imagen actualizada correctamente"
+                    },
+                    "422": {
+                        "description": "Error de validación o reglas de negocio"
+                    },
+                    "404": {
+                        "description": "Imagen no encontrada"
+                    }
+                }
+            }
+        },
+        "/api/admin/popups": {
+            "get": {
+                "tags": [
+                    "Popups"
+                ],
+                "summary": "Obtener todos los popups",
+                "operationId": "48b1414bed571a8cdd4ea91f850ad321",
+                "responses": {
+                    "200": {
+                        "description": "Lista de popups"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Popups"
+                ],
+                "summary": "Crear popup",
+                "operationId": "c9d251bdefe07b2cf152f3d72da420f9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "lead_source_id",
+                                    "title",
+                                    "button_text",
+                                    "page_target",
+                                    "delay_seconds",
+                                    "priority",
+                                    "images"
+                                ],
+                                "properties": {
+                                    "lead_source_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Popup de prueba"
+                                    },
+                                    "button_text": {
+                                        "type": "string",
+                                        "example": "Aceptar"
+                                    },
+                                    "button_color": {
+                                        "type": "string",
+                                        "example": "#f54927"
+                                    },
+                                    "page_target": {
+                                        "type": "string",
+                                        "example": "inicio"
+                                    },
+                                    "delay_seconds": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "priority": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "images": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "file",
+                                                "device",
+                                                "slot"
+                                            ],
+                                            "properties": {
+                                                "file": {
+                                                    "type": "string",
+                                                    "format": "binary"
+                                                },
+                                                "device": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "desktop",
+                                                        "mobile"
+                                                    ],
+                                                    "example": "desktop"
+                                                },
+                                                "slot": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "left",
+                                                        "right",
+                                                        "center"
+                                                    ],
+                                                    "example": "left"
+                                                },
+                                                "alt": {
+                                                    "type": "string",
+                                                    "example": "Imagen izquierda"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Promo izquierda"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Popup creado correctamente"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/popups/{id}": {
+            "get": {
+                "tags": [
+                    "Popups"
+                ],
+                "summary": "Obtener popup por ID",
+                "operationId": "daf59547131eee6eee0885f851345092",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del popup",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Popup encontrado"
+                    },
+                    "404": {
+                        "description": "Popup no encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Popups"
+                ],
+                "summary": "Eliminar popup",
+                "operationId": "46b39fa769c10a92e3c7e3d19a32943f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Popup eliminado"
+                    },
+                    "404": {
+                        "description": "No encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Popups"
+                ],
+                "summary": "Actualizar popup",
+                "operationId": "335e98426b229bc4f4ca63bb4e3f3aa9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Nuevo título"
+                                    },
+                                    "button_text": {
+                                        "type": "string",
+                                        "example": "Comprar"
+                                    },
+                                    "button_color": {
+                                        "type": "string",
+                                        "example": "#000000"
+                                    },
+                                    "page_target": {
+                                        "type": "string",
+                                        "example": "home"
+                                    },
+                                    "delay_seconds": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "priority": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Popup actualizado"
+                    },
+                    "404": {
+                        "description": "No encontrado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/popups": {
+            "get": {
+                "tags": [
+                    "Popups"
+                ],
+                "summary": "Obtener popup activo por página",
+                "operationId": "f0aab26071e60f63e9ae6e779b994a73",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Slug de la página",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "inicio"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Popup activo"
+                    },
+                    "400": {
+                        "description": "Parámetro page requerido"
+                    }
+                }
+            }
+        },
         "/api/productos": {
             "get": {
                 "tags": [
@@ -78,18 +439,18 @@
                 }
             }
         },
-        "/api/productos/{slug}": {
+        "/api/productos/{term}": {
             "get": {
                 "tags": [
                     "Productos"
                 ],
                 "summary": "Obtener detalle de un producto",
-                "operationId": "2e56c697785bf4bf5c4463052363fc1e",
+                "operationId": "46298340a4253e1c11f2e58bc75b4b33",
                 "parameters": [
                     {
-                        "name": "slug",
+                        "name": "term",
                         "in": "path",
-                        "description": "Slug del producto",
+                        "description": "Slug O ID del producto",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -185,10 +546,79 @@
             }
         }
     },
+    "components": {
+        "schemas": {
+            "Product": {
+                "title": "Producto",
+                "description": "Modelo del producto dentro del sistema",
+                "required": [
+                    "name",
+                    "slug",
+                    "price",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Laptop Lenovo Ideapad"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "laptop-lenovo-ideapad"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Laptop con procesador AMD Ryzen..."
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2599.9
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "meta_title": {
+                        "type": "string",
+                        "example": "Laptop Lenovo - Oferta"
+                    },
+                    "meta_description": {
+                        "type": "string",
+                        "example": "Mejor laptop calidad-precio"
+                    },
+                    "keywords": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "laptop",
+                            "lenovo",
+                            "computadora"
+                        ]
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
     "tags": [
         {
             "name": "Productos",
             "description": "Endpoints para gestión de productos"
+        },
+        {
+            "name": "PopupImages",
+            "description": "PopupImages"
+        },
+        {
+            "name": "Popups",
+            "description": "Popups"
         }
     ]
 }
