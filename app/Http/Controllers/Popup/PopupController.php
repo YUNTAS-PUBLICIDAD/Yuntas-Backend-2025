@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Popup\StorePopupRequest;
 use App\Http\Requests\Popup\UpdatePopupRequest;
 use App\Models\Popup;
+use App\Models\PopupImage;
 use App\Service\Image\ImageService;
+use DB;
 use Exception;
 use Illuminate\Http\Request;
 use Log;
@@ -32,37 +34,103 @@ class PopupController extends Controller
    */
   public function index()
   {
-    return Popup::orderBy('priority')->get();
+    // return Popup::orderBy('priority')->get();
+    return Popup::with('images')
+    ->orderBy('priority')
+    ->get();
   }
 
   public function show($id)
   {
-    return Popup::findOrFail($id);
+    // return Popup::findOrFail($id);
+    return Popup::with('images')->findOrFail($id);
   }
 
   // Crear popup
   public function store(StorePopupRequest $request)
   {
-
+    DB::beginTransaction();
     try {
+      Log::info('STORE POPUP - inicio');
+      Log::info('Request data', [
+        'all' => $request->all(),
+        'files' => $request->files->all()
+      ]);
+// dd($request->all(), $request->file('images'));
+      $data = $request->validated();
+
+      Log::info('Data validada', $data);
 
       $data = $request->validated();
       $data['page_target'] = Str::slug($data['page_target']);
 
-      if ($request->hasFile('image')) {
-        $data['image'] = $this->imageService->store(
-          $request->file('image'),
+      // Crear popup sin imágenes
+      $popup = Popup::create($data);
+      Log::info('Popup creado', ['id' => $popup->id]);
+
+      // Guardar Imágenes
+      // if ($request->hasFile('image')) {
+      //   $data['image'] = $this->imageService->store(
+      //     $request->file('image'),
+      //     'popups'
+      //   );
+      // }
+
+      // $popup = Popup::create($data);
+
+      // return response()->json($popup, 201);
+      // Guardar imágenes
+      Log::info('Popup creado', ['id' => $popup->id]);
+
+      if (!$request->has('images')) {
+        Log::warning('No se enviaron imágenes');
+      }
+      foreach ($request->images ?? [] as $index => $img) {
+
+       Log::info("Procesando imagen {$index}", [
+        'keys' => array_keys($img),
+        'device' => $img['device'] ?? null,
+        'slot' => $img['slot'] ?? null,
+        'has_file' => isset($img['file'])
+      ]);
+
+      if (!isset($img['file'])) {
+        Log::error("Imagen {$index} sin archivo");
+        continue;
+      }
+        $path = $this->imageService->store(
+          $img['file'],
           'popups'
         );
+
+        Log::info("Imagen guardada", ['path' => $path]);
+
+        // PopupImage::create([
+        //   'popup_id' => $popup->id,
+        //   'image'=> $path,
+        //   'device' => $img['device'],
+        //   'slot' => $img['slot'],
+        //   'alt' => $img['alt'] ?? null,
+        //   'title' => $img['title'] ?? null
+        // ]);
+        $popup->images()->create([
+          'image' => $path,
+          'device' => $img['device'],
+          'slot' => $img['slot'],
+          'alt' => $img['alt'] ?? null,
+          'title' => $img['title'] ?? null,
+        ]);
       }
-
-      $popup = Popup::create($data);
-
-      return response()->json($popup, 201);
-
+      DB::commit();
+      Log::info('STORE POPUP - éxito', ['popup_id' => $popup->id]);
+ 
+      return response()->json($popup->load('images'), 201);
     } catch (Exception $e) {
+      DB::rollBack();
+
       Log::error('Error al crear popup', [
-        'error' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
       ]);
 
       return response()->json([
@@ -74,26 +142,53 @@ class PopupController extends Controller
   public function update(UpdatePopupRequest $request, $id)
   {
 
+  DB::beginTransaction();
     try {
       $popup = Popup::findOrFail($id);
 
       $data = $request->validated();
       $data['page_target'] = Str::slug($data['page_target']);
 
-      if ($request->hasFile('image')) {
 
-        $data['image'] = $this->imageService->update(
-          $request->file('image'),
-          $popup->image,
-          'popups'
-        );
-      }
+      // if ($request->hasFile('image')) {
+
+      //   $data['image'] = $this->imageService->update(
+      //     $request->file('image'),
+      //     $popup->image,
+      //     'popups'
+      //   );
+      // }
+
+      // // Solo tocar imágenes si vienen en request
+      // if($request->has('images')){
+      //   // Eliminar archivos físicos
+      //   foreach ($popup->images as $image) {
+      //     $this->imageService->remove($image->image);
+      //   }
+      //   // Eliminar registros
+      //   $popup->images()->delete();
+
+      //   // Recrear
+      //   foreach ($request->images as $img) {
+      //     $path = $this->imageService->store($img['file'], 'popups');
+
+      //     $popup->images()->create([
+      //       'image' => $path,
+      //       'device' => $img['device'],
+      //       'slot' => $img['slot'],
+      //       'alt' => $img['alt'] ?? null,
+      //       'title' => $img['title'] ?? null
+      //     ]);
+      //   }
+      // }
+
       $popup->update($data);
+      DB::commit();
 
-
-      return response()->json($popup);
+      return response()->json($popup->load('images'));
 
     } catch (Exception $e) {
+      DB::rollBack();
       Log::error('Error al actualizar popup', [
         'error' => $e->getMessage()
       ]);
@@ -108,10 +203,16 @@ class PopupController extends Controller
   public function destroy($id)
   {
     try {
-      $popup = Popup::findOrFail($id);
+      // $popup = Popup::findOrFail($id);
 
-      if ($popup->image) {
-        $this->imageService->remove($popup->image);
+
+      // if ($popup->image) {
+      //   $this->imageService->remove($popup->image);
+      // }
+      // $popup->delete();
+      $popup = Popup::with('images')->findOrFail($id);
+      foreach ($popup->images as $image) {
+        $this->imageService->remove($image->image);
       }
       $popup->delete();
 
@@ -137,11 +238,17 @@ class PopupController extends Controller
       return response()->json(['message' => 'El parámetro "page" es obligatorio'], 400);
     }
 
+    // $popup = Popup::active()
+    //   ->forPage($page)
+    //   ->inSchedule()
+    //   ->orderBy('priority')
+    //   ->first();
     $popup = Popup::active()
-      ->forPage($page)
-      ->inSchedule()
-      ->orderBy('priority')
-      ->first();
+    ->forPage($page)
+    ->inSchedule()
+    ->with('images')
+    ->orderBy('priority')
+    ->first();
 
     return response()->json($popup);
   }
