@@ -11,6 +11,73 @@ use Illuminate\Validation\Rule;
 
 class PopupImageController extends Controller
 {
+  /**
+ * @OA\Patch(
+ *     path="/api/admin/popup-images/{id}",
+ *     tags={"PopupImages"},
+ *     summary="Actualizar una imagen de popup (parcial)",
+ *     description="Permite actualizar imagen, device, slot, alt o title de forma independiente",
+ *     operationId="updatePopupImage",
+ *     
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la imagen",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *
+ *     @OA\RequestBody(
+ *         required=false,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 type="object",
+ *                 
+ *                 @OA\Property(
+ *                     property="file",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Nueva imagen"
+ *                 ),
+ *                 @OA\Property(
+ *                     property="device",
+ *                     type="string",
+ *                     enum={"desktop","mobile"}
+ *                 ),
+ *                 @OA\Property(
+ *                     property="slot",
+ *                     type="string",
+ *                     enum={"left","right","center"}
+ *                 ),
+ *                 @OA\Property(
+ *                     property="alt",
+ *                     type="string",
+ *                     nullable=true
+ *                 ),
+ *                 @OA\Property(
+ *                     property="title",
+ *                     type="string",
+ *                     nullable=true
+ *                 ),
+ *             )
+ *         )
+ *     ),
+ *
+ *     @OA\Response(
+ *         response=200,
+ *         description="Imagen actualizada correctamente"
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Error de validación o reglas de negocio"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Imagen no encontrada"
+ *     )
+ * )
+ */
   public function update(Request $request, $id, ImageService $imageService)
   {
     DB::beginTransaction();
