@@ -544,6 +544,252 @@
                     }
                 }
             }
+        },
+        "/api/admin/templates": {
+            "get": {
+                "tags": [
+                    "Templates"
+                ],
+                "summary": "Listar templates",
+                "operationId": "67a0540064adec74c1c77f8248e93db6",
+                "responses": {
+                    "200": {
+                        "description": "Lista de templates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "active": {
+                                                "type": "boolean"
+                                            },
+                                            "contents": {
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/components/schemas/TemplateContent"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Templates"
+                ],
+                "summary": "Crear template",
+                "operationId": "df08370eb895e2dc260080b71cb212e0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "lead_source_id",
+                                    "name",
+                                    "active"
+                                ],
+                                "properties": {
+                                    "lead_source_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Template bienvenida"
+                                    },
+                                    "active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "contents": {
+                                        "description": "Enviar como contents[0][field]. Ej: contents[0][channel]",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/TemplateContent"
+                                        }
+                                    },
+                                    "contents[0][channel]": {
+                                        "type": "string",
+                                        "example": "whatsapp"
+                                    },
+                                    "contents[0][subject]": {
+                                        "type": "string",
+                                        "example": "Promo"
+                                    },
+                                    "contents[0][content]": {
+                                        "type": "string",
+                                        "example": "Hola {{name}}"
+                                    },
+                                    "contents[0][active]": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "contents[0][image]": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Template creado"
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/templates/{id}": {
+            "get": {
+                "tags": [
+                    "Templates"
+                ],
+                "summary": "Obtener template",
+                "operationId": "60827edf37195e58e6df74590d1bf3b2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Template encontrado"
+                    },
+                    "404": {
+                        "description": "No encontrado"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Templates"
+                ],
+                "summary": "Eliminar template",
+                "operationId": "0b8309741db8872429c27c24a0c53017",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eliminado"
+                    },
+                    "404": {
+                        "description": "No encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Templates"
+                ],
+                "summary": "Actualizar template",
+                "operationId": "9f88d960babdfe262630f6d91324ba52",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "active": {
+                                        "type": "boolean"
+                                    },
+                                    "contents": {
+                                        "description": "Actualizar o crear contenidos usando contents[index][field]",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/TemplateContent"
+                                        }
+                                    },
+                                    "contents[0][id]": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "contents[0][channel]": {
+                                        "type": "string"
+                                    },
+                                    "contents[0][content]": {
+                                        "type": "string"
+                                    },
+                                    "contents[0][active]": {
+                                        "type": "boolean"
+                                    },
+                                    "contents[0][image]": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Template actualizado"
+                    },
+                    "404": {
+                        "description": "No encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -604,6 +850,46 @@
                     }
                 },
                 "type": "object"
+            },
+            "TemplateContent": {
+                "required": [
+                    "channel",
+                    "content",
+                    "active"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "channel": {
+                        "type": "string",
+                        "example": "whatsapp"
+                    },
+                    "subject": {
+                        "type": "string",
+                        "example": "Promoción"
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "Hola {{name}}"
+                    },
+                    "variables": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "/storage/plantillas/img.png"
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
             }
         }
     },
@@ -619,6 +905,10 @@
         {
             "name": "Popups",
             "description": "Popups"
+        },
+        {
+            "name": "Templates",
+            "description": "Templates"
         }
     ]
 }
