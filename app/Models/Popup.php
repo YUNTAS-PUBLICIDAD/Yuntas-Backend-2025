@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class Popup extends Model
 {
   protected $fillable = [
+    'lead_source_id',
     'slug',
     'title',
     'button_text',
@@ -90,6 +91,11 @@ class Popup extends Model
     }else{
       $this->attributes['button_color'] = null;
     }
+  }
+
+  public function images()
+  {
+    return $this->hasMany(PopupImage::class);
   }
 
 }
