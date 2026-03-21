@@ -72,6 +72,13 @@ class EmailPopupController extends Controller
                       $data
                     );
 
+                    // Log para inspección
+                    Log::info('Template Email renderizado', [
+                      'source_id' => $lead->source_id,
+                      'variables' => $data,
+                      'template' => $template
+                    ]);
+
                     // Mail::raw($template['message'], function ($message) use ($template, $lead){
                     //   $message->to($lead->email)
                     //   ->subject($template['subject'] ?? 'Mensaje');

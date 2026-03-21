@@ -25,7 +25,9 @@ class TemplateService
     if(!$template) {
       throw new Exception("Template no encontrado");
     };
-    $content = $template->contents->first();
+    // $content = $template->contents->first();
+    $content = $template->contents->where('channel', $channel)->where('active', true)->sortByDesc('id')->first();
+
     if(!$content){
       throw new Exception("Contenido no encontrado para canal {$channel}");
     };
