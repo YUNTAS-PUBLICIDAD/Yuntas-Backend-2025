@@ -7,6 +7,7 @@ use App\Jobs\SendTemplateEmailJob;
 use Illuminate\Http\Request;
 use App\Jobs\SendProductEmailJob;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\PopupTemplateMail;
 use App\Mail\InicioMailing;
 use App\Mail\ProductosMailing;
 use App\Models\Lead;
@@ -89,18 +90,14 @@ class EmailPopupController extends Controller
                     //           ->setBody($template['message'], 'text/html');
                     // });
                     
-                    $html = $template['message'];
+                    $subject = $template['subject'] ?? 'Mensaje';
+                    $bodyHtml = $template['message'] ?? '';
+                    $imageUrl = $template['image_url'] ?? null;
 
-                    if(!empty($template['image_url'])){
-                        $html = '<img src="'.$template['image_url'].'" style="max-width:100%;"><br>' . $html;
-                    }
-                    
-                    Mail::send([], [], function ($message) use ($template, $lead, $html){
-                      $message->to($lead->email)
-                      ->subject($template['subject'] ?? 'Mensaje')
-                      // ->html($template['message']); 
-                      ->html($html);
-                    });
+                    $popupMail = new PopupTemplateMail($subject, $bodyHtml, $imageUrl);
+                    $html = $popupMail->render();
+
+                    Mail::to($lead->email)->send($popupMail);
 
                     // Guardar registro
                     EmailMessage::create([
@@ -156,17 +153,20 @@ class EmailPopupController extends Controller
               //   ->subject($template['subject'] ?? 'Producto')
               //   ->setBody($template['message'], 'text/html');
               // });
-              Mail::send([], [], function ($message) use ($template, $lead) {
-                $message->to($lead->email)
-                ->subject($template['subject'] ?? 'Producto')
-                ->html($template['message']);
-              });
+              $subject = $template['subject'] ?? 'Producto';
+              $bodyHtml = $template['message'] ?? '';
+              $imageUrl = $template['image_url'] ?? null;
+
+              $productMail = new PopupTemplateMail($subject, $bodyHtml, $imageUrl);
+              $renderedHtml = $productMail->render();
+
+              Mail::to($lead->email)->send($productMail);
 
               EmailMessage::create([
                 'lead_id' => $lead->id,
                 'type' => 'popup',
                 'subject' => $template['subject'] ?? null,
-                'body' => $template['message'],
+                'body' => $renderedHtml,
                 'status' => 'enviado',
                 'sent_at' => now()
               ]);
