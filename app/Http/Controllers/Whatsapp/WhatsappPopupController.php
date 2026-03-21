@@ -101,18 +101,34 @@ class WhatsappPopupController extends Controller
                 //     $imagenUrl = $plantillaPopup->imagen_url;
                 // }
                 // Render Template
-                $templateData = $this->templateService->render(
-                  $request->source_id,
-                  'whatsapp',
-                  $variables
-                );
-        
-                if(!$templateData){
+                try {
+                  $templateData = $this->templateService->render(
+                    $request->source_id,
+                    'whatsapp',
+                    $variables
+                  );
+
+                  Log::info('Tempalte renderizado correctamente', ['source_id' => $request->source_id, 'variables' => $variables, 'template' => $templateData]);
+                  
+                } catch (\Exception $e) {
+                  Log::error('Error al renderizar template', [
+
+                  'source_id' => $request->source_id,
+                  'variables' => $variables,
+                  'error' => $e->getMessage()
+                  ]);
                   return response()->json([
                     'success' => false,
-                    'message' => 'No hay template configurado'
+                    'message' => $e->getMessage()
                   ], 500);
                 }
+        
+                // if(!$templateData){
+                //   return response()->json([
+                //     'success' => false,
+                //     'message' => 'No hay template configurado'
+                //   ], 500);
+                // }
         
                 $mensaje = $templateData['message'];
                 if (!$imagenUrl) {
@@ -198,7 +214,9 @@ class WhatsappPopupController extends Controller
 
             // Si tiene imagen, enviar con imagen
             if ($imagenUrl) {
-                $imagePath = str_replace('storage/', '', $imagenUrl);
+                // $imagePath = str_replace('storage/', '', $imagenUrl);
+                $parsedPath = parse_url($imagenUrl, PHP_URL_PATH);
+                $imagePath = ltrim(str_replace('/storage/', '', $parsedPath), '/');
                 $image = Storage::disk('public')->get($imagePath);
 
                 $payload['imageData'] = base64_encode($image);
@@ -207,7 +225,8 @@ class WhatsappPopupController extends Controller
                 Log::info('Enviando WhatsApp con imagen', [
                     'lead_id' => $lead->id,
                     'phone' => $payload['phone'],
-                    'tiene_imagen' => true
+                    'tiene_imagen' => true,
+                    'imagePath' => $imagePath
                 ]);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
@@ -219,7 +238,13 @@ class WhatsappPopupController extends Controller
                     'phone' => $payload['phone']
                 ]);
 
+                Log::info('Payload send-message', ['payload' => $payload]);
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-message", $payload);
+
+                Log::info('Response raw send-message', [
+                  'body' => $response->body(),
+                  'status' => $response->status(),
+                ]);
             }
 
             $success = $response->json()['success'] ?? false;
