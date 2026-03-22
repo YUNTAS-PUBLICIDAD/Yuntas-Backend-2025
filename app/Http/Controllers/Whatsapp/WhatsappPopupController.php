@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Whatsapp;
 
 use App\Application\Services\Template\TemplateService;
+use App\Application\Support\TemplateVariableBuilder;
 use App\Http\Controllers\Controller;
 use App\Models\WhatsappMessage;
 use App\Models\Lead;
 // use App\Models\WhatsappPopup;
 // use App\Models\Product;
 // use App\Models\WhatsappProducto;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -68,9 +70,10 @@ class WhatsappPopupController extends Controller
         // Obtener plantilla según el popup del que viene el lead
         // $plantillaPopup = WhatsappPopup::activaPorSource($request->source_id);
         // // variables para el mensaje
-        $variables = [
-            'nombre' => $lead->name,
-        ];
+        // $variables = [
+        //     'nombre' => $lead->name,
+        // ];
+        $variables = TemplateVariableBuilder::forLead($lead);
         
         // if (!$plantillaPopup) {
           //     return response()->json([
@@ -83,34 +86,81 @@ class WhatsappPopupController extends Controller
             // Si es detalle de producto, agregar variables y obtener imagen
             // LÓGICA DE PRODUCTO
             $imagenUrl = null;
-            if ($lead->product_id && $lead->source->name === 'Producto detalle') {
-              $imagenUrl = $lead->product->images
-              ->where('slot_id', 5) // Slot de imagen principal
-              ->first()?->url;
+
+            // CONTEXTO: PRODUCTO DETALLE
+            if ($lead->product_id) {
+              // $imagenUrl = $lead->product;
+              // ->where('slot_id', 5) // Slot de imagen principal
+              // ->first()?->url;
+              $product = $lead->product;
+              if (!$product) {
+               return response()->json([
+                'success' => false,
+                'message' => 'Producto no encotrado'
+               ], 404);
+              }
               
               // variables adicionales
-              $variables = array_merge($variables, [
-                'producto_nombre' => $lead->product->name ?? '',
-                'descripcion' => $lead->product->description ?? '',
-                'fecha' => now('America/Lima')->format('d/m/Y'),
-                'hora' => now('America/Lima')->format('H:i'),
-                'email' => $lead->email,
-                ]);
-                } 
+              // $variables = array_merge($variables, [
+              //   'producto_nombre' => $lead->product->name ?? '',
+              //   'descripcion' => $lead->product->description ?? '',
+              //   'fecha' => now('America/Lima')->format('d/m/Y'),
+              //   'hora' => now('America/Lima')->format('H:i'),
+              //   'email' => $lead->email,
+              //   ]);
+              //   } 
+              // $variables = array_merge($variables, [
+
+              //   // 'nombre' => $lead->name,
+              //   'producto_nombre' => $product->name ?? '',
+              //   'descripcion' => $product->description ?? '',
+              //   'fecha' => now('America/Lima')->format('d/m/Y'),
+              //   'hora' => now('America/Lima')->format('H:i'),
+              //   'email' => $lead->email,
+              // ]);
+              // }
+
+                // Imagen dinámica del producto
+                // $imagenUrl = optional($product->images->where('slot_id', 5)->first())->url();
+                // $imagenUrl = optional($product?->images?->firstWhere('slot_id', 5))->url ?? null;
                 // else { // Para popup de Inicio y Productos, se usa imagen de la plantilla
                 //     $imagenUrl = $plantillaPopup->imagen_url;
                 // }
+                // $product->loadMissing('images');
+                // $imagen = $product->images->firstWhere('slot_id', 5);
+                // $imagenUrl = $imagen?->url;
+                $product->loadMissing('mainImage');
+                $imagenUrl = $product->mainImage?->url;
+            }
                 // Render Template
                 try {
+
+                // Render template
+                  // $templateData = $this->templateService->render(
+                  //   $request->source_id,
+                  //   'whatsapp',
+                  //   $variables
+                  // );
+                  Log::info('FLOW DEBUG', [
+ 'product_id'  => $lead->product_id,
+ 'tiene_producto' => (bool) $lead->product,
+ 'variables' => $variables
+                  ]);
+
                   $templateData = $this->templateService->render(
                     $request->source_id,
-                    'whatsapp',
-                    $variables
+                  'whatsapp',
+                  $variables
                   );
 
-                  Log::info('Tempalte renderizado correctamente', ['source_id' => $request->source_id, 'variables' => $variables, 'template' => $templateData]);
+
+                  Log::info('Template renderizado correctamente', [
+                    'source_id' => $request->source_id, 
+                    'variables_keys' => array_keys($variables)
+                    // 'variables' => $variables, 'template' => $templateData
+                  ]);
                   
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                   Log::error('Error al renderizar template', [
 
                   'source_id' => $request->source_id,
@@ -131,6 +181,8 @@ class WhatsappPopupController extends Controller
                 // }
         
                 $mensaje = $templateData['message'];
+
+                // Fallback solo si no hay imagen de producto
                 if (!$imagenUrl) {
                   $imagenUrl = $templateData['image_url'];
                 }
@@ -264,7 +316,7 @@ class WhatsappPopupController extends Controller
 
             return ['success' => $success];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error enviando WhatsApp', [
                 'lead_id' => $lead->id,
                 'error' => $e->getMessage(),
