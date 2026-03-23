@@ -15,6 +15,6 @@ class ChatbotAnswer extends Model
 
     public function actions()
     {
-      return $this->belongsToMany(ChatbotAction::class, 'chatbot_answer_actions')->withPivot(['priority', 'is_active'])->wherePivot('is_active', true);
+      return $this->belongsToMany(ChatbotAction::class, 'chatbot_answer_actions', 'answer_id', 'action_id')->withPivot(['priority', 'is_active'])->wherePivot('is_active', true);
     }
 }

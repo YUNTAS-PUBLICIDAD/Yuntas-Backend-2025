@@ -32,7 +32,7 @@ class ChatbotAction extends Model
     public function answers()
     {
       return $this->belongsToMany(
-        ChatbotAnswer::class, 'chatbot_answer_actions'
+        ChatbotAnswer::class, 'chatbot_answer_actions', 'action_id', 'answer_id'
       );
     }
 }
