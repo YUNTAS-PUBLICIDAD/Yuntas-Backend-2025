@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ChatBotActionCondition extends Model
+class ChatbotActionCondition extends Model
 {
     protected $fillable = [
       'action_id',
