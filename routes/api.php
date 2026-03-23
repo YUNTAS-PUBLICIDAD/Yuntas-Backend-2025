@@ -211,7 +211,7 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
   });
   Route::prefix('admin/popup-images')->group(function(){
     Route::post('{id}', [PopupImageController::class, 'update']);
-    Route::patch('{id}', [PopupController::class, 'update']);
+    Route::patch('{id}', [PopupImageController::class, 'update']);
   });
 });
 
