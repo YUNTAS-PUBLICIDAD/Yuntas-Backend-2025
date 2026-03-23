@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\Popup\PopupController;
 use App\Http\Controllers\PopupImage\PopupImageController;
 use App\Http\Controllers\Template\TemplateController;
@@ -216,3 +217,6 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
 });
 
 Route::get('popup', [PopupController::class, 'getPopup'])->middleware('throttle:public');
+
+// Chatbot
+Route::post('/chatbot/message', [ChatbotController::class, 'handle'])->middleware('throttle:forms');
