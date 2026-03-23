@@ -18,14 +18,16 @@ class ChatbotAction extends Model
 
     public function conditions()
     {
-      return $this->hasMany(ChatBotActionCondition::class, 'action_id')->where('is_active', true);
+      return $this->hasMany(ChatbotActionCondition::class, 'action_id')->where('is_active', true);
     }
 
     public function intents()
     {
       return $this->belongsToMany(
         ChatbotIntent::class,
-        'chatbot_intent_actions'
+        'chatbot_intent_actions',
+        'action_id',
+        'intent_id'
       );
     }
 
