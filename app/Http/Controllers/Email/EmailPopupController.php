@@ -93,7 +93,7 @@ class EmailPopupController extends Controller
                     ]);
                     $imagenUrl = null;
       
-                    // Intentar imagen del producto
+                    // prioridad 1: producto
                     if ($lead->product_id && $lead->product) {
                       $lead->product->loadMissing('mainImage');
 
@@ -102,7 +102,7 @@ class EmailPopupController extends Controller
                       }
                     }
 
-                    // Fallback a template
+                    // prioridad 2: template
                     if (!$imagenUrl && !empty($template['image_url'])) {
                       $imagenUrl = $template['image_url'];
                     }
@@ -121,14 +121,18 @@ class EmailPopupController extends Controller
                     //           ->setBody($template['message'], 'text/html');
                     // });
                     
-                    $html = $template['message'];
+                    // $html = $template['message'];
 
                     // if(!empty($template['image_url'])){
                     //     $html = '<img src="'.$template['image_url'].'" style="max-width:100%;"><br>' . $html;
                     // }
-                    if ($imagenUrl) {
-    $html = '<img src="'.$imagenUrl.'" style="max-width:100%;"><br>' . $html;
-}
+    //                 if ($imagenUrl) {
+    // $html = '<img src="'.$imagenUrl.'" style="max-width:100%;"><br>' . $html;
+// }
+$html = view('emails.layouts.base', [
+  'contenido' => $template['message'],
+  'imagenUrl' => $imagenUrl
+])->render();
                     
                     Mail::send([], [], function ($message) use ($template, $lead, $html){
                       $message->to($lead->email)
