@@ -49,9 +49,11 @@ class ChatBotEngine
 
     // Acciones
     $actions = $this->collectActions($intent, $answer);
+    $validActions = app(ActionExecutor::class)->filterExecutable($actions, $conversation, $message);
 
     // Ejecutar acciones
-    app(ActionExecutor::class)->execute($actions, $conversation,$message );
+    // app(ActionExecutor::class)->execute($actions, $conversation,$message );
+    app(ActionExecutor::class)->execute($validActions, $conversation, $message);
   }
 
   protected function collectActions($intent, $answer)
@@ -70,6 +72,7 @@ class ChatBotEngine
       'timestamp' => now()
     ]);
   }
+
 
   protected function fallback($conversation)
   {
