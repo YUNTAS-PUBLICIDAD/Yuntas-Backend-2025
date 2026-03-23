@@ -85,4 +85,12 @@ class Product extends Model
     {
         return $this->hasMany(Claim::class);
     }
+
+    public function mainImage()
+    {
+      return $this->hasOne(ProductImage::class)->whereHas('slot', function ($q) {
+        $q->where('module', 'products')
+        ->where('name', 'Hero');
+      });
+    }
 }

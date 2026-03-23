@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Whatsapp;
 
 use App\Application\Services\Template\TemplateService;
+use App\Application\Support\TemplateVariableBuilder;
 use App\Http\Controllers\Controller;
 use App\Models\WhatsappMessage;
 use App\Models\Lead;
 // use App\Models\WhatsappPopup;
 // use App\Models\Product;
 // use App\Models\WhatsappProducto;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -68,9 +70,10 @@ class WhatsappPopupController extends Controller
         // Obtener plantilla según el popup del que viene el lead
         // $plantillaPopup = WhatsappPopup::activaPorSource($request->source_id);
         // // variables para el mensaje
-        $variables = [
-            'nombre' => $lead->name,
-        ];
+        // $variables = [
+        //     'nombre' => $lead->name,
+        // ];
+        $variables = TemplateVariableBuilder::forLead($lead);
         
         // if (!$plantillaPopup) {
           //     return response()->json([
@@ -83,38 +86,103 @@ class WhatsappPopupController extends Controller
             // Si es detalle de producto, agregar variables y obtener imagen
             // LÓGICA DE PRODUCTO
             $imagenUrl = null;
-            if ($lead->product_id && $lead->source->name === 'Producto detalle') {
-              $imagenUrl = $lead->product->images
-              ->where('slot_id', 5) // Slot de imagen principal
-              ->first()?->url;
+
+            // CONTEXTO: PRODUCTO DETALLE
+            if ($lead->product_id) {
+              // $imagenUrl = $lead->product;
+              // ->where('slot_id', 5) // Slot de imagen principal
+              // ->first()?->url;
+              $product = $lead->product;
+              if (!$product) {
+               return response()->json([
+                'success' => false,
+                'message' => 'Producto no encotrado'
+               ], 404);
+              }
               
               // variables adicionales
-              $variables = array_merge($variables, [
-                'producto_nombre' => $lead->product->name ?? '',
-                'descripcion' => $lead->product->description ?? '',
-                'fecha' => now('America/Lima')->format('d/m/Y'),
-                'hora' => now('America/Lima')->format('H:i'),
-                'email' => $lead->email,
-                ]);
-                } 
+              // $variables = array_merge($variables, [
+              //   'producto_nombre' => $lead->product->name ?? '',
+              //   'descripcion' => $lead->product->description ?? '',
+              //   'fecha' => now('America/Lima')->format('d/m/Y'),
+              //   'hora' => now('America/Lima')->format('H:i'),
+              //   'email' => $lead->email,
+              //   ]);
+              //   } 
+              // $variables = array_merge($variables, [
+
+              //   // 'nombre' => $lead->name,
+              //   'producto_nombre' => $product->name ?? '',
+              //   'descripcion' => $product->description ?? '',
+              //   'fecha' => now('America/Lima')->format('d/m/Y'),
+              //   'hora' => now('America/Lima')->format('H:i'),
+              //   'email' => $lead->email,
+              // ]);
+              // }
+
+                // Imagen dinámica del producto
+                // $imagenUrl = optional($product->images->where('slot_id', 5)->first())->url();
+                // $imagenUrl = optional($product?->images?->firstWhere('slot_id', 5))->url ?? null;
                 // else { // Para popup de Inicio y Productos, se usa imagen de la plantilla
                 //     $imagenUrl = $plantillaPopup->imagen_url;
                 // }
+                // $product->loadMissing('images');
+                // $imagen = $product->images->firstWhere('slot_id', 5);
+                // $imagenUrl = $imagen?->url;
+                $product->loadMissing('mainImage');
+                $imagenUrl = $product->mainImage?->url;
+            }
                 // Render Template
-                $templateData = $this->templateService->render(
-                  $request->source_id,
+                try {
+
+                // Render template
+                  // $templateData = $this->templateService->render(
+                  //   $request->source_id,
+                  //   'whatsapp',
+                  //   $variables
+                  // );
+                  Log::info('FLOW DEBUG', [
+ 'product_id'  => $lead->product_id,
+ 'tiene_producto' => (bool) $lead->product,
+ 'variables' => $variables
+                  ]);
+
+                  $templateData = $this->templateService->render(
+                    $request->source_id,
                   'whatsapp',
                   $variables
-                );
-        
-                if(!$templateData){
+                  );
+
+
+                  Log::info('Template renderizado correctamente', [
+                    'source_id' => $request->source_id, 
+                    'variables_keys' => array_keys($variables)
+                    // 'variables' => $variables, 'template' => $templateData
+                  ]);
+                  
+                } catch (Exception $e) {
+                  Log::error('Error al renderizar template', [
+
+                  'source_id' => $request->source_id,
+                  'variables' => $variables,
+                  'error' => $e->getMessage()
+                  ]);
                   return response()->json([
                     'success' => false,
-                    'message' => 'No hay template configurado'
+                    'message' => $e->getMessage()
                   ], 500);
                 }
         
+                // if(!$templateData){
+                //   return response()->json([
+                //     'success' => false,
+                //     'message' => 'No hay template configurado'
+                //   ], 500);
+                // }
+        
                 $mensaje = $templateData['message'];
+
+                // Fallback solo si no hay imagen de producto
                 if (!$imagenUrl) {
                   $imagenUrl = $templateData['image_url'];
                 }
@@ -198,7 +266,9 @@ class WhatsappPopupController extends Controller
 
             // Si tiene imagen, enviar con imagen
             if ($imagenUrl) {
-                $imagePath = str_replace('storage/', '', $imagenUrl);
+                // $imagePath = str_replace('storage/', '', $imagenUrl);
+                $parsedPath = parse_url($imagenUrl, PHP_URL_PATH);
+                $imagePath = ltrim(str_replace('/storage/', '', $parsedPath), '/');
                 $image = Storage::disk('public')->get($imagePath);
 
                 $payload['imageData'] = base64_encode($image);
@@ -207,7 +277,8 @@ class WhatsappPopupController extends Controller
                 Log::info('Enviando WhatsApp con imagen', [
                     'lead_id' => $lead->id,
                     'phone' => $payload['phone'],
-                    'tiene_imagen' => true
+                    'tiene_imagen' => true,
+                    'imagePath' => $imagePath
                 ]);
 
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
@@ -219,7 +290,13 @@ class WhatsappPopupController extends Controller
                     'phone' => $payload['phone']
                 ]);
 
+                Log::info('Payload send-message', ['payload' => $payload]);
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-message", $payload);
+
+                Log::info('Response raw send-message', [
+                  'body' => $response->body(),
+                  'status' => $response->status(),
+                ]);
             }
 
             $success = $response->json()['success'] ?? false;
@@ -239,7 +316,7 @@ class WhatsappPopupController extends Controller
 
             return ['success' => $success];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error enviando WhatsApp', [
                 'lead_id' => $lead->id,
                 'error' => $e->getMessage(),

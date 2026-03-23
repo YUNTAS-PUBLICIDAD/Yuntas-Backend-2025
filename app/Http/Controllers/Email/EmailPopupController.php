@@ -51,18 +51,31 @@ class EmailPopupController extends Controller
         //     'correo' => $lead->email,
         //     'telefono' => $lead->phone,
         // ];
+
+        // Cargar relación
+        $lead->loadMissing('product');
+
         $data = [
           'nombre' => $lead->name,
           'email' => $lead->email,
           'telefono' => $lead->phone,
           'fecha' => now()->format('Y-m-d'),
-          'hora' => now()->format('H:i')
+          'hora' => now()->format('H:i'),
+
+          'producto_nombre' => $lead->product->name ?? '',
+          'descripcion' => $lead->product->description ?? ''
         ];
+
+        Log::info('EMAIL FLOW DEBUG', [
+          'source_id' => $lead->source_id,
+          'product_id' => $lead->product_id,
+          'data' => $data
+        ]);
 
 
         // enviar si viene de inicio o producto
         // CASO 1: POPUP (sin producto)
-        if (isNull($lead->product_id)) {
+        // if (isNull($lead->product_id)) {
             // if ($lead->source->name === 'Inicio') {
                 try {
                     // Mail::to($cliente['correo'])->send(new InicioMailing($cliente));
@@ -71,6 +84,32 @@ class EmailPopupController extends Controller
                       'email',
                       $data
                     );
+
+                    // Log para inspección
+                    Log::info('Template Email renderizado', [
+                      'source_id' => $lead->source_id,
+                      'variables' => $data,
+                      'template' => $template
+                    ]);
+                    $imagenUrl = null;
+      
+                    // Intentar imagen del producto
+                    if ($lead->product_id && $lead->product) {
+                      $lead->product->loadMissing('mainImage');
+
+                      if ($lead->product->mainImage?->url) {
+                        $imagenUrl = asset($lead->product->mainImage->url);
+                      }
+                    }
+
+                    // Fallback a template
+                    if (!$imagenUrl && !empty($template['image_url'])) {
+                      $imagenUrl = $template['image_url'];
+                    }
+                    Log::info('DEBUG IMAGEN', [
+                      'image_url_template'  => $template['image_url']
+                    ]);
+
 
                     // Mail::raw($template['message'], function ($message) use ($template, $lead){
                     //   $message->to($lead->email)
@@ -84,9 +123,12 @@ class EmailPopupController extends Controller
                     
                     $html = $template['message'];
 
-                    if(!empty($template['image_url'])){
-                        $html = '<img src="'.$template['image_url'].'" style="max-width:100%;"><br>' . $html;
-                    }
+                    // if(!empty($template['image_url'])){
+                    //     $html = '<img src="'.$template['image_url'].'" style="max-width:100%;"><br>' . $html;
+                    // }
+                    if ($imagenUrl) {
+    $html = '<img src="'.$imagenUrl.'" style="max-width:100%;"><br>' . $html;
+}
                     
                     Mail::send([], [], function ($message) use ($template, $lead, $html){
                       $message->to($lead->email)
@@ -130,49 +172,49 @@ class EmailPopupController extends Controller
                       'message' => $e->getMessage(),
                     ], 500);
                 }
-            } 
+            // } 
             // CASO 2: Producto
-            try {
-              $product = $lead->product;
-              $data['producto_nombre'] = $product->name ?? 'Producto';
-              $data['descripcion'] = $product->description ?? 'Sin descripción';
-              $data['fecha'] = now()->translatedFormat('d \\d\\e F \\d\\e Y');
-              $data['hora'] = now()->format('h:i A');
-              // $detailSourceId = $lead->source_id;
-              $template = $this->templateService->renderByProduct($lead->product_id, 'email', $data);
-              // Mail::raw($template['message'], function ($message) use ($template, $lead){
-              //   $message->to($lead->email)
-              //   ->subject($template['subject'] ?? 'Producto');
-              // });
-              // Mail::send([], [], function ($message) use ($template, $lead){
-              //   $message->to($lead->email)
-              //   ->subject($template['subject'] ?? 'Producto')
-              //   ->setBody($template['message'], 'text/html');
-              // });
-              Mail::send([], [], function ($message) use ($template, $lead) {
-                $message->to($lead->email)
-                ->subject($template['subject'] ?? 'Producto')
-                ->html($template['message']);
-              });
+            // try {
+            //   $product = $lead->product;
+            //   $data['producto_nombre'] = $product->name ?? 'Producto';
+            //   $data['descripcion'] = $product->description ?? 'Sin descripción';
+            //   $data['fecha'] = now()->translatedFormat('d \\d\\e F \\d\\e Y');
+            //   $data['hora'] = now()->format('h:i A');
+            //   // $detailSourceId = $lead->source_id;
+            //   $template = $this->templateService->render($lead->product_id, 'email', $data);
+            //   // Mail::raw($template['message'], function ($message) use ($template, $lead){
+            //   //   $message->to($lead->email)
+            //   //   ->subject($template['subject'] ?? 'Producto');
+            //   // });
+            //   // Mail::send([], [], function ($message) use ($template, $lead){
+            //   //   $message->to($lead->email)
+            //   //   ->subject($template['subject'] ?? 'Producto')
+            //   //   ->setBody($template['message'], 'text/html');
+            //   // });
+            //   Mail::send([], [], function ($message) use ($template, $lead) {
+            //     $message->to($lead->email)
+            //     ->subject($template['subject'] ?? 'Producto')
+            //     ->html($template['message']);
+            //   });
 
-              EmailMessage::create([
-                'lead_id' => $lead->id,
-                'type' => 'popup',
-                'subject' => $template['subject'] ?? null,
-                'body' => $template['message'],
-                'status' => 'enviado',
-                'sent_at' => now()
-              ]);
+            //   EmailMessage::create([
+            //     'lead_id' => $lead->id,
+            //     'type' => 'popup',
+            //     'subject' => $template['subject'] ?? null,
+            //     'body' => $template['message'],
+            //     'status' => 'enviado',
+            //     'sent_at' => now()
+            //   ]);
 
-              return response()->json([
-                'message' => 'Email de producto enviado',
-                'lead_id' => $lead->id
-              ], 200);
-            } catch (\Throwable $e) {
-              return response()->json([
-                'message' => $e->getMessage(),
-              ],500);
-            }
+            //   return response()->json([
+            //     'message' => 'Email de producto enviado',
+            //     'lead_id' => $lead->id
+            //   ], 200);
+            // } catch (\Throwable $e) {
+            //   return response()->json([
+            //     'message' => $e->getMessage(),
+            //   ],500);
+            // }
     
             // else if ($lead->source->name === 'Productos') {
             //     try {

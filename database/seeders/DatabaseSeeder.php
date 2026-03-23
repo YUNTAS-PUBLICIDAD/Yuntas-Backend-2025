@@ -147,31 +147,32 @@ class DatabaseSeeder extends Seeder
           ]
         );
 
-        $templateProducto = Template::updateOrCreate(
-          [
-            'product_id' => $product->id,
-            'lead_source_id' => $detalleSource->id
-          ],
-          [
-            'name' => 'Secuencias Producto ' . $product->id,
-            'active' => true
-          ]
-        );
+        // $templateProducto = Template::updateOrCreate(
+        //   [
+        //     'product_id' => $product->id,
+        //     // 'lead_source_id' => $detalleSource->id
+        //     'lead_source_id' => null
+        //   ],
+        //   [
+        //     'name' => 'Secuencias Producto ' . $product->id,
+        //     'active' => true
+        //   ]
+        // );
 
-        // STEP 0
-        TemplateContent::updateOrCreate(
-          [
-            'template_id' => $templateProducto->id,
-            'channel' => 'email',
-            // 'step' => 0
-          ],
-          [
-'subject' => 'Gracias por tu interés',
-'content' => "Hola {{nombre}},\n\nGracias por tu interés en *{{producto_nombre}}*.\n\n{{descripcion}}\n\n📅 Registrado el {{fecha}} a las {{hora}}.\n\nEn breve uno de nuestros asesores te contactará con más información.\n\nSi tienes alguna duda, puedes responder este correo.\n\nSaludos,\nEquipo de ventas",
-        'variables' => ['nombre', 'producto_nombre'],
-        'active' => true,
-          ]
-        );
+//         // STEP 0
+//         TemplateContent::updateOrCreate(
+//           [
+//             'template_id' => $templateProducto->id,
+//             'channel' => 'email',
+//             // 'step' => 0
+//           ],
+//           [
+// 'subject' => 'Gracias por tu interés',
+// 'content' => "Hola {{nombre}},\n\nGracias por tu interés en *{{producto_nombre}}*.\n\n{{descripcion}}\n\n📅 Registrado el {{fecha}} a las {{hora}}.\n\nEn breve uno de nuestros asesores te contactará con más información.\n\nSi tienes alguna duda, puedes responder este correo.\n\nSaludos,\nEquipo de ventas",
+//         'variables' => ['nombre', 'producto_nombre'],
+//         'active' => true,
+//           ]
+//         );
 
 //         // STEP 1
 //         TemplateContent::updateOrCreate(
@@ -205,26 +206,26 @@ class DatabaseSeeder extends Seeder
 // =========================
         // 🟢 TEMPLATE: INICIO
         // =========================
-        // $templateInicio = Template::updateOrCreate(
-        //     ['lead_source_id' => $inicioSource->id],
-        //     [
-        //         'name' => 'Template Inicio',
-        //         'active' => true,
-        //     ]
-        // );
+        $templateInicio = Template::updateOrCreate(
+            ['lead_source_id' => $inicioSource->id],
+            [
+                'name' => 'Template Inicio',
+                'active' => true,
+            ]
+        );
 
-        // TemplateContent::updateOrCreate(
-        //     [
-        //         'template_id' => $templateInicio->id,
-        //         'channel' => 'whatsapp',
-        //     ],
-        //     [
-        //         'content' => "👋 ¡Bienvenido(a) a *Yuntas Publicidad*!\n\nHola {{nombre}}, gracias por escribirnos.",
-        //         'variables' => ['nombre'],
-        //         'image_url' => 'storage/plantillas/yuntas-bienvenida.webp',
-        //         'active' => true,
-        //     ]
-        // );
+        TemplateContent::updateOrCreate(
+            [
+                'template_id' => $templateInicio->id,
+                'channel' => 'whatsapp',
+            ],
+            [
+                'content' => "👋 ¡Bienvenido(a) a *Yuntas Publicidad*!\n\nHola {{nombre}}, gracias por escribirnos.",
+                'variables' => ['nombre'],
+                'image_url' => 'storage/plantillas/yuntas-bienvenida.webp',
+                'active' => true,
+            ]
+        );
 
         // =========================
         // 🟢 TEMPLATE: PRODUCTOS
@@ -280,19 +281,19 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-//         TemplateContent::updateOrCreate(
-//     [
-//         'template_id' => $templateInicio->id,
-//         'channel' => 'email',
-//     ],
-//     [
-//         'subject' => 'Bienvenido a Yuntas Publicidad',
-//         'content' => "Hola {{nombre}},\n\nGracias por contactarnos. En Yuntas Publicidad te ayudamos a hacer crecer tu negocio.\n\nPronto nos comunicaremos contigo.",
-//         'variables' => ['nombre'],
-//         'image_url' => null,
-//         'active' => true,
-//     ]
-// );
+        TemplateContent::updateOrCreate(
+    [
+        'template_id' => $templateInicio->id,
+        'channel' => 'email',
+    ],
+    [
+        'subject' => 'Bienvenido a Yuntas Publicidad',
+        'content' => "Hola {{nombre}},\n\nGracias por contactarnos. En Yuntas Publicidad te ayudamos a hacer crecer tu negocio.\n\nPronto nos comunicaremos contigo.",
+        'variables' => ['nombre'],
+        'image_url' => null,
+        'active' => true,
+    ]
+);
 
 TemplateContent::updateOrCreate(
     [
