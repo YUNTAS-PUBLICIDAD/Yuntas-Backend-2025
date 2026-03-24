@@ -84,17 +84,21 @@ class ActionExecutor
       }
 
   // Actualiza contexto de forma segura
-  protected function updateContext($action, $conversation)
+  protected function updateContext($action, $conversation, $message)
   {
     // $params = $action->parameters;
     $params = $action->parameters ?? [];
     if (!isset($params['key'], $params['value'])) {
     return;
     }
-    $context = $conversation->context ?? [];
+    $value = $params['value'];
+    if ($value === '__from_message__') {
+      $value = app(MessageParser::class)->extractName($message);
+    }
     // $context[$params['key']] = $params['value'];
+    $context = $conversation->context ?? [];
     // Permite Keys tipo: context.user.name
-    data_set($context, $params['key'], $params['value']);
+    data_set($context, $params['key'], $value);
 
     $conversation->update([
       'context' => $context
