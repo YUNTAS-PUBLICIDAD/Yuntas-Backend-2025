@@ -29,7 +29,7 @@ class ChatbotSeeder extends Seeder
         'question_text' => 'capturar nombre'
       ],
       [
-        'keywords' => ['me llamo', 'soy', 'mi nombre es']
+        'keywords' => ['me llamo', 'soy', 'mi nombre es', 'nombre', 'llamo']
       ]
     );
 
