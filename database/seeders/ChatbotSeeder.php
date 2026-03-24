@@ -17,6 +17,47 @@ class ChatbotSeeder extends Seeder
      */
     public function run(): void
     {
+
+    // Intent: Nombre
+    $intentNombre = ChatbotIntent::firstOrCreate([
+      'name' => 'nombre'
+    ]);
+
+    $qNombre = ChatbotQuestion::updateOrCreate(
+      [
+        'intent_id' => $intentNombre->id,
+        'question_text' => 'capturar nombre'
+      ],
+      [
+        'keywords' => ['me llamo', 'soy', 'mi nombre es']
+      ]
+    );
+
+    $answerNombre = ChatbotAnswer::firstOrCreate(
+      [
+        'question_id' => $qNombre->id
+      ],
+      [
+        'answer_text' => 'Mucho gusto {{user_name|amigo}} 👌 ¿En qué puedo ayudarte?'
+      ]
+    );
+    // Acción
+    $actionSaveName = ChatbotAction::firstOrCreate(
+      ['name' => 'save_name'],
+      [
+        'trigger_type' => 'after_answer',
+        'action_type' => 'update_context',
+        'parameters' => [
+          'key' => 'user_name',
+          'value' => '__from_message__'
+        ]
+      ]
+    );
+
+    $answerNombre->actions()->syncWithoutDetaching([
+      $actionSaveName->id => ['priority' => 1, 'is_active' => 1]
+    ]);
+
        /*
         |--------------------------------------------------------------------------
         | 🧠 INTENT: SALUDO
@@ -41,7 +82,7 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qSaludo->id,
             ],
             [
-                'answer_text' => 'Hola {{context.user_name ?? "👋"}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
+                'answer_text' => 'Hola {{user_name| "👋"}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
             ]
         );
 
@@ -69,7 +110,7 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qCompra->id,
             ],
             [
-                'answer_text' => 'Perfecto {{context.user_name ?? ""}} 👍 trabajamos con letreros luminosos, neón LED y soluciones visuales. ¿Qué tipo de proyecto tienes?'
+                'answer_text' => 'Perfecto {{user_name ?? ""}} 👍 trabajamos con letreros luminosos, neón LED y soluciones visuales. ¿Qué tipo de proyecto tienes?'
             ]
         );
 
@@ -143,7 +184,7 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qPrecio->id,
             ],
             [
-                'answer_text' => 'El precio depende del tipo de proyecto {{context.user_name ?? ""}}. ¿Qué necesitas exactamente?'
+                'answer_text' => 'El precio depende del tipo de proyecto {{user_name ?? ""}}. ¿Qué necesitas exactamente?'
             ]
         );
 
@@ -160,7 +201,7 @@ class ChatbotSeeder extends Seeder
         ChatBotActionCondition::firstOrCreate(
             [
                 'action_id' => $actionPrecio->id,
-                'field' => 'context.step',
+                'field' => 'step',
                 'operator' => '='
             ],
             [
