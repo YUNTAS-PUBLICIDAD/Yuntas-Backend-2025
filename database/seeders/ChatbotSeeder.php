@@ -38,7 +38,7 @@ class ChatbotSeeder extends Seeder
         'question_id' => $qNombre->id
       ],
       [
-        'answer_text' => 'Mucho gusto {{user_name|amigo}} 👌 ¿En qué puedo ayudarte?'
+        'answer_text' => 'Mucho gusto {{user.name|amigo}} 👌 ¿En qué puedo ayudarte?'
       ]
     );
     // Acción
@@ -48,7 +48,7 @@ class ChatbotSeeder extends Seeder
         'trigger_type' => 'after_answer',
         'action_type' => 'update_context',
         'parameters' => [
-          'key' => 'user_name',
+          'key' => 'user.name',
           'value' => '__from_message__'
         ]
       ]
@@ -82,7 +82,7 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qSaludo->id,
             ],
             [
-                'answer_text' => 'Hola {{user_name| "👋"}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
+                'answer_text' => 'Hola {{user.name|👋}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
             ]
         );
 
@@ -110,7 +110,7 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qCompra->id,
             ],
             [
-                'answer_text' => 'Perfecto {{user_name ?? ""}} 👍 trabajamos con letreros luminosos, neón LED y soluciones visuales. ¿Qué tipo de proyecto tienes?'
+                'answer_text' => 'Perfecto {{user.name|amigo}} 👍 trabajamos con letreros luminosos, neón LED y soluciones visuales. ¿Qué tipo de proyecto tienes?'
             ]
         );
 
@@ -184,7 +184,7 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qPrecio->id,
             ],
             [
-                'answer_text' => 'El precio depende del tipo de proyecto {{user_name ?? ""}}. ¿Qué necesitas exactamente?'
+                'answer_text' => 'El precio depende del tipo de proyecto {{user.name|""}}. ¿Qué necesitas exactamente?'
             ]
         );
 
