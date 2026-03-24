@@ -29,47 +29,105 @@ class ChatBotEngine
       'sender' => 'user',
       'timestamp' => now()
     ]);
+    $conversation->refresh();
 
-    // Detectar intent
-    $intent = app(IntentMatcher::class)->match($message);
-
-    if (!$intent) {
-      return $this->fallback($conversation);
-    }
+    
     // Messages -> SOLO historial visible (chat)
     // Context -> SOLO estado útil del bot
     // Memoria útil vs ruido
     // Guardar en context: nombre, email, intención actual, paso de flujo o decisiones del usuario
     // No guardar mensajes completos, textos largos o historial redundante
+    // Obtener contexto actual
     $context = $conversation->context ?? [];
-    data_set($context, 'conversation.intent', $intent->name);
 
-    $conversation->update([
-      'context' => $context
-    ]);
-    // Obtener respuesta
-    $question = $intent->questions()->inRandomOrder()->first();
-    $answer = $question->answers()->inRandomOrder()->first();
+    // Log para verificar en preguntar nombre
+    \Log::info('Comprobando user.name antes de preguntar', [
+    'conversation_id' => $conversation->id,
+    'user_name' => data_get($context, 'user.name')]);
 
-    if (!$answer) {
-      return $this->fallback($conversation);
+    // Permitir que el intent "nombre" pase aunque no haya nombre
+    // $hasName = !empty(trim(data_get($context, 'user.name', '')));
+    $hasName = filled(data_get($context, 'user.name'));
+
+    // SI NO HAY NOMBRE -> lo capturamos directo
+    if (!$hasName) {
+       $name = app(MessageParser::class)->extractName($message);
+
+       if ($name) {
+        data_set($context, 'user.name', $name);
+
+        // Limpiar mensaje
+         $message = preg_replace('/(me llamo|soy|mi nombre es)\s+' . preg_quote($name, '/') . '/i', '', $message);
+   $message = trim($message);
+
+        $conversation->update([
+          'context' => $context
+        ]);
+        // Log justo después de actualizar
+\Log::info('Contexto después de capturar nombre', [
+    'conversation_id' => $conversation->id,
+    'context' => $conversation->context
+]);
+
+        $conversation->refresh();
+        $context = $conversation->context ?? [];
+
+        // // Responder inmediatamente
+        return $this->sendMessage($conversation, "Perfecto, {$name} 👍");
+       }else {
+
+         // Si no puedo extraer -> seguir preguntando
+         return $this->askName($conversation);
+       }
     }
 
-    // // Responder
-    // $this->sendMessage($conversation, $answer->answer_text);
+    // Detectar intent
+    $intent = app(IntentMatcher::class)->match($message);
+    if (!$intent) {
+      return $this->fallback($conversation);
+      }
+      
 
-    // Acciones primero (actualizar contexto)
-    $actions = $this->collectActions($intent, $answer);
-    $validActions = app(ActionExecutor::class)->filterExecutable($actions, $conversation, $message);
+    // Guardar intent de contexto
+    data_set($context, 'conversation.intent', $intent->name); 
+    $conversation->update([
+      'context' => $context
+      ]);
+      $conversation->refresh();
+      $context = $conversation->context ?? [];
+      // Obtener respuesta base
+      $question = $intent->questions()->inRandomOrder()->first();
+      $answer = $question->answers()->inRandomOrder()->first();
+      
+      if (!$answer) {
+        return $this->fallback($conversation);
+        }
+        
+        // // Responder
+        // $this->sendMessage($conversation, $answer->answer_text);
+        
+        // Acciones primero (actualizar contexto)
+        $actions = $this->collectActions($intent, $answer);
+        $validActions = app(ActionExecutor::class)->filterExecutable($actions, $conversation, $message);
+        
+        // Ejecutar acciones
+        // app(ActionExecutor::class)->execute($actions, $conversation,$message );
+        app(ActionExecutor::class)->execute($validActions, $conversation, $message);
+        // Refrescar contexto actualizado
+        $conversation->refresh();
+        $context = $conversation->context ?? [];
+     
 
-    // app(ActionExecutor::class)->execute($actions, $conversation,$message );
-    app(ActionExecutor::class)->execute($validActions, $conversation, $message);
-
-    // Parsea con el contexto ya actualizado
+    // Parsear mensaje con contexto actualizado
     $parsedText = $this->parseMessage($answer->answer_text, $conversation);
 
-    // Y enviar UNA sola respuesta
+    // Responder
     $this->sendMessage($conversation, $parsedText);
+  }
+
+  protected function askName($conversation)
+  {
+    $this->sendMessage($conversation, 'Antes de continuar, ¿cómo te llamas?');
   }
 
   protected function collectActions($intent, $answer)
