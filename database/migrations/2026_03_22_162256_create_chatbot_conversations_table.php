@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('chatbot_conversations', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('lead_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('ended_at')->nullable();
