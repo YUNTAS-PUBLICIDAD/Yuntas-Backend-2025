@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Str;
 
 class ChatbotConversation extends Model
 {
@@ -25,5 +26,12 @@ class ChatbotConversation extends Model
     public function lead()
     {
       return $this->belongsTo(Lead::class);
+    }
+
+    protected static function booted()
+    {
+      static::creating(function ($model) {
+        $model->uuid = Str::uuid();
+      });
     }
 }
