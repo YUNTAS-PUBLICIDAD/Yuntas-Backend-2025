@@ -72,30 +72,32 @@ Route::post('claims', [ClaimController::class, 'store'])->middleware('throttle:f
 // ------------------- CONTACTO (Soporte) -------------------
 Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
   Route::post('/', [ContactMessageController::class, 'store']);
-});
-
-// ------------------- POPUP: EMAIL -------------------
-Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
-  Route::post('/enviar', [EmailPopupController::class, 'enviar']);
-});
-
-// ------------------- POPUP: WHATSAPP -------------------
-Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
-  Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
-});
-
-// ==============================================================================
-//                                WEBHOOKS
-// ==============================================================================
-// ------------------- DEPLOY FRONTEND -------------------
-Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
-  Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
-});
-
-
-// ==============================================================================
-//                          ADMINISTRACIÓN (ADMIN PANEL)
-// ==============================================================================
+  });
+  
+  // ------------------- POPUP: EMAIL -------------------
+  Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
+    Route::post('/enviar', [EmailPopupController::class, 'enviar']);
+    });
+    
+    // ------------------- POPUP: WHATSAPP -------------------
+    Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
+      Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
+      });
+      
+      // ==============================================================================
+      //                                WEBHOOKS
+      // ==============================================================================
+      // ------------------- DEPLOY FRONTEND -------------------
+      Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
+        Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
+        });
+        
+        // Chatbot
+        Route::post('/chatbot/message', [ChatbotController::class, 'handle'])->middleware('throttle:forms');
+        
+        // ==============================================================================
+        //                          ADMINISTRACIÓN (ADMIN PANEL)
+        // ==============================================================================
 Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admin'])->group(function () {
 
   // ------------------- USUARIOS -------------------
@@ -217,6 +219,3 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
 });
 
 Route::get('popup', [PopupController::class, 'getPopup'])->middleware('throttle:public');
-
-// Chatbot
-Route::post('/chatbot/message', [ChatbotController::class, 'handle'])->middleware('throttle:forms');
