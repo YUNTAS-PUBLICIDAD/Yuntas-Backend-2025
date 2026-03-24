@@ -16,7 +16,7 @@ class ActionExecutor
       // }
       match ($action->action_type) {
         // 'call_n8n' => $this->callN8N($action, $conversation),
-        'update_context'=> $this->updateContext($action, $conversation),
+        'update_context'=> $this->updateContext($action, $conversation, $message),
         'log' => $this->logAction($action, $conversation),
         // 'call_n8n' => $this->skipN8N($action),
         'call_n8n' => $this->handleN8N($action, $conversation),
