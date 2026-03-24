@@ -44,16 +44,21 @@ class ChatBotEngine
       return $this->fallback($conversation);
     }
 
-    // Responder
-    $this->sendMessage($conversation, $answer->answer_text);
+    // // Responder
+    // $this->sendMessage($conversation, $answer->answer_text);
 
-    // Acciones
+    // Acciones primero (actualizar contexto)
     $actions = $this->collectActions($intent, $answer);
     $validActions = app(ActionExecutor::class)->filterExecutable($actions, $conversation, $message);
 
-    // Ejecutar acciones
     // app(ActionExecutor::class)->execute($actions, $conversation,$message );
     app(ActionExecutor::class)->execute($validActions, $conversation, $message);
+
+    // Parsea con el contexto ya actualizado
+    $parsedText = $this->parseMessage($answer->answer_text, $conversation);
+
+    // Y enviar UNA sola respuesta
+    $this->sendMessage($conversation, $parsedText);
   }
 
   protected function collectActions($intent, $answer)
@@ -77,5 +82,14 @@ class ChatBotEngine
   protected function fallback($conversation)
   {
     $this->sendMessage($conversation, 'No entendí, ¿puedes reformular');
+  }
+
+  protected function parseMessage($text, $conversation)
+  {
+    $context = $conversation->context ?? [];
+
+     return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($context) {
+        return data_get($context, trim($matches[1]), '');
+    }, $text);
   }
 }
