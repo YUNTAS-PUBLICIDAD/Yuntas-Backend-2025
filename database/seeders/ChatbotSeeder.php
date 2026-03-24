@@ -33,16 +33,17 @@ class ChatbotSeeder extends Seeder
       ]
     );
 
-    $answerNombre = ChatbotAnswer::firstOrCreate(
+    $answerNombre = ChatbotAnswer::updateOrCreate(
       [
         'question_id' => $qNombre->id
       ],
       [
-        'answer_text' => 'Mucho gusto {{user.name|amigo}} 👌 ¿En qué puedo ayudarte?'
+        // 'answer_text' => 'Mucho gusto {{user.name|amigo}} 👌 ¿En qué puedo ayudarte?'
+        'answer_text' => 'Perfecto, {{user.name|amigo}} 👍'
       ]
     );
     // Acción
-    $actionSaveName = ChatbotAction::firstOrCreate(
+    $actionSaveName = ChatbotAction::updateOrCreate(
       ['name' => 'save_name'],
       [
         'trigger_type' => 'after_answer',
@@ -67,7 +68,7 @@ class ChatbotSeeder extends Seeder
             'name' => 'saludo'
         ]);
 
-        $qSaludo = ChatbotQuestion::firstOrCreate(
+        $qSaludo = ChatbotQuestion::updateOrCreate(
             [
                 'intent_id' => $intentSaludo->id,
                 'question_text' => 'saludo usuario',
@@ -77,12 +78,12 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        ChatbotAnswer::firstOrCreate(
+        ChatbotAnswer::updateOrCreate(
             [
                 'question_id' => $qSaludo->id,
             ],
             [
-                'answer_text' => 'Hola {{user.name|👋}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
+                'answer_text' => 'Hola 👋 {{user.name|amigo}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
             ]
         );
 
@@ -95,7 +96,7 @@ class ChatbotSeeder extends Seeder
             'name' => 'compra'
         ]);
 
-        $qCompra = ChatbotQuestion::firstOrCreate(
+        $qCompra = ChatbotQuestion::updateOrCreate(
             [
                 'intent_id' => $intentCompra->id,
                 'question_text' => 'interes compra',
@@ -105,7 +106,7 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        $answerCompra = ChatbotAnswer::firstOrCreate(
+        $answerCompra = ChatbotAnswer::updateOrCreate(
             [
                 'question_id' => $qCompra->id,
             ],
@@ -114,7 +115,7 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        $actionSales = ChatbotAction::firstOrCreate(
+        $actionSales = ChatbotAction::updateOrCreate(
             [
                 'name' => 'set_sales',
             ],
@@ -122,7 +123,7 @@ class ChatbotSeeder extends Seeder
                 'trigger_type' => 'after_answer',
                 'action_type' => 'update_context',
                 'parameters' => [
-                    'key' => 'step',
+                    'key' => 'conversation.step',
                     'value' => 'sales'
                 ]
             ]
@@ -141,7 +142,7 @@ class ChatbotSeeder extends Seeder
             'name' => 'servicios'
         ]);
 
-        $qServicios = ChatbotQuestion::firstOrCreate(
+        $qServicios = ChatbotQuestion::updateOrCreate(
             [
                 'intent_id' => $intentServicios->id,
                 'question_text' => 'servicios disponibles',
@@ -151,7 +152,7 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        ChatbotAnswer::firstOrCreate(
+        ChatbotAnswer::updateOrCreate(
             [
                 'question_id' => $qServicios->id,
             ],
@@ -169,7 +170,7 @@ class ChatbotSeeder extends Seeder
             'name' => 'precio'
         ]);
 
-        $qPrecio = ChatbotQuestion::firstOrCreate(
+        $qPrecio = ChatbotQuestion::updateOrCreate(
             [
                 'intent_id' => $intentPrecio->id,
                 'question_text' => 'consulta precio',
@@ -179,16 +180,16 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        $answerPrecio = ChatbotAnswer::firstOrCreate(
+        $answerPrecio = ChatbotAnswer::updateOrCreate(
             [
                 'question_id' => $qPrecio->id,
             ],
             [
-                'answer_text' => 'El precio depende del tipo de proyecto {{user.name|""}}. ¿Qué necesitas exactamente?'
+                'answer_text' => 'El precio depende del tipo de proyecto {{user.name|amigo}}. ¿Qué necesitas exactamente?'
             ]
         );
 
-        $actionPrecio = ChatbotAction::firstOrCreate(
+        $actionPrecio = ChatbotAction::updateOrCreate(
             [
                 'name' => 'precio_only_sales',
             ],
@@ -198,10 +199,10 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        ChatBotActionCondition::firstOrCreate(
+        ChatBotActionCondition::updateOrCreate(
             [
                 'action_id' => $actionPrecio->id,
-                'field' => 'step',
+                'field' => 'context.conversation.step',
                 'operator' => '='
             ],
             [
@@ -222,7 +223,7 @@ class ChatbotSeeder extends Seeder
             'name' => 'contacto'
         ]);
 
-        $qContacto = ChatbotQuestion::firstOrCreate(
+        $qContacto = ChatbotQuestion::updateOrCreate(
             [
                 'intent_id' => $intentContacto->id,
                 'question_text' => 'contacto cliente',
@@ -232,7 +233,7 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        ChatbotAnswer::firstOrCreate(
+        ChatbotAnswer::updateOrCreate(
             [
                 'question_id' => $qContacto->id,
             ],
