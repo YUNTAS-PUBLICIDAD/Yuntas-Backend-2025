@@ -94,13 +94,44 @@ class ChatBotEngine
      return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($context) {
         $expression = trim($matches[1]);
 
-        // soporte básico para default: user_name|👋
-        if (str_contains($expression, '|')) {
-            [$key, $default] = explode('|', $expression);
-            return data_get($context, trim($key), trim($default));
+        // // soporte básico para default: user_name|👋
+        // if (str_contains($expression, '|')) {
+        //     // [$key, $default] = explode('|', $expression);
+        //     [$key, $default] = array_pad(explode('|', $expression,2),2, '');
+        //     return data_get($context, trim($key), trim($default));
+        // }
+
+        // return data_get($context, $expression, '');
+
+        // sperar por pipes: key | default | transform
+        $parts = array_map('trim', explode('|', $expression));
+
+        $key = array_shift($parts);
+        // Obtener valor del contexto
+        $value = data_get($context, $key);
+
+        // Si no existe valor -> usar default (si hay)
+        if (!$value && count($parts)) {
+          $value = array_shift($parts);
         }
 
-        return data_get($context, $expression, '');
+        // Aplicar transformaciones
+        foreach ($parts as $modifier) {
+          $value = $this->applyModifier($value, $modifier);
+        }
+
+        return $value ?? '';
     }, $text);
+  }
+
+  protected function applyModifier($value, $modifier)
+  {
+    return match ($modifier) {
+      'upper' => strtoupper($value),
+      'lower' => strtolower($value),
+      'ucfirst' => ucfirst($value),
+      'title' => ucwords($value),
+      default => $value
+    };
   }
 }
