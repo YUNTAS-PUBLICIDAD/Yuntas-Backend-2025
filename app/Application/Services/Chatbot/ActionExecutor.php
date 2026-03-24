@@ -101,7 +101,16 @@ class ActionExecutor
     data_set($context, $params['key'], $value);
 
     $conversation->update([
-      'context' => $context
+      // 'context' => $context
+      'context' => $this->cleanContext($context)
     ]);
+  }
+
+  protected function cleanContext($context)
+  {
+    return [
+      'user' => $context['user'] ?? [],
+      'conversation' => $context['conversation'] ?? [],
+    ];
   }
 }
