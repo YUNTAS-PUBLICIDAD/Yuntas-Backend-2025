@@ -36,6 +36,8 @@ class ChatBotEngine
     if (!$intent) {
       return $this->fallback($conversation);
     }
+    // Messages -> SOLO historial visible (chat)
+    // Context -> SOLO estado útil del bot
     // Memoria útil vs ruido
     // Guardar en context: nombre, email, intención actual, paso de flujo o decisiones del usuario
     // No guardar mensajes completos, textos largos o historial redundante
