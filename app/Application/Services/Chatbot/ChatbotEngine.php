@@ -76,6 +76,7 @@ class ChatBotEngine
       'sender' => 'bot',
       'timestamp' => now()
     ]);
+    $this->trimMessages($conversation);
   }
 
 
@@ -133,5 +134,21 @@ class ChatBotEngine
       'title' => ucwords($value),
       default => $value
     };
+  }
+
+  protected function trimMessages($conversation, $limit = 50)
+  {
+    // $conversation->messages()
+    // ->latest()->skip($limit)
+    // ->take(PHP_INT_MAX)
+    // ->delete();
+    $idsToKeep = $conversation->messages()
+    ->latest('timestamp')
+    ->take($limit)
+    ->pluck('id');
+
+    $conversation->messages()
+    ->whereNotIn('id', $idsToKeep)
+    ->delete();
   }
 }
