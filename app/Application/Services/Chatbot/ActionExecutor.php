@@ -95,14 +95,18 @@ class ActionExecutor
     if ($value === '__from_message__') {
       $value = app(MessageParser::class)->extractName($message);
     }
+    // Si no extrajo nada -> no rompas el contexto
+    if (!$value) {
+      return;
+    }
     // $context[$params['key']] = $params['value'];
     $context = $conversation->context ?? [];
     // Permite Keys tipo: context.user.name
     data_set($context, $params['key'], $value);
 
     $conversation->update([
-      // 'context' => $context
-      'context' => $this->cleanContext($context)
+      'context' => $context
+      // 'context' => $this->cleanContext($context)
     ]);
   }
 
