@@ -88,8 +88,19 @@ class ChatBotEngine
   {
     $context = $conversation->context ?? [];
 
+    //  return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($context) {
+    //     return data_get($context, trim($matches[1]), '');
+    // }, $text);
      return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($context) {
-        return data_get($context, trim($matches[1]), '');
+        $expression = trim($matches[1]);
+
+        // soporte básico para default: user_name|👋
+        if (str_contains($expression, '|')) {
+            [$key, $default] = explode('|', $expression);
+            return data_get($context, trim($key), trim($default));
+        }
+
+        return data_get($context, $expression, '');
     }, $text);
   }
 }
