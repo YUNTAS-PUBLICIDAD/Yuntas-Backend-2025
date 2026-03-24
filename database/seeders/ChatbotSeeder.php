@@ -17,7 +17,7 @@ class ChatbotSeeder extends Seeder
      */
     public function run(): void
     {
-         /*
+       /*
         |--------------------------------------------------------------------------
         | 🧠 INTENT: SALUDO
         |--------------------------------------------------------------------------
@@ -26,49 +26,68 @@ class ChatbotSeeder extends Seeder
             'name' => 'saludo'
         ]);
 
-        $qSaludo = ChatbotQuestion::create([
-            'intent_id' => $intentSaludo->id,
-            'question_text' => 'saludo usuario',
-            'keywords' => ['hola', 'buenas', 'hello']
-        ]);
+        $qSaludo = ChatbotQuestion::firstOrCreate(
+            [
+                'intent_id' => $intentSaludo->id,
+                'question_text' => 'saludo usuario',
+            ],
+            [
+                'keywords' => ['hola', 'buenas', 'hello']
+            ]
+        );
 
-        ChatbotAnswer::create([
-            'question_id' => $qSaludo->id,
-            'answer_text' => 'Hola 👋 Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
-        ]);
+        ChatbotAnswer::firstOrCreate(
+            [
+                'question_id' => $qSaludo->id,
+            ],
+            [
+                'answer_text' => 'Hola {{context.user_name ?? "👋"}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
+            ]
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | 🧠 INTENT: COMPRA / INTERÉS
+        | 🧠 INTENT: COMPRA
         |--------------------------------------------------------------------------
         */
         $intentCompra = ChatbotIntent::firstOrCreate([
             'name' => 'compra'
         ]);
 
-        $qCompra = ChatbotQuestion::create([
-            'intent_id' => $intentCompra->id,
-            'question_text' => 'interes compra',
-            'keywords' => ['comprar', 'quiero', 'cotizar', 'proyecto']
-        ]);
-
-        $answerCompra = ChatbotAnswer::create([
-            'question_id' => $qCompra->id,
-            'answer_text' => 'Perfecto 👍 trabajamos con letreros luminosos, neón LED y soluciones visuales. ¿Qué tipo de proyecto tienes?'
-        ]);
-
-        // Acción → entrar en funnel ventas
-        $actionSales = ChatbotAction::create([
-            'name' => 'set_sales',
-            'trigger_type' => 'after_answer',
-            'action_type' => 'update_context',
-            'parameters' => [
-                'key' => 'step',
-                'value' => 'sales'
+        $qCompra = ChatbotQuestion::firstOrCreate(
+            [
+                'intent_id' => $intentCompra->id,
+                'question_text' => 'interes compra',
+            ],
+            [
+                'keywords' => ['comprar', 'quiero', 'cotizar', 'proyecto']
             ]
-        ]);
+        );
 
-        $answerCompra->actions()->sync([
+        $answerCompra = ChatbotAnswer::firstOrCreate(
+            [
+                'question_id' => $qCompra->id,
+            ],
+            [
+                'answer_text' => 'Perfecto {{context.user_name ?? ""}} 👍 trabajamos con letreros luminosos, neón LED y soluciones visuales. ¿Qué tipo de proyecto tienes?'
+            ]
+        );
+
+        $actionSales = ChatbotAction::firstOrCreate(
+            [
+                'name' => 'set_sales',
+            ],
+            [
+                'trigger_type' => 'after_answer',
+                'action_type' => 'update_context',
+                'parameters' => [
+                    'key' => 'step',
+                    'value' => 'sales'
+                ]
+            ]
+        );
+
+        $answerCompra->actions()->syncWithoutDetaching([
             $actionSales->id => ['priority' => 1, 'is_active' => 1]
         ]);
 
@@ -81,52 +100,75 @@ class ChatbotSeeder extends Seeder
             'name' => 'servicios'
         ]);
 
-        $qServicios = ChatbotQuestion::create([
-            'intent_id' => $intentServicios->id,
-            'question_text' => 'servicios disponibles',
-            'keywords' => ['servicios', 'que hacen', 'ofrecen']
-        ]);
+        $qServicios = ChatbotQuestion::firstOrCreate(
+            [
+                'intent_id' => $intentServicios->id,
+                'question_text' => 'servicios disponibles',
+            ],
+            [
+                'keywords' => ['servicios', 'que hacen', 'ofrecen']
+            ]
+        );
 
-        ChatbotAnswer::create([
-            'question_id' => $qServicios->id,
-            'answer_text' => 'Ofrecemos letreros luminosos, iluminación LED, neón personalizado y diseño de espacios comerciales.'
-        ]);
+        ChatbotAnswer::firstOrCreate(
+            [
+                'question_id' => $qServicios->id,
+            ],
+            [
+                'answer_text' => 'Ofrecemos letreros luminosos, iluminación LED, neón personalizado y diseño de espacios comerciales.'
+            ]
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | 🧠 INTENT: PRECIO (CONDICIONADO 🔥)
+        | 🧠 INTENT: PRECIO (CONDICIONAL)
         |--------------------------------------------------------------------------
         */
         $intentPrecio = ChatbotIntent::firstOrCreate([
             'name' => 'precio'
         ]);
 
-        $qPrecio = ChatbotQuestion::create([
-            'intent_id' => $intentPrecio->id,
-            'question_text' => 'consulta precio',
-            'keywords' => ['precio', 'costo', 'cuanto cuesta']
-        ]);
+        $qPrecio = ChatbotQuestion::firstOrCreate(
+            [
+                'intent_id' => $intentPrecio->id,
+                'question_text' => 'consulta precio',
+            ],
+            [
+                'keywords' => ['precio', 'costo', 'cuanto cuesta']
+            ]
+        );
 
-        $answerPrecio = ChatbotAnswer::create([
-            'question_id' => $qPrecio->id,
-            'answer_text' => 'El precio depende del tipo de proyecto. ¿Qué necesitas exactamente?'
-        ]);
+        $answerPrecio = ChatbotAnswer::firstOrCreate(
+            [
+                'question_id' => $qPrecio->id,
+            ],
+            [
+                'answer_text' => 'El precio depende del tipo de proyecto {{context.user_name ?? ""}}. ¿Qué necesitas exactamente?'
+            ]
+        );
 
-        $actionPrecio = ChatbotAction::create([
-            'name' => 'precio_only_sales',
-            'trigger_type' => 'after_answer',
-            'action_type' => 'log'
-        ]);
+        $actionPrecio = ChatbotAction::firstOrCreate(
+            [
+                'name' => 'precio_only_sales',
+            ],
+            [
+                'trigger_type' => 'after_answer',
+                'action_type' => 'log'
+            ]
+        );
 
-        // 🔥 condición clave
-        ChatBotActionCondition::create([
-            'action_id' => $actionPrecio->id,
-            'field' => 'context.step',
-            'operator' => '=',
-            'value' => 'sales'
-        ]);
+        ChatBotActionCondition::firstOrCreate(
+            [
+                'action_id' => $actionPrecio->id,
+                'field' => 'context.step',
+                'operator' => '='
+            ],
+            [
+                'value' => 'sales'
+            ]
+        );
 
-        $answerPrecio->actions()->sync([
+        $answerPrecio->actions()->syncWithoutDetaching([
             $actionPrecio->id => ['priority' => 1, 'is_active' => 1]
         ]);
 
@@ -139,15 +181,23 @@ class ChatbotSeeder extends Seeder
             'name' => 'contacto'
         ]);
 
-        $qContacto = ChatbotQuestion::create([
-            'intent_id' => $intentContacto->id,
-            'question_text' => 'contacto cliente',
-            'keywords' => ['contacto', 'telefono', 'hablar', 'asesor']
-        ]);
+        $qContacto = ChatbotQuestion::firstOrCreate(
+            [
+                'intent_id' => $intentContacto->id,
+                'question_text' => 'contacto cliente',
+            ],
+            [
+                'keywords' => ['contacto', 'telefono', 'asesor', 'hablar']
+            ]
+        );
 
-        ChatbotAnswer::create([
-            'question_id' => $qContacto->id,
-            'answer_text' => 'Puedes contactarnos al +51 912 849 782 o dejarme tus datos y un asesor te escribirá.'
-        ]);
+        ChatbotAnswer::firstOrCreate(
+            [
+                'question_id' => $qContacto->id,
+            ],
+            [
+                'answer_text' => 'Puedes contactarnos al +51 912 849 782 o dejarme tus datos y un asesor te escribirá.'
+            ]
+        );
     }
 }
