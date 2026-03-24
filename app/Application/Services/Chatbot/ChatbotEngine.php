@@ -36,6 +36,15 @@ class ChatBotEngine
     if (!$intent) {
       return $this->fallback($conversation);
     }
+    // Memoria útil vs ruido
+    // Guardar en context: nombre, email, intención actual, paso de flujo o decisiones del usuario
+    // No guardar mensajes completos, textos largos o historial redundante
+    $context = $conversation->context ?? [];
+    data_set($context, 'conversation.intent', $intent->name);
+
+    $conversation->update([
+      'context' => $context
+    ]);
     // Obtener respuesta
     $question = $intent->questions()->inRandomOrder()->first();
     $answer = $question->answers()->inRandomOrder()->first();
