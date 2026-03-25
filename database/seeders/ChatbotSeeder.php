@@ -18,46 +18,46 @@ class ChatbotSeeder extends Seeder
     public function run(): void
     {
 
-    // Intent: Nombre
-    $intentNombre = ChatbotIntent::firstOrCreate([
-      'name' => 'nombre'
-    ]);
+    // // Intent: Nombre
+    // $intentNombre = ChatbotIntent::firstOrCreate([
+    //   'name' => 'nombre'
+    // ]);
 
-    $qNombre = ChatbotQuestion::updateOrCreate(
-      [
-        'intent_id' => $intentNombre->id,
-        'question_text' => 'capturar nombre'
-      ],
-      [
-        'keywords' => ['me llamo', 'soy', 'mi nombre es', 'nombre', 'llamo']
-      ]
-    );
+    // $qNombre = ChatbotQuestion::updateOrCreate(
+    //   [
+    //     'intent_id' => $intentNombre->id,
+    //     'question_text' => 'capturar nombre'
+    //   ],
+    //   [
+    //     'keywords' => ['me llamo', 'soy', 'mi nombre es', 'nombre', 'llamo']
+    //   ]
+    // );
 
-    $answerNombre = ChatbotAnswer::updateOrCreate(
-      [
-        'question_id' => $qNombre->id
-      ],
-      [
-        // 'answer_text' => 'Mucho gusto {{user.name|amigo}} 👌 ¿En qué puedo ayudarte?'
-        'answer_text' => 'Perfecto, {{user.name|amigo}} 👍'
-      ]
-    );
-    // Acción
-    $actionSaveName = ChatbotAction::updateOrCreate(
-      ['name' => 'save_name'],
-      [
-        'trigger_type' => 'after_answer',
-        'action_type' => 'update_context',
-        'parameters' => [
-          'key' => 'user.name',
-          'value' => '__from_message__'
-        ]
-      ]
-    );
+    // $answerNombre = ChatbotAnswer::updateOrCreate(
+    //   [
+    //     'question_id' => $qNombre->id
+    //   ],
+    //   [
+    //     // 'answer_text' => 'Mucho gusto {{user.name|amigo}} 👌 ¿En qué puedo ayudarte?'
+    //     'answer_text' => 'Perfecto, {{user.name|amigo}} 👍'
+    //   ]
+    // );
+    // // Acción
+    // $actionSaveName = ChatbotAction::updateOrCreate(
+    //   ['name' => 'save_name'],
+    //   [
+    //     'trigger_type' => 'after_answer',
+    //     'action_type' => 'update_context',
+    //     'parameters' => [
+    //       'key' => 'user.name',
+    //       'value' => '__from_message__'
+    //     ]
+    //   ]
+    // );
 
-    $answerNombre->actions()->syncWithoutDetaching([
-      $actionSaveName->id => ['priority' => 1, 'is_active' => 1]
-    ]);
+    // $answerNombre->actions()->syncWithoutDetaching([
+    //   $actionSaveName->id => ['priority' => 1, 'is_active' => 1]
+    // ]);
 
        /*
         |--------------------------------------------------------------------------
@@ -89,7 +89,7 @@ class ChatbotSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | 🧠 INTENT: COMPRA
+        | 🧠 INTENT: COMPRA (ENTRA A ESM)
         |--------------------------------------------------------------------------
         */
         $intentCompra = ChatbotIntent::firstOrCreate([
@@ -102,7 +102,7 @@ class ChatbotSeeder extends Seeder
                 'question_text' => 'interes compra',
             ],
             [
-                'keywords' => ['comprar', 'quiero', 'cotizar', 'proyecto']
+                'keywords' => ['comprar', 'quiero cotizar', 'cotizar', 'proyecto']
             ]
         );
 
@@ -115,16 +115,20 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
+        // CAMBIO ESTADO (ESM)
         $actionSales = ChatbotAction::updateOrCreate(
             [
-                'name' => 'set_sales',
+                // 'name' => 'set_sales',
+                'name' => 'ask_project_type'
             ],
             [
                 'trigger_type' => 'after_answer',
                 'action_type' => 'update_context',
                 'parameters' => [
-                    'key' => 'conversation.step',
-                    'value' => 'sales'
+                    // 'key' => 'conversation.step',
+                    // 'value' => 'sales'
+                    'key' => 'conversation.state',
+                    'value' => 'asking_project_type'
                 ]
             ]
         );
@@ -202,11 +206,13 @@ class ChatbotSeeder extends Seeder
         ChatBotActionCondition::updateOrCreate(
             [
                 'action_id' => $actionPrecio->id,
-                'field' => 'context.conversation.step',
+                // 'field' => 'context.conversation.step',
+                'field' => 'context.conversation.state',
                 'operator' => '='
             ],
             [
-                'value' => 'sales'
+                // 'value' => 'sales'
+                'value' => 'asking_project_type'
             ]
         );
 
@@ -238,8 +244,36 @@ class ChatbotSeeder extends Seeder
                 'question_id' => $qContacto->id,
             ],
             [
-                'answer_text' => 'Puedes contactarnos al +51 912 849 782 o dejarme tus datos y un asesor te escribirá.'
+                'answer_text' => 'Déjame tus datos y un asesor te contactará.'
             ]
         );
+        /*
+    |--------------------------------------------------------------------------
+    | 🧠 INTENT: AGRADECIMIENTO
+    |--------------------------------------------------------------------------
+    */
+
+    $intentAgradecimiento = ChatbotIntent::firstOrCreate([
+      'name' => 'agradecimiento'
+    ]);
+
+    $qGracias = ChatbotQuestion::updateOrCreate(
+      [
+        'intent_id' => $intentAgradecimiento->id,
+        'question_text' => 'agradecimiento usuario',
+      ],
+      [
+        'keywords' => ['gracias', 'thanks', 'ok gracias', 'perfecto gracias']
+      ]
+    );
+
+    ChatbotAnswer::updateOrCreate(
+      [
+        'question_id' => $qGracias->id
+      ],
+      [
+        'answer_text' => 'Con gusto {{user.name|}} 😊 ¿Necesitas algo más?'
+      ]
+    );
     }
 }
