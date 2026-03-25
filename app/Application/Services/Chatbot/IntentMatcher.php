@@ -21,10 +21,21 @@ class IntentMatcher
       foreach ($intent->questions as $q) {
         $keywords = $q->keywords ?? [];
 
+        $words = explode(' ', $message);
+
         foreach ($keywords as $keyword) {
           // if (str_contains($message, strtolower($keyword))) {
           //   $score++;
           // }
+          $keyword = strtolower($keyword);
+
+          // match exacto (más fuerte)
+          if (in_array($keyword, $words)) {
+            $score += 2;
+            continue;
+          }
+
+          // match parcial (más débil)
           if (str_contains($message, $keyword)) {
             // Palabras más largas = más específicas
             $score += strlen($keyword) > 5 ? 2 : 1;
