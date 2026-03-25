@@ -22,8 +22,12 @@ class IntentMatcher
         $keywords = $q->keywords ?? [];
 
         foreach ($keywords as $keyword) {
-          if (str_contains($message, strtolower($keyword))) {
-            $score++;
+          // if (str_contains($message, strtolower($keyword))) {
+          //   $score++;
+          // }
+          if (str_contains($message, $keyword)) {
+            // Palabras más largas = más específicas
+            $score += strlen($keyword) > 5 ? 2 : 1;
           }
         }
       }
