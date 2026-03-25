@@ -341,5 +341,7 @@ TemplateContent::updateOrCreate(
         // 9. Tipo Reclamo
         ClaimType::firstOrCreate(['name' => 'reclamo']);
 
+        // Chatbot
+        $this->call(ChatbotSeeder::class);
     }
 }
