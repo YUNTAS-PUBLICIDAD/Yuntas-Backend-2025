@@ -1,6 +1,7 @@
 <?php
 namespace App\Application\Services\Chatbot;
 
+use App\Application\Services\Chatbot\States\ConversationState;
 use App\Models\ChatbotConversation;
 
 // Encargado de orquestar todo
@@ -47,111 +48,254 @@ class ChatBotEngine
 
     // Permitir que el intent "nombre" pase aunque no haya nombre
     // $hasName = !empty(trim(data_get($context, 'user.name', '')));
-    $hasName = filled(data_get($context, 'user.name'));
+//     $hasName = filled(data_get($context, 'user.name'));
 
-    // SI NO HAY NOMBRE -> lo capturamos directo
-    if (!$hasName) {
-       $name = app(MessageParser::class)->extractName($message);
+//     // SI NO HAY NOMBRE -> lo capturamos directo
+//     if (!$hasName) {
+//        $name = app(MessageParser::class)->extractName($message);
 
-       if ($name) {
-        data_set($context, 'user.name', $name);
+//        if ($name) {
+//         data_set($context, 'user.name', $name);
 
-        // Limpiar mensaje
-         $message = preg_replace('/(me llamo|soy|mi nombre es)\s+' . preg_quote($name, '/') . '/i', '', $message);
-   $message = trim($message);
+//         // Limpiar mensaje
+//          $message = preg_replace('/(me llamo|soy|mi nombre es)\s+' . preg_quote($name, '/') . '/i', '', $message);
+//    $message = trim($message);
 
-        $conversation->update([
-          'context' => $context
-        ]);
-        // Log justo después de actualizar
-\Log::info('Contexto después de capturar nombre', [
-    'conversation_id' => $conversation->id,
-    'context' => $conversation->context
-]);
+//         $conversation->update([
+//           'context' => $context
+//         ]);
+//         // Log justo después de actualizar
+// \Log::info('Contexto después de capturar nombre', [
+//     'conversation_id' => $conversation->id,
+//     'context' => $conversation->context
+// ]);
 
-        $conversation->refresh();
-        $context = $conversation->context ?? [];
+//         $conversation->refresh();
+//         $context = $conversation->context ?? [];
 
-        // // Responder inmediatamente
-        return $this->sendMessage($conversation, "Perfecto, {$name} 👍");
-       }else {
+//         // // Responder inmediatamente
+//         return $this->sendMessage($conversation, "Perfecto, {$name} 👍");
+//        }else {
 
-         // Si no puedo extraer -> seguir preguntando
-         return $this->askName($conversation);
-       }
-    }
+//          // Si no puedo extraer -> seguir preguntando
+//          return $this->askName($conversation);
+//        }
+//     }
 
-    // Detectar intent
-    $intent = app(IntentMatcher::class)->match($message);
-    if (!$intent) {
-      return $this->fallback($conversation);
-      }
+// Obtener estado actual STATE MACHINE (FSM)
+$state = data_get($context, 'conversation.state');
+$lockedStates = [
+  ConversationState::ASKING_PROJECT_TYPE
+];
+
+if (in_array($state, $lockedStates)) {
+  return $this->handleProjectType($conversation, $message);
+}
+
+// Estado inicial si no existe
+if (!$state) {
+  $state = ConversationState::ASKING_NAME;
+  data_set($context, 'conversation.state', $state);
+  $conversation->update(['context' => $context]);
+}
+
+// ==============
+// ESM MANDA PRIMERO
+// ==============
+
+switch ($state) {
+  case ConversationState::ASKING_NAME:
+    return $this->handleAskingName($conversation, $message);
+  case ConversationState::ASKING_PROJECT_TYPE:
+    return $this->handleProjectType($conversation, $message);
+  case ConversationState::CLOSING_LEAD:
+    return $this->handleClosing($conversation);
+  case ConversationState::READY: 
+  default:
+    return $this->handleIntentFlow($conversation, $message);
+}
+
+    // // Detectar intent
+    // $intent = app(IntentMatcher::class)->match($message);
+    // if (!$intent) {
+    //   return $this->fallback($conversation);
+    //   }
       
 
-    // Guardar intent de contexto
-    data_set($context, 'conversation.intent', $intent->name); 
-    $conversation->update([
-      'context' => $context
-      ]);
-      $conversation->refresh();
-      $context = $conversation->context ?? [];
-      // Obtener respuesta base
-      $question = $intent->questions()->inRandomOrder()->first();
-      $answer = $question->answers()->inRandomOrder()->first();
+    // // Guardar intent de contexto
+    // data_set($context, 'conversation.intent', $intent->name); 
+    // $conversation->update([
+    //   'context' => $context
+    //   ]);
+    //   $conversation->refresh();
+    //   $context = $conversation->context ?? [];
+    //   // Obtener respuesta base
+    //   $question = $intent->questions()->inRandomOrder()->first();
+    //   $answer = $question->answers()->inRandomOrder()->first();
       
-      if (!$answer) {
-        return $this->fallback($conversation);
-        }
+    //   if (!$answer) {
+    //     return $this->fallback($conversation);
+    //     }
         
-        // // Responder
-        // $this->sendMessage($conversation, $answer->answer_text);
+    //     // // Responder
+    //     // $this->sendMessage($conversation, $answer->answer_text);
         
-        // Acciones primero (actualizar contexto)
-        $actions = $this->collectActions($intent, $answer);
-        $validActions = app(ActionExecutor::class)->filterExecutable($actions, $conversation, $message);
+    //     // Acciones primero (actualizar contexto)
+    //     $actions = $this->collectActions($intent, $answer);
+    //     $validActions = app(ActionExecutor::class)->filterExecutable($actions, $conversation, $message);
         
-        // Ejecutar acciones
-        // app(ActionExecutor::class)->execute($actions, $conversation,$message );
-        app(ActionExecutor::class)->execute($validActions, $conversation, $message);
-        // Refrescar contexto actualizado
-        $conversation->refresh();
-        $context = $conversation->context ?? [];
+    //     // Ejecutar acciones
+    //     // app(ActionExecutor::class)->execute($actions, $conversation,$message );
+    //     app(ActionExecutor::class)->execute($validActions, $conversation, $message);
+    //     // Refrescar contexto actualizado
+    //     $conversation->refresh();
+    //     $context = $conversation->context ?? [];
      
 
-    // Parsear mensaje con contexto actualizado
-    $parsedText = $this->parseMessage($answer->answer_text, $conversation);
+    // // Parsear mensaje con contexto actualizado
+    // $parsedText = $this->parseMessage($answer->answer_text, $conversation);
 
-    // Responder
-    $this->sendMessage($conversation, $parsedText);
+    // // Responder
+    // $this->sendMessage($conversation, $parsedText);
   }
 
-  protected function askName($conversation)
+  // protected function askName($conversation)
+  // {
+  //   $this->sendMessage($conversation, 'Antes de continuar, ¿cómo te llamas?');
+  // }
+
+  // ==================
+  // STATE: ASKING NAME
+  // =================
+  protected function handleAskingName($conversation, $message)
   {
-    $this->sendMessage($conversation, 'Antes de continuar, ¿cómo te llamas?');
+    $context = $conversation->context ?? [];
+
+    $name = app(MessageParser::class)->extractName($message);
+
+    if (!$name) {
+      return $this->sendMessage($conversation, 'Antes de continuar ¿Cómo te llamas?');
+    }
+
+    // Guardar nombre
+    data_set($context, 'user.name', $name);
+
+    // Cambiar estado
+    data_set($context, 'conversation.state', ConversationState::READY);
+
+    $conversation->update(['context' => $context]);
+
+    $message = preg_replace('/(me llamo|soy|mi nombre es)\s+' . preg_quote($name, '/') . '/i', '', $message);
+$message = trim($message);
+$this->sendMessage($conversation, "Perfecto, {$name} 👍");
+if ($message) {
+  return $this->handleIntentFlow($conversation, $message);
+}
+
+    return;
   }
 
-  protected function collectActions($intent, $answer)
+  // ===================
+  // STATE: PROJECT TYPE
+  protected function handleProjectType($conversation, $message)
   {
-    return collect()
-    ->merge($intent->actions)
-    ->merge($answer->actions)
-    ->sortBy('pivot.priority');
+    $context = $conversation->context ?? [];
+    if (strlen(trim($message)) < 3) {
+      return $this->sendMessage($conversation, '¿Puedes darme más detalle del proyecto?');
+    }
+    data_set($context, 'lead.project_type', $message);
+    data_set($context, 'conversation.state', ConversationState::CLOSING_LEAD);
+    $conversation->update(['context' => $context]);
+    return $this->sendMessage($conversation, 'Genial, te contacto en breve 👍');
   }
 
+  // ================
+  // STATE: CLOSING
+  // ================
+  protected function handleClosing($conversation)
+  {
+    $context = $conversation->context ?? [];
+    // RESET a estado base
+    data_set($context, 'conversation.state', ConversationState::READY);
+    $conversation->update(['context' => $context]);
+    return $this->sendMessage($conversation, 'Gracias por tu interés 🙌');
+  }
+
+  // =================
+  // INTENT FLOW
+  // =================
+  protected function handleIntentFlow($conversation, $message)
+  {
+    $context = $conversation->context ?? [];
+
+    $intent = app(IntentMatcher::class)->match($message);
+
+    if (!$intent) {
+      return $this->fallback($conversation);
+    }
+
+    // Guardar intent
+    data_set($context, 'conversation.intent', $intent->name);
+    $conversation->update(['context' => $context]);
+
+    // Obtener respuesta
+    $question = $intent->questions()->inRandomOrder()->first();
+    $answer = $question?->answers()->inRandomOrder()->first();
+
+    if (!$answer) {
+      return $this->fallback($conversation);
+    }
+
+    $prevState = data_get($conversation->context, 'conversation.state');
+
+    // Ejecutar acciones
+    $actions = $this->collectActions($intent, $answer);
+    $validActions = app(ActionExecutor::class)
+    ->filterExecutable($actions, $conversation, $message);
+
+    app(ActionExecutor::class)
+    ->execute($validActions, $conversation, $message);
+
+    $conversation->refresh();
+
+    $newState = data_get($conversation->context, 'conversation.state');
+
+    \Log::info('STATE TRANSITION', [
+      'from' => $prevState,
+      'to' => $newState
+    ]);
+
+    // Parsear variables
+    $parsed = $this->parseMessage($answer->answer_text, $conversation);
+
+    return $this->sendMessage($conversation, $parsed);
+  }
+
+  
+  // ================
+  // UTILIDADES
+  // ================
   protected function sendMessage($conversation, $text)
   {
     $conversation->messages()->create([
       'message_text' => $text,
       'sender' => 'bot',
       'timestamp' => now()
-    ]);
-    $this->trimMessages($conversation);
-  }
-
+      ]);
+      $this->trimMessages($conversation);
+      }
+      
+      protected function collectActions($intent, $answer)
+      {
+        return collect()
+        ->merge($intent->actions)
+        ->merge($answer->actions)
+        ->sortBy('pivot.priority');
+      }
 
   protected function fallback($conversation)
   {
-    $this->sendMessage($conversation, 'No entendí, ¿puedes reformular');
+    return $this->sendMessage($conversation, 'No entendí, ¿puedes reformular?');
   }
 
   protected function parseMessage($text, $conversation)
@@ -162,7 +306,7 @@ class ChatBotEngine
     //     return data_get($context, trim($matches[1]), '');
     // }, $text);
      return preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($context) {
-        $expression = trim($matches[1]);
+        // $expression = trim($matches[1]);
 
         // // soporte básico para default: user_name|👋
         // if (str_contains($expression, '|')) {
@@ -174,7 +318,8 @@ class ChatBotEngine
         // return data_get($context, $expression, '');
 
         // sperar por pipes: key | default | transform
-        $parts = array_map('trim', explode('|', $expression));
+        // $parts = array_map('trim', explode('|', $expression));
+        $parts = array_map('trim', explode('|', $matches[1]));
 
         $key = array_shift($parts);
         // Obtener valor del contexto
@@ -187,7 +332,13 @@ class ChatBotEngine
 
         // Aplicar transformaciones
         foreach ($parts as $modifier) {
-          $value = $this->applyModifier($value, $modifier);
+          // $value = $this->applyModifier($value, $modifier);
+          $value = match ($modifier) {
+            'upper' => strtoupper($value),
+            'lower' => strtolower($value),
+            'title' => ucwords($value),
+            default => $value
+          };
         }
 
         return $value ?? '';
