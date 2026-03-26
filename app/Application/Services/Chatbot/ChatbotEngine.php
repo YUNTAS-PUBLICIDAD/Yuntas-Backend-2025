@@ -294,7 +294,7 @@ class ChatbotEngine
 
     $newState = data_get($conversation->context, 'conversation.state');
 
-    \Log::info('STATE TRANSITION', [
+    Log::info('STATE TRANSITION', [
       'from' => $prevState,
       'to' => $newState
     ]);
