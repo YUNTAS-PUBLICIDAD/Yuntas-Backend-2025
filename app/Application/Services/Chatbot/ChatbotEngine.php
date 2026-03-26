@@ -45,7 +45,7 @@ class ChatbotEngine
     $context = $conversation->context ?? [];
 
     // Log para verificar en preguntar nombre
-    \Log::info('Comprobando user.name antes de preguntar', [
+    Log::info('Comprobando user.name antes de preguntar', [
       'conversation_id' => $conversation->id,
       'user_name' => data_get($context, 'user.name')
     ]);
@@ -116,10 +116,18 @@ class ChatbotEngine
     // Obtener estado actual STATE MACHINE (FSM)
     $state = data_get($context, 'conversation.state');
     $lockedStates = [
-      ConversationState::ASKING_PROJECT_TYPE
+      ConversationState::ASKING_PROJECT_TYPE,
+      // ConversationState::CLOSING_LEAD
     ];
 
-    if (in_array($state, $lockedStates)) {
+    // if (in_array($state, $lockedStates)) {
+    //   // return $this->handleProjectType($conversation, $message);
+    //   return match($state){
+    //     ConversationState::ASKING_PROJECT_TYPE => $this->handleProjectType($conversation, $message),
+    //     ConversationState::CLOSING_LEAD => $this->handleClosing($conversation),
+    //   };
+    // }
+    if($state ===  ConversationState::ASKING_PROJECT_TYPE){
       return $this->handleProjectType($conversation, $message);
     }
 
@@ -138,9 +146,10 @@ class ChatbotEngine
         return $this->handleAskingName($conversation, $message);
       case ConversationState::ASKING_PROJECT_TYPE:
         return $this->handleProjectType($conversation, $message);
-      case ConversationState::CLOSING_LEAD:
-        $this->handleClosing($conversation);
-        return $this->handleIntentFlow($conversation, $message);
+      // case ConversationState::CLOSING_LEAD:
+        // $this->handleClosing($conversation);
+        // return $this->handleIntentFlow($conversation, $message);
+        // return $this->handleClosing($conversation);
       case ConversationState::READY:
       default:
         return $this->handleIntentFlow($conversation, $message);
@@ -238,9 +247,15 @@ class ChatbotEngine
       return $this->sendMessage($conversation, '¿Puedes darme más detalle del proyecto?');
     }
     data_set($context, 'lead.project_type', $message);
-    data_set($context, 'conversation.state', ConversationState::CLOSING_LEAD);
+    // Cerrar inmediatamente
+    data_set($context, 'conversation.state', ConversationState::READY);
+    // data_set($context, 'conversation.state', ConversationState::CLOSING_LEAD);
     $conversation->update(['context' => $context]);
-    return $this->sendMessage($conversation, 'Genial, te contacto en breve 👍');
+
+  return  $this->sendMessage($conversation, 'Genial, te contacto en breve 👍');
+
+    // return $this->sendMessage($conversation, 'Gracias por tu interés 🙌');
+    // return;
   }
 
   // ================
@@ -249,10 +264,15 @@ class ChatbotEngine
   protected function handleClosing($conversation)
   {
     $context = $conversation->context ?? [];
-    // RESET a estado base
+
+    // Reponder primero
+    $this->sendMessage($conversation, 'Gracias por tu interés 🙌');
+
+   // Luego cambiar estado
     data_set($context, 'conversation.state', ConversationState::READY);
     $conversation->update(['context' => $context]);
-    return $this->sendMessage($conversation, 'Gracias por tu interés 🙌');
+
+    return;
   }
 
   // =================
@@ -266,6 +286,11 @@ class ChatbotEngine
 
     if (!$intent) {
       return $this->fallback($conversation);
+    }
+
+    // Evitar saludo repetido
+    if($intent->name === 'saludo' && data_get($context, 'conversation.intent')){
+      return $this->sendMessage($conversation, 'Seguimos 👌 ¿En qué más te ayudo?');
     }
 
     // Guardar intent
