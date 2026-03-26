@@ -10,6 +10,12 @@ class IntentMatcher
   {
     $message = strtolower($message);
 
+    // Limpiar texto básico
+    $message = preg_replace('/[^\w\s]/', '', $message);
+    $words = explode(' ', $message);
+
+    $stopWords = ['quiero', 'necesito', 'deseo', 'porfavor'];
+
     $intents = ChatbotIntent::with('questions')->get();
 
     $bestIntent = null;
@@ -21,7 +27,7 @@ class IntentMatcher
       foreach ($intent->questions as $q) {
         $keywords = $q->keywords ?? [];
 
-        $words = explode(' ', $message);
+        // $words = explode(' ', $message);
 
         foreach ($keywords as $keyword) {
           // if (str_contains($message, strtolower($keyword))) {
@@ -29,13 +35,18 @@ class IntentMatcher
           // }
           $keyword = strtolower($keyword);
 
-          // match exacto (más fuerte)
-          if (in_array($keyword, $words)) {
-            $score += 2;
+          // Ignorar basura
+          if(in_array($keyword, $stopWords)){
             continue;
           }
 
-          // match parcial (más débil)
+          // match exacto palabra
+          if (in_array($keyword, $words)) {
+            $score += 3;
+            continue;
+          }
+
+          // match frase completa
           if (str_contains($message, $keyword)) {
             // Palabras más largas = más específicas
             $score += strlen($keyword) > 5 ? 2 : 1;
@@ -47,7 +58,7 @@ class IntentMatcher
         $bestIntent = $intent;
       }
     }
-    return $bestScore > 0 ? $bestIntent : null;
+    return $bestScore >= 2 ? $bestIntent : null;
 
     // return ChatbotIntent::with('questions')
     // ->get()
