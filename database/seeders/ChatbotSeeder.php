@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ChatbotAction;
-use App\Models\ChatBotActionCondition;
+use App\Models\ChatbotActionCondition;
 use App\Models\ChatbotAnswer;
 use App\Models\ChatbotIntent;
 use App\Models\ChatbotQuestion;
@@ -203,7 +203,7 @@ class ChatbotSeeder extends Seeder
             ]
         );
 
-        ChatBotActionCondition::updateOrCreate(
+        ChatbotActionCondition::updateOrCreate(
             [
                 'action_id' => $actionPrecio->id,
                 // 'field' => 'context.conversation.step',

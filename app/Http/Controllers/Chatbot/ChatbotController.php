@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Chatbot;
 
-use App\Application\Services\Chatbot\ChatBotEngine;
+use App\Application\Services\Chatbot\ChatbotEngine;
 use App\Http\Controllers\Controller;
 use App\Models\ChatbotConversation;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class ChatbotController extends Controller
 ]);
 
       // Ejecutar motor
-      app(ChatBotEngine::class)->handleMessage($conversation, $request->message);
+      app(ChatbotEngine::class)->handleMessage($conversation, $request->message);
 
       // Devolver últimos mensajes
       return response()->json([
