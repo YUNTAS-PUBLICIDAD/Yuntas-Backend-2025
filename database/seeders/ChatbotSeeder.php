@@ -102,7 +102,7 @@ class ChatbotSeeder extends Seeder
                 'question_text' => 'interes compra',
             ],
             [
-                'keywords' => ['comprar', 'quiero cotizar', 'cotizar', 'proyecto']
+                'keywords' => ['comprar', 'cotizacion', 'cotizar', 'proyecto', 'presupuesto']
             ]
         );
 
