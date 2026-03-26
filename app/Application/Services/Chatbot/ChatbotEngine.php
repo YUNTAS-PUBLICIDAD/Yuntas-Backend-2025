@@ -51,19 +51,23 @@ class ChatbotEngine
     ]);
 
     $name = app(MessageParser::class)->extractName($message);
+    if($name){
 
-    if($name && !data_get($context, 'user.name')){
+      // Guarda nombre si no existe
+    if(!data_get($context, 'user.name')){
       data_set($context, 'user.name', $name);
 
       $conversation->update(['context' => $context]);
       $conversation->refresh();
+      // CLAVE
+      $context = $conversation->context ?? [];
 
       Log::info('Nombre capturado globalmente', [
       'conversation_id' => $conversation->id,
       'name' => $name
       ]);
-
-      // Limpiar mensaje
+    }
+      // Limpiar mensaje SIEMPRE
       $message = preg_replace(
       '/(me llamo|soy|mi nombre es)\s+' . preg_quote($name, '/') . '/i',
           '',
@@ -72,9 +76,22 @@ class ChatbotEngine
       $message = trim($message);
 
       // responder solo si NO hay más mensaje
-      if(!$message){
-        return $this->sendMessage($conversation, "Perfecto, {$name}");
-      }
+      // if(!$message){
+      //   return $this->sendMessage($conversation, "Perfecto, {$name}");
+      // }
+      // 🚨 CLAVE: si no queda nada → cortar flujo
+        // if (!$message) {
+        //   return $this->sendMessage($conversation, 'Seguimos 👌 ¿En qué más te ayudo?');
+        // }
+        $intent = app(IntentMatcher::class)->match($message);
+        // // 🔥 NUEVO: ignorar frases sociales inútiles
+        //     if (!$message || strlen($message) < 3) {
+        //         return $this->sendMessage($conversation, 'Seguimos 👌 ¿En qué más te ayudo?');
+        //     }
+        // Si después de limpiar NO hay intención útil -> cortar
+        if(!$message || (!$intent)){
+          return $this->sendMessage($conversation, 'Seguimos 👌 ¿En qué más te ayudo?');
+        }
     }
 
     // Permitir que el intent "nombre" pase aunque no haya nombre
@@ -128,6 +145,10 @@ class ChatbotEngine
     //   };
     // }
     if($state ===  ConversationState::ASKING_PROJECT_TYPE){
+      // Interceptar nombre incluso aquí
+      if(app(MessageParser::class)->extractName($message)){
+         return $this->sendMessage($conversation, 'Ya tengo tu nombre 👍 ¿Qué tipo de proyecto necesitas?');
+      }
       return $this->handleProjectType($conversation, $message);
     }
 
@@ -243,6 +264,12 @@ class ChatbotEngine
   protected function handleProjectType($conversation, $message)
   {
     $context = $conversation->context ?? [];
+
+   // Detectar si el usuario está diciendo su nombre
+   if(app(MessageParser::class)->extractName($message)){
+     return $this->sendMessage($conversation, 'Ya tengo tu nombre 👍 ¿Qué tipo de proyecto necesitas?');
+   }
+
     if (strlen(trim($message)) < 3) {
       return $this->sendMessage($conversation, '¿Puedes darme más detalle del proyecto?');
     }
