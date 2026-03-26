@@ -20,7 +20,7 @@ use App\Models\ChatbotConversation;
  * 9. Ejecutar acciones
  * 10. Actualizar contexto
  */
-class ChatBotEngine
+class ChatbotEngine
 {
   public function handleMessage(ChatbotConversation $conversation, string $message)
   {
