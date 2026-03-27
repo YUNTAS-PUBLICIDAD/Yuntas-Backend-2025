@@ -206,26 +206,26 @@ class DatabaseSeeder extends Seeder
 // =========================
         // 🟢 TEMPLATE: INICIO
         // =========================
-        $templateInicio = Template::updateOrCreate(
-            ['lead_source_id' => $inicioSource->id],
-            [
-                'name' => 'Template Inicio',
-                'active' => true,
-            ]
-        );
+        // $templateInicio = Template::updateOrCreate(
+        //     ['lead_source_id' => $inicioSource->id],
+        //     [
+        //         'name' => 'Template Inicio',
+        //         'active' => true,
+        //     ]
+        // );
 
-        TemplateContent::updateOrCreate(
-            [
-                'template_id' => $templateInicio->id,
-                'channel' => 'whatsapp',
-            ],
-            [
-                'content' => "👋 ¡Bienvenido(a) a *Yuntas Publicidad*!\n\nHola {{nombre}}, gracias por escribirnos.",
-                'variables' => ['nombre'],
-                'image_url' => 'storage/plantillas/yuntas-bienvenida.webp',
-                'active' => true,
-            ]
-        );
+        // TemplateContent::updateOrCreate(
+        //     [
+        //         'template_id' => $templateInicio->id,
+        //         'channel' => 'whatsapp',
+        //     ],
+        //     [
+        //         'content' => "👋 ¡Bienvenido(a) a *Yuntas Publicidad*!\n\nHola {{nombre}}, gracias por escribirnos.",
+        //         'variables' => ['nombre'],
+        //         'image_url' => 'storage/plantillas/yuntas-bienvenida.webp',
+        //         'active' => true,
+        //     ]
+        // );
 
         // =========================
         // 🟢 TEMPLATE: PRODUCTOS
@@ -281,19 +281,19 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        TemplateContent::updateOrCreate(
-    [
-        'template_id' => $templateInicio->id,
-        'channel' => 'email',
-    ],
-    [
-        'subject' => 'Bienvenido a Yuntas Publicidad',
-        'content' => "Hola {{nombre}},\n\nGracias por contactarnos. En Yuntas Publicidad te ayudamos a hacer crecer tu negocio.\n\nPronto nos comunicaremos contigo.",
-        'variables' => ['nombre'],
-        'image_url' => null,
-        'active' => true,
-    ]
-);
+//         TemplateContent::updateOrCreate(
+//     [
+//         'template_id' => $templateInicio->id,
+//         'channel' => 'email',
+//     ],
+//     [
+//         'subject' => 'Bienvenido a Yuntas Publicidad',
+//         'content' => "Hola {{nombre}},\n\nGracias por contactarnos. En Yuntas Publicidad te ayudamos a hacer crecer tu negocio.\n\nPronto nos comunicaremos contigo.",
+//         'variables' => ['nombre'],
+//         'image_url' => null,
+//         'active' => true,
+//     ]
+// );
 
 TemplateContent::updateOrCreate(
     [
