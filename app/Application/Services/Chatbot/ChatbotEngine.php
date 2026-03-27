@@ -541,7 +541,7 @@ class ChatbotEngine
     };
   }
 
-  protected function trimMessages($conversation, $limit = 50)
+  protected function trimMessages($conversation, $limit = 10)
   {
     // $conversation->messages()
     // ->latest()->skip($limit)
