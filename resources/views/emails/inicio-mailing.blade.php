@@ -13,23 +13,17 @@
     <div class="container">
         <img src="{{ asset('storage/plantillas/yuntas-bienvenida.webp') }}" alt="Yuntas Bienvenida" class="header-image">
         
-        <p>Estimado/a <strong>{{ $cliente['nombre'] }}</strong>:</p>
+        <p>Estimado(a) <strong>{{ $cliente['nombre'] }}</strong>:</p>
         
-        <p>Gracias por contactarnos y por su interés en nuestros servicios.</p>
+        <p>Gracias por contactarnos.</p>
         
-        <p>En <strong>Yuntas Publicidad</strong> somos su aliado en publicidad. Nos especializamos en brindar soluciones publicitarias personalizadas que ayudan a destacar su marca y potenciar su presencia en el mercado.</p>
+        <p>En <strong>Yuntas Publicidad</strong> te ayudamos a destacar con productos publicitarios personalizados y cotizaciones rápidas sin compromiso.</p>
         
-        <p>🔹 <strong>¿En qué podemos ayudarle?</strong></p>
-        <ul>
-            <li>Productos publicitarios personalizados</li>
-            <li>Cotizaciones sin compromiso</li>
-        </ul>
-        
-        <p>En breve recibirá información detallada en este correo. Si tiene alguna consulta adicional, no dude en escribirnos. Estaremos encantados de atenderle.</p>
+        <p>Cuéntanos qué necesitas y con gusto te asesoramos.</p>
         
         <p>Saludos cordiales,<br>
         <strong>Yuntas Publicidad ✨</strong><br>
-        912 849 782
+        912 849 782</p>
     </div>
 </body>
 </html>
