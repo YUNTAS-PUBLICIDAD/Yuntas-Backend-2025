@@ -3,6 +3,7 @@
 namespace App\Application\Services\Chatbot;
 
 use App\Application\Services\Chatbot\States\ConversationState;
+use App\Application\Services\Lead\LeadNotifier;
 use App\Models\ChatbotConversation;
 use Illuminate\Support\Facades\Log;
 
@@ -50,6 +51,7 @@ class ChatbotEngine
       'user_name' => data_get($context, 'user.name')
     ]);
 
+    // Intercepciones globales
     $name = app(MessageParser::class)->extractName($message);
     if($name){
 
@@ -92,6 +94,45 @@ class ChatbotEngine
         if(!$message || (!$intent)){
           return $this->sendMessage($conversation, 'Seguimos 👌 ¿En qué más te ayudo?');
         }
+    }
+
+    $phone = app(MessageParser::class)->extractPhone($message);
+
+    // if($phone && !data_get($context, 'user.phone')){
+    //   data_set($context, 'user.phone', $phone);
+
+    //   $conversation->update(['context' => $context]);
+
+    //   Log::info('Teléfono capturado globalmente', [
+    //   'conversation_id' => $conversation->id,
+    //   'phone' => $phone
+    //   ]);
+    // }
+
+    if($phone){
+      // Si ya existe -> responder distinto
+      if(data_get($context, 'user.phone')){
+        return $this->sendMessage(
+        $conversation,
+        'Ya tengo tu número 👍 ¿En qué más te ayudo?'
+        );
+      }
+
+      // Guardar si no existe
+      data_set($context, 'user.phone', $phone);
+      $conversation->update(['context' => $context]);
+
+      app(LeadNotifier::class)->notify($conversation);
+
+      Log::info('Teléfono capturado globalmente', [
+     'conversation_id'  => $conversation->id,
+     'phone' => $phone
+      ]);
+
+      return $this->sendMessage(
+      $conversation,
+      'Perfecto, te contactamos en breve 👍'
+      );
     }
 
     // Permitir que el intent "nombre" pase aunque no haya nombre
@@ -171,6 +212,8 @@ class ChatbotEngine
         // $this->handleClosing($conversation);
         // return $this->handleIntentFlow($conversation, $message);
         // return $this->handleClosing($conversation);
+      case ConversationState::ASKING_CONTACT:
+        return $this->handleAskingContact($conversation, $message);
       case ConversationState::READY:
       default:
         return $this->handleIntentFlow($conversation, $message);
@@ -275,11 +318,16 @@ class ChatbotEngine
     }
     data_set($context, 'lead.project_type', $message);
     // Cerrar inmediatamente
-    data_set($context, 'conversation.state', ConversationState::READY);
+    // data_set($context, 'conversation.state', ConversationState::READY);
     // data_set($context, 'conversation.state', ConversationState::CLOSING_LEAD);
+    data_set($context, 'conversation.state', ConversationState::ASKING_CONTACT);
     $conversation->update(['context' => $context]);
 
-  return  $this->sendMessage($conversation, 'Genial, te contacto en breve 👍');
+  // return  $this->sendMessage($conversation, 'Genial, te contacto en breve 👍');
+  return $this->sendMessage(
+  $conversation,
+  'Genial 👍 para darte una cotización precisa ¿me dejas tu número?'
+  );
 
     // return $this->sendMessage($conversation, 'Gracias por tu interés 🙌');
     // return;
@@ -300,6 +348,57 @@ class ChatbotEngine
     $conversation->update(['context' => $context]);
 
     return;
+  }
+
+  protected function handleAskingContact($conversation, $message)
+  {
+    $context = $conversation->context ?? [];
+
+    Log::info('Intentando capturar teléfono', [
+    'conversation_id' => $conversation->id,
+    'message' => $message
+    ]);
+
+    if(data_get($context, 'user.phone')){
+      data_set($context, 'conversation.state', ConversationState::READY);
+
+      return $this->sendMessage(
+      $conversation,
+      'Perfecto, te contactamos en breve'
+      );
+    }
+
+    // $phone = app(MessageParser::class)->extractPhone($message);
+
+    // if(!$phone){
+
+    //  Log::info('Resultado extracción teléfono', [
+    //   'conversation_id' => $conversation->id,
+    //   'phone' => $phone
+    //  ]);
+
+    //   return $this->sendMessage(
+    //   $conversation,
+    //   'No logré captar tu número 🤔 ¿me lo compartes por favor?'
+    //   );
+    // }
+
+    // data_set($context, 'user.phone', $phone);
+
+    // // Ahora si se puede cerrar
+    // data_set($context, 'conversation.state', ConversationState::READY);
+
+    // $conversation->update(['context' => $context]);
+    // $conversation->refresh();
+
+    // return $this->sendMessage(
+    // $conversation,
+    // 'Perfecto, te contactamos en breve 👍'
+    // );
+    return $this->sendMessage(
+    $conversation,
+    '¿Me compartes tu número para continuar?'
+    );
   }
 
   // =================
