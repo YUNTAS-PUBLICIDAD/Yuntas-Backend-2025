@@ -6,6 +6,7 @@ use App\Application\Services\Chatbot\ChatbotEngine;
 use App\Http\Controllers\Controller;
 use App\Models\ChatbotConversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ChatbotController extends Controller
 {
@@ -22,7 +23,7 @@ class ChatbotController extends Controller
       $conversation = $this->resolveConversation($request);
 
       // Log para rastrear conversaciones
-\Log::info('Con conversación resuelta', [
+Log::info('Con conversación resuelta', [
     'conversation_id' => $conversation->id,
     'lead_id' => $conversation->lead_id,
     'context' => $conversation->context
