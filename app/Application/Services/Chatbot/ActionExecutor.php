@@ -64,7 +64,7 @@ class ActionExecutor
     ]);
   }
 
-  
+
   // Simulación (cuando N8N está desactivado)
   protected function skipN8N($action)
   {
@@ -92,8 +92,12 @@ class ActionExecutor
     return;
     }
     $value = $params['value'];
-    if ($value === '__from_message__') {
+    // Diferenciar tipo de extracción
+    if ($value === '__from_message_name__') {
       $value = app(MessageParser::class)->extractName($message);
+    }
+    if ($value === '__from_message_phone__') {
+      $value = app(MessageParser::class)->extractPhone($message);
     }
     // Si no extrajo nada -> no rompas el contexto
     if (!$value) {
