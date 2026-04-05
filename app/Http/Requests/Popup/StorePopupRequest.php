@@ -41,10 +41,6 @@ class StorePopupRequest extends FormRequest
       'images' => ['required', 'array', 'size:3'],
       'images.*' => ['required', 'array'],
       'images.*.file' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-      // 'images.*.file' => [
-      //   'required', 'file', 'mimes:jpg,png,webp',
-      //   'max:2048'
-      // ],
      'images.*.device' => ['required', Rule::in(['desktop', 'mobile'])],
      'images.*.slot' => ['required', Rule::in(['left', 'right', 'center'])],
      'images.*.alt' => 'nullable|string|max:255',
