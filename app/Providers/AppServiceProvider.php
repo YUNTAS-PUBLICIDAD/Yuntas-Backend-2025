@@ -25,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Configuración para MySQL string length
         Schema::defaultStringLength(191);
+        if(!extension_loaded('gd')){
+          logger()->critical('GD extension is not enabled');
+        }
     }
 }
