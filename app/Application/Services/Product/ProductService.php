@@ -18,7 +18,7 @@ use App\Traits\SanitizesInput;
 class ProductService
 {
     use ValidatesImageSecurity, SanitizesInput;
-    
+
     public function __construct() {}
 
     public function getAll(int $perPage = 10)
@@ -41,9 +41,9 @@ class ProductService
             throw new ModelNotFoundException("Producto no encontrado con el término: $term");
         }
         $product->load([
-            'images.slot',       
-            'contentItems.slot', 
-            'categories'         
+            'images.slot',
+            'contentItems.slot',
+            'categories'
         ]);
         return $product;
     }
@@ -80,7 +80,7 @@ class ProductService
                 $this->uploadImage($product, $dto->main_image, 'List', 'products', $title, $alt);
             }
 
-            // 4. Gestionar Galería con Mapa de Slots           
+            // 4. Gestionar Galería con Mapa de Slots
             if (!empty($dto->gallery)) {
                 foreach ($dto->gallery as $item) {
                     $slotName = $item['slot'];
@@ -106,7 +106,7 @@ class ProductService
             }
 
             return $product->load('images', 'categories', 'contentItems');
-        
+
         });
 
         return $product;
@@ -134,8 +134,8 @@ class ProductService
             ]);
 
            if (!empty($dto->categories)) {
-                $nombresCategorias = is_array($dto->categories) 
-                    ? $dto->categories 
+                $nombresCategorias = is_array($dto->categories)
+                    ? $dto->categories
                     : [$dto->categories];
 
                 $categoryIds = $this->resolveCategoryIds($nombresCategorias);
@@ -181,7 +181,7 @@ class ProductService
                     $this->updateImageTitle($product, $slot, $title ?? $product->name);
                 }
             }
-            
+
             // solo para actualizar ALT de la galería
             if (!empty($dto->gallery_alt)) {
                 foreach ($dto->gallery_alt as $slot => $alt) {
@@ -254,14 +254,14 @@ class ProductService
         if (!$slot) return;
 
         $image = $product->images()->where('slot_id', $slot->id)->first();
-        
+
         if ($image) {
             $image->update(['title' => $title]);
         }
     }
 
     private function updateImageAlt(Product $product, string $slotName, string $alt): void
-    {   
+    {
         // Buscar el Slot
         $slot = ImageSlot::where(
             ['name' => $slotName, 'module' => 'products']
@@ -270,7 +270,7 @@ class ProductService
         if (!$slot) return;
 
         $image = $product->images()->where('slot_id', $slot->id)->first();
-        
+
         if ($image) {
             $image->update(['alt_text' => $alt]);
         }
@@ -298,7 +298,7 @@ class ProductService
 
         foreach ($items as $index => $itemData) {
             $text = is_string($index) ? "$index: $itemData" : $itemData;
-            
+
             if(empty(trim($text))) continue;
 
             $product->contentItems()->create([
@@ -323,7 +323,7 @@ class ProductService
                 ['name' => trim($name)], // Buscamos por nombre exacto
                 ['slug' => \Illuminate\Support\Str::slug($name)] // Si se crea, generamos slug
             );
-            
+
             $ids[] = $category->id;
         }
         return $ids;
@@ -378,5 +378,24 @@ class ProductService
     {
         $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'Popups'];
         return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
+    }
+
+    public function searchForChatbot(string $query)
+    {
+      return Product::query()
+        ->with(['images.slot'])
+        ->where('name', 'like', "%[$query]%")
+        ->limit(3)
+        ->get()
+        ->map(function ($product) {
+          $image = $product->images->firstWhere('slot.name', 'List');
+
+          return [
+          'name' => $product->name,
+          'price' => $product->price,
+          'image' => $image?->url,
+          'url' => url("/productos/{$product->slug}")
+          ];
+        });
     }
 }
