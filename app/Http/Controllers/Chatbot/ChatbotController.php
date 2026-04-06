@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Chatbot;
 
-use App\Application\Services\Chatbot\ChatbotEngine;
+use App\Application\Services\Chatbot\Engine\ChatbotEngine;
 use App\Http\Controllers\Controller;
 use App\Models\ChatbotConversation;
 use Illuminate\Http\Request;
