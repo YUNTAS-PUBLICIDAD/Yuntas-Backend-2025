@@ -382,20 +382,30 @@ class ProductService
 
     public function searchForChatbot(string $query)
     {
-      return Product::query()
-        ->with(['images.slot'])
-        ->where('name', 'like', "%[$query]%")
-        ->limit(3)
-        ->get()
-        ->map(function ($product) {
-          $image = $product->images->firstWhere('slot.name', 'List');
+      $words = collect(explode(' ', strtolower($query)))
+              ->filter(fn($w) => strlen($w) > 2) // quitar ruido tipo "de", "el"
+              ->values();
 
-          return [
-          'name' => $product->name,
-          'price' => $product->price,
-          'image' => $image?->url,
-          'url' => url("/productos/{$product->slug}")
-          ];
-        });
+          $products = Product::query()
+              ->with(['images.slot'])
+              ->where(function ($q) use ($words) {
+                  foreach ($words as $word) {
+                      $q->orWhere('name', 'like', "%{$word}%");
+                  }
+              })
+              ->limit(3)
+              ->get();
+
+          return $products->map(function ($product) {
+              $image = $product->images->firstWhere('slot.name', 'List');
+
+              return [
+                  'id' => $product->id,
+                  'name' => $product->name,
+                  'slug' => $product->slug,
+                  'price' => $product->price,
+                  'image' => $image?->url,
+              ];
+          });
     }
 }
