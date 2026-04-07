@@ -25,7 +25,7 @@ class CtaInterceptor implements Interceptor
                     'Aquí tienes nuestra información 👇',
                     [
                         'type' => 'contact_page',
-                        'url' => '/nosotros'
+                        'url' => '/contacto'
                     ]
                 );
             }

@@ -292,7 +292,7 @@ class ChatbotSeeder extends Seeder
           'action_type' => 'send_metadata',
           'parameters' => [
             'type' => 'contact_page',
-            'url' => '/nosotros'
+            'url' => '/contacto'
           ]
           ]
         );
