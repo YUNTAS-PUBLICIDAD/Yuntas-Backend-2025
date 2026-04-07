@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Application\Services\Chatbot;
+namespace App\Application\Services\Chatbot\Intent;
 
 use App\Models\ChatbotIntent;
 
@@ -58,7 +58,7 @@ class IntentMatcher
         $bestIntent = $intent;
       }
     }
-    return $bestScore >= 2 ? $bestIntent : null;
+    return $bestScore >= 1 ? $bestIntent : null;
 
     // return ChatbotIntent::with('questions')
     // ->get()
