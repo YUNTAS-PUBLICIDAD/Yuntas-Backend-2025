@@ -22,10 +22,21 @@ class ProductInterceptor implements Interceptor
       'No encontre productos especificos, pero trabajamos con LED, neón y letreros. ¿Qué necesitas exactamente'
       );
     }
-    $list = $products->map(fn($p) => "- {$p->name}")->implode("\n");
+    // $list = $products->map(fn($p) => "- {$p->name}")->implode("\n");
+    // $list = $products->map(function ($p) {
+    //     return "{$p['name']} - S/ {$p['price']}\n{$p['url']}";
+    // })->implode("\n\n");
 
-    return InterceptionResult::stop(
-    "Tenemos:\n{$list}\n\n¿Quieres cotizar alguno?"
+    // return InterceptionResult::stop(
+    // "Tenemos:\n{$list}\n\n¿Quieres cotizar alguno?"
+    // );
+
+    return InterceptionResult::stopWithMetadata(
+      'Estos son algunos productos 👇',
+      [
+        'type' => 'products',
+        'products' => $products->values()
+      ]
     );
   }
 }
