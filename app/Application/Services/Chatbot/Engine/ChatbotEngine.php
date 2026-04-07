@@ -9,6 +9,7 @@ use App\Application\Services\Chatbot\Intent\IntentMatcher;
 use App\Application\Services\Chatbot\States\StateResolver;
 use App\Models\ChatbotConversation;
 
+
 // INPUT
 //  ↓
 // [1] Global Interceptors (nombre, phone, etc)
@@ -28,6 +29,8 @@ class ChatbotEngine
 {
   public function handleMessage($conversation, string $message)
   {
+
+    $this->cleanupIfNeeded();
 
     $this->storeMessage($conversation, $message);
 
@@ -93,6 +96,7 @@ class ChatbotEngine
      'message_text' => $message,
      'sender' => 'user'
     ]);
+    $conversation->touch();
   }
 
   protected function send($conversation, $text, $metadata = null)
@@ -102,6 +106,9 @@ class ChatbotEngine
     'sender' => 'bot',
     'metadata' => $metadata
     ]);
+    $conversation->touch();
+
+    $this->pruneMessages($conversation);
   }
 
   protected function persistContext($conversation, $context)
@@ -116,6 +123,25 @@ class ChatbotEngine
     return preg_replace_callback('/{{(.*?)}}/', function ($m) use ($context) {
                return data_get($context->toArray(), trim($m[1]), '');
            }, $text);
+  }
+
+  protected function pruneMessages($conversation)
+  {
+    $limit = 20; // Ajusta según UX
+    $idsToKeep = $conversation->messages()
+      ->latest()
+      ->take($limit)
+      ->pluck('id');
+      $conversation->messages()
+      ->whereNotIn('id', $idsToKeep)
+      ->delete();
+  }
+
+  protected function cleanupIfNeeded()
+  {
+    cache()->remember('chatbot_cleanup', 3600, function () {
+      ChatbotConversation::where('updated_at', '<', now()->subDay())->delete();
+    });
   }
 
 }
