@@ -38,7 +38,7 @@ class ChatbotEngine
       ->processInterceptors($conversation, $message, $context);
 
       if($interception->stop){
-        return $this->send($conversation, $interception->response);
+        return $this->send($conversation, $interception->response, $interception->metadata ?? null);
       }
 
       $message = $interception->message;
@@ -95,11 +95,12 @@ class ChatbotEngine
     ]);
   }
 
-  protected function send($conversation, $text)
+  protected function send($conversation, $text, $metadata = null)
   {
     $conversation->messages()->create([
     'message_text' => $text,
-    'sender' => 'bot'
+    'sender' => 'bot',
+    'metadata' => $metadata
     ]);
   }
 
