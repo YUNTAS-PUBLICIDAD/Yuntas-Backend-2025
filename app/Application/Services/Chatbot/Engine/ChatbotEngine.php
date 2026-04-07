@@ -61,7 +61,12 @@ class ChatbotEngine
 
       $this->persistContext($conversation, $context);
 
-      return $this->send($conversation, $response);
+      // return $this->send($conversation, $response);
+      return $this->send(
+      $conversation,
+      $response['text'],
+      $response['metadata'] ?? null
+      );
   }
 
   protected function handleIntent($conversation, $message, $context)
@@ -69,17 +74,26 @@ class ChatbotEngine
     $intent = app(IntentMatcher::class)->match($message);
 
     if(!$intent){
-      return 'No entendí, ¿puedes reformular?';
+      // return 'No entendí, ¿puedes reformular?';
+      return [
+        'text' => 'No entendí, ¿puedes reformular?',
+        'metadata' => null
+      ];
     }
+
 
     $question = $intent->questions()->inRandomOrder()->first();
     $answer = $question?->answers()->inRandomOrder()->first();
 
     if(!$answer){
-      return 'No tengo respuesta para eso aún.';
+      // return 'No tengo respuesta para eso aún.';
+      return [
+        'text' => 'No tengo respuesta para eso aún',
+        'metadata' => null
+      ];
     }
 
-    app(ActionExecutor::class)->execute(
+    $metadata = app(ActionExecutor::class)->execute(
     $intent,
     $answer,
     $conversation,
@@ -87,7 +101,11 @@ class ChatbotEngine
     $context
     );
 
-    return $this->parse($answer->answer_text, $context);
+    // return $this->parse($answer->answer_text, $context);
+    return [
+    'text' => $this->parse($answer->answer_text, $context),
+    'metadata' => $metadata
+    ];
   }
 
   protected function storeMessage($conversation, $message)
