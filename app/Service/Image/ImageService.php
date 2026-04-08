@@ -5,14 +5,18 @@ namespace App\Service\Image;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\Encoders\WebpEncoder;
+use Intervention\Image\Laravel\Facades\Image;
+use RuntimeException;
+use Throwable;
 
 class ImageService
 {
   /**
    * @param UploadedFile $archivo
-   * @param string $directorio 
+   * @param string $directorio
    * @param string $disco
-   * @return string 
+   * @return string
    */
   public function guardarImagen(UploadedFile $archivo, string $directorio = 'imagenes', string $disco = 'public'): string
   {
@@ -23,8 +27,8 @@ class ImageService
   }
 
   /**
-   * @param string $rutaImagen 
-   * @param string $disco 
+   * @param string $rutaImagen
+   * @param string $disco
    * @return bool
    */
   public function eliminarImagen(string $rutaImagen, string $disco = 'public'): bool
@@ -34,7 +38,7 @@ class ImageService
   }
 
   /**
-   * @param array $rutasImagenes 
+   * @param array $rutasImagenes
    * @param string $disco
    * @return bool
    */
@@ -49,10 +53,10 @@ class ImageService
 
   /**
    * @param UploadedFile $nuevaImagen
-   * @param string|null $imagenAnterior 
-   * @param string $directorio 
-   * @param string $disco 
-   * @return string 
+   * @param string|null $imagenAnterior
+   * @param string $directorio
+   * @param string $disco
+   * @return string
    */
   public function actualizarImagen(
     UploadedFile $nuevaImagen,
@@ -115,10 +119,31 @@ class ImageService
     }
 
     $this->validateMime($file);
-    $extension = $file->extension();
-    $filename = Str::uuid().'_'.time().'.'.$extension;
 
-    $path = $file->storeAs($directory, $filename, $disk);
+    // Validación crítica
+    if(!extension_loaded('gd')){
+      throw new RuntimeException('Server misconfigured: GD extension required');
+    }
+
+    try {
+    $image = Image::decode($file)->scaleDown(width: 1200);
+    } catch (Throwable $e) {
+     throw new RuntimeException('Invalid image content');
+    }
+
+    $encoded = $image->encode(new WebpEncoder(quality: 80));
+
+    // $extension = $file->extension();
+
+    // $filename = Str::uuid().'_'.time().'.'.$extension;
+
+    // $path = $file->storeAs($directory, $filename, $disk);
+
+    $filename = Str::uuid().'_'.time().'.webp';
+    $path = "{$directory}/{$filename}";
+
+    // Storage::disk($disk)->put($path, (string) $image);
+    Storage::disk($disk)->put($path, $encoded);
     return Storage::url($path);
   }
 
@@ -151,7 +176,6 @@ class ImageService
     'image/jpeg',
     'image/png',
     'image/webp',
-    'image/gif'
   ];
 
   private function validateMime(UploadedFile $file): void

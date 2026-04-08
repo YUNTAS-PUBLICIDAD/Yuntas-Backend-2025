@@ -5,9 +5,11 @@ namespace App\Http\Controllers\PopupImage;
 use App\Http\Controllers\Controller;
 use App\Models\PopupImage;
 use App\Service\Image\ImageService;
-use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class PopupImageController extends Controller
 {
@@ -18,7 +20,7 @@ class PopupImageController extends Controller
  *     summary="Actualizar una imagen de popup (parcial)",
  *     description="Permite actualizar imagen, device, slot, alt o title de forma independiente",
  *     operationId="updatePopupImage",
- *     
+ *
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -33,7 +35,7 @@ class PopupImageController extends Controller
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 type="object",
- *                 
+ *
  *                 @OA\Property(
  *                     property="file",
  *                     type="string",
@@ -89,7 +91,14 @@ class PopupImageController extends Controller
 
       // Validación simple
       $request->validate([
-        'file' => 'sometimes|image|max:2048',
+        // 'file' => 'sometimes|image|max:2048',
+        'file' => [
+          'sometimes',
+          'file',
+          'image',
+          'mimes:jpg,jpeg,png,webp',
+          'max:2048'
+        ],
         'device' => ['sometimes', Rule::in(['desktop', 'mobile'])],
         'slot' => ['sometimes', Rule::in(['left', 'right', 'center'])],
         'alt' => 'nullable|string|max:255',
@@ -123,14 +132,32 @@ class PopupImageController extends Controller
       // Imagen si viene
       if ($request->hasFile('file')) {
         $oldPath = $image->image;
+        Log::info('Actualizando imagen', [
+        'old_path' => $oldPath
+        ]);
 
-        $data['image'] = $imageService->store(
+        $newPath = $imageService->store(
           $request->file('file'),
           'popups'
         );
 
+        Log::info('Nueva imagen guardada', [
+        'new_path' => $newPath
+        ]);
+
+        $data['image'] = $newPath;
+
+        try {
+
         // Eliminar después de guardar (seguro)
-        $imageService->remove($oldPath); 
+        $imageService->remove($oldPath);
+        Log::info('Imagen anterior eliminada');
+        } catch (Throwable $e) {
+          Log::warning('Error eliminando imagen anterior', [
+          'error' => $e->getMessage()
+          ]);
+        }
+
       }
       if ($request->has('device')) {
         $data['device'] = $request->device;
@@ -154,11 +181,15 @@ class PopupImageController extends Controller
     } catch (\Throwable $th) {
       DB::rollBack();
 
-       \Log::error('PopupImage update error', [
+      Log::info('REQUEST DATA', $request->all());
+      Log::info('FILES', $request->allFiles());
+
+       Log::error('PopupImage update error', [
     'id' => $id,
-    'error' => $th->getMessage()
+    'error' => $th->getMessage(),
+    'trace' => $th->getTraceAsString()
   ]);
-      
+
       return response()->json([
         'message'  => 'Error al actualizar imagen'
       ], 500);

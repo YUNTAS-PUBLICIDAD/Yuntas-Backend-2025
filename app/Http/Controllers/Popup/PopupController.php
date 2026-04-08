@@ -8,11 +8,11 @@ use App\Http\Requests\Popup\UpdatePopupRequest;
 use App\Models\Popup;
 use App\Models\PopupImage;
 use App\Service\Image\ImageService;
-use DB;
 use Exception;
 use Illuminate\Http\Request;
-use Log;
-use Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PopupController extends Controller
 {
@@ -80,7 +80,7 @@ class PopupController extends Controller
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 required={"lead_source_id","title","button_text","page_target","delay_seconds","priority","images"},
- *                 
+ *
  *                 @OA\Property(property="lead_source_id", type="integer", example=1),
  *                 @OA\Property(property="title", type="string", example="Popup de prueba"),
  *                 @OA\Property(property="button_text", type="string", example="Aceptar"),
@@ -96,7 +96,7 @@ class PopupController extends Controller
  *                     @OA\Items(
  *                         type="object",
  *                         required={"file","device","slot"},
- *                         
+ *
  *                         @OA\Property(
  *                             property="file",
  *                             type="string",
@@ -203,7 +203,7 @@ class PopupController extends Controller
       }
       DB::commit();
       Log::info('STORE POPUP - éxito', ['popup_id' => $popup->id]);
- 
+
       return response()->json($popup->load('images'), 201);
     } catch (Exception $e) {
       DB::rollBack();

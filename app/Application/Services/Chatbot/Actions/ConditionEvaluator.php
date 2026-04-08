@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Application\Services\Chatbot;
+namespace App\Application\Services\Chatbot\Actions;
 
 class ConditionEvaluator
 {
