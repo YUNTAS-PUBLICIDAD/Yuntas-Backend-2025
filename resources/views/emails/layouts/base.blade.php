@@ -1,3 +1,8 @@
+@php
+$frontendUrl = 'https://yuntaspublicidad.com';
+
+@endphp
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -65,9 +70,9 @@
         <!-- BOTÓN (IMPORTANTE para conversión) -->
         <tr>
           <td align="center" style="padding:0 20px 30px;">
-            <a href="#"
+            <a href="{{ $frontendUrl . '/productos' }}"
               style="background:#0b1c3f; color:#ffffff; padding:12px 20px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Ver servicios
+              Ver Productos
             </a>
           </td>
         </tr>

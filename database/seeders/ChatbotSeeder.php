@@ -18,46 +18,6 @@ class ChatbotSeeder extends Seeder
     public function run(): void
     {
 
-    // // Intent: Nombre
-    // $intentNombre = ChatbotIntent::firstOrCreate([
-    //   'name' => 'nombre'
-    // ]);
-
-    // $qNombre = ChatbotQuestion::updateOrCreate(
-    //   [
-    //     'intent_id' => $intentNombre->id,
-    //     'question_text' => 'capturar nombre'
-    //   ],
-    //   [
-    //     'keywords' => ['me llamo', 'soy', 'mi nombre es', 'nombre', 'llamo']
-    //   ]
-    // );
-
-    // $answerNombre = ChatbotAnswer::updateOrCreate(
-    //   [
-    //     'question_id' => $qNombre->id
-    //   ],
-    //   [
-    //     // 'answer_text' => 'Mucho gusto {{user.name|amigo}} 👌 ¿En qué puedo ayudarte?'
-    //     'answer_text' => 'Perfecto, {{user.name|amigo}} 👍'
-    //   ]
-    // );
-    // // Acción
-    // $actionSaveName = ChatbotAction::updateOrCreate(
-    //   ['name' => 'save_name'],
-    //   [
-    //     'trigger_type' => 'after_answer',
-    //     'action_type' => 'update_context',
-    //     'parameters' => [
-    //       'key' => 'user.name',
-    //       'value' => '__from_message__'
-    //     ]
-    //   ]
-    // );
-
-    // $answerNombre->actions()->syncWithoutDetaching([
-    //   $actionSaveName->id => ['priority' => 1, 'is_active' => 1]
-    // ]);
 
        /*
         |--------------------------------------------------------------------------
@@ -85,6 +45,36 @@ class ChatbotSeeder extends Seeder
             [
                 'answer_text' => 'Hola 👋 {{user.name|amigo}} Bienvenido a Yuntas Publicidad. ¿Buscas cotizar un proyecto o conocer nuestros servicios?'
             ]
+        );
+
+        $intentSmalltalk = ChatbotIntent::firstOrCreate([
+          'name' => 'smalltalk'
+        ]);
+
+        $qSmalltalk = ChatbotQuestion::updateOrCreate(
+          [
+            'intent_id' => $intentSmalltalk->id,
+            'question_text' => 'interacción casual'
+          ],
+          [
+            'keywords' => [
+              'como estas',
+              'como te va',
+              'todo bien',
+              'que tal',
+              'como andas',
+              'estas bien'
+            ]
+          ]
+        );
+
+        ChatbotAnswer::updateOrCreate(
+          [
+              'question_id' => $qSmalltalk->id
+          ],
+          [
+            'answer_text' => 'Todo bien por aquí 👍 ¿En qué puedo ayudarte?'
+          ]
         );
 
         /*
@@ -222,6 +212,51 @@ class ChatbotSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
+        | 🧠 INTENT: ASESOR
+        |--------------------------------------------------------------------------
+        */
+        $intentAsesor = ChatbotIntent::firstOrCreate([
+          'name' => 'asesor'
+        ]);
+
+        $qAsesor = ChatbotQuestion::updateOrCreate(
+          [
+            'intent_id' => $intentAsesor->id,
+            'question_text' => 'hablar con asesor'
+          ],
+          [
+            'keywords' => ['asesor', 'hablar con alguien', 'whatsapp', 'atencion']
+          ]
+        );
+
+
+     $answerAsesor =  ChatbotAnswer::updateOrCreate(
+        [
+          'question_id' => $qAsesor->id
+        ],
+        [
+          'answer_text' => 'Te contacto con un asesor ahora mismo 👇'
+        ]
+        );
+
+        $actionWhatsapp = ChatbotAction::updateOrCreate(
+        [
+          'name' => 'send_whatsapp'
+        ],
+        [
+          'trigger_type' => 'after_answer',
+          'action_type' => 'send_metadata',
+          'parameters' => [
+            'type' => 'whatsapp'
+          ]
+        ]
+        );
+
+        $answerAsesor->actions()->syncWithoutDetaching([
+        $actionWhatsapp->id => ['priority' => 1, 'is_active' => 1]
+        ]);
+        /*
+        |--------------------------------------------------------------------------
         | 🧠 INTENT: CONTACTO
         |--------------------------------------------------------------------------
         */
@@ -232,21 +267,39 @@ class ChatbotSeeder extends Seeder
         $qContacto = ChatbotQuestion::updateOrCreate(
             [
                 'intent_id' => $intentContacto->id,
-                'question_text' => 'contacto cliente',
+                'question_text' => 'info contacto',
             ],
             [
-                'keywords' => ['contacto', 'telefono', 'asesor', 'hablar']
+                'keywords' => ['contacto', 'correo', 'ubicacion', 'oficina', 'direccion', 'donde estan', 'donde queda', 'donde se ubican', 'tienen local', 'mapa', 'como los ubico']
             ]
         );
 
-        ChatbotAnswer::updateOrCreate(
+        $answerContacto = ChatbotAnswer::updateOrCreate(
             [
                 'question_id' => $qContacto->id,
             ],
             [
-                'answer_text' => 'Déjame tus datos y un asesor te contactará.'
+                'answer_text' => 'Puedes ver toda nuestra información aquí 👇'
             ]
         );
+
+        $actionContact = ChatbotAction::updateOrCreate(
+          [
+            'name' => 'send_contact_page'
+          ],
+          [
+          'trigger_type' => 'after_answer',
+          'action_type' => 'send_metadata',
+          'parameters' => [
+            'type' => 'contact_page',
+            'url' => '/contacto'
+          ]
+          ]
+        );
+
+        $answerContacto->actions()->syncWithoutDetaching([
+        $actionContact->id => ['priority' => 1, 'is_active' => 1]
+        ]);
         /*
     |--------------------------------------------------------------------------
     | 🧠 INTENT: AGRADECIMIENTO

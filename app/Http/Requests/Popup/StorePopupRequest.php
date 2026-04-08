@@ -44,7 +44,7 @@ class StorePopupRequest extends FormRequest
      'images.*.device' => ['required', Rule::in(['desktop', 'mobile'])],
      'images.*.slot' => ['required', Rule::in(['left', 'right', 'center'])],
      'images.*.alt' => 'nullable|string|max:255',
-     'images.*.title' => 'nullable|string|max:255',  
+     'images.*.title' => 'nullable|string|max:255',
     ];
   }
 }
