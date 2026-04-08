@@ -5,8 +5,10 @@ namespace App\Service\Image;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Encoders\WebpEncoder;
-use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\Drivers\Gd\Driver;
+// use Intervention\Image\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
+// use Intervention\Image\Laravel\Facades\Image;
 use RuntimeException;
 use Throwable;
 
@@ -121,17 +123,28 @@ class ImageService
     $this->validateMime($file);
 
     // Validación crítica
+    // if(!extension_loaded('gd')){
+    //   throw new RuntimeException('Server misconfigured: GD extension required');
+    // }
     if(!extension_loaded('gd')){
-      throw new RuntimeException('Server misconfigured: GD extension required');
+      throw new RuntimeException('GD not installed');
     }
-
+    $manager = new ImageManager(new Driver());
     try {
-    $image = Image::decode($file)->scaleDown(width: 1200);
+    // $image = Image::decode($file)->scaleDown(width: 1200);
+    // $image = $manager->read($file)
+    //   ->resize(1200, null, function ($constraint){
+    //     $constraint->aspectRatio();
+    //     $constraint->upsize();
+    //   });
+    $image = $manager->read($file)
+      ->scaleDown(width: 1200);
     } catch (Throwable $e) {
      throw new RuntimeException('Invalid image content');
     }
 
-    $encoded = $image->encode(new WebpEncoder(quality: 80));
+    // $encoded = $image->encode(new WebpEncoder(quality: 80));
+    $encoded = $image->toWebp(80);
 
     // $extension = $file->extension();
 
@@ -143,7 +156,7 @@ class ImageService
     $path = "{$directory}/{$filename}";
 
     // Storage::disk($disk)->put($path, (string) $image);
-    Storage::disk($disk)->put($path, $encoded);
+    Storage::disk($disk)->put($path, (string) $encoded);
     return Storage::url($path);
   }
 
