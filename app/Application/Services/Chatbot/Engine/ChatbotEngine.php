@@ -5,6 +5,7 @@ namespace App\Application\Services\Chatbot\Engine;
 use App\Application\Services\Chatbot\Actions\ActionExecutor;
 use App\Application\Services\Chatbot\Context\ChatContext;
 use App\Application\Services\Chatbot\Engine\Pipeline;
+use App\Application\Services\Chatbot\Formatters\ResponseFormatter;
 use App\Application\Services\Chatbot\Intent\IntentMatcher;
 use App\Application\Services\Chatbot\States\StateResolver;
 use App\Models\ChatbotConversation;
@@ -27,7 +28,7 @@ use App\Models\ChatbotConversation;
 // Encargado de orquestar todo
 class ChatbotEngine
 {
-  public function handleMessage($conversation, string $message)
+  public function handleMessage($conversation, string $message, string $channel = 'web')
   {
 
     $this->cleanupIfNeeded();
@@ -62,11 +63,16 @@ class ChatbotEngine
       $this->persistContext($conversation, $context);
 
       // return $this->send($conversation, $response);
-      return $this->send(
-      $conversation,
-      $response['text'],
-      $response['metadata'] ?? null
-      );
+      // return $this->send(
+      // $conversation,
+      // $response['text'],
+      // $response['metadata'] ?? null
+      // );
+      $formatted = app(ResponseFormatter::class)
+        ->format($response['text'], $response['metadata'] ?? null, $channel);
+
+    // return $this->send($conversation, $formatted);
+    $this->send($conversation, $formatted['text']);
   }
 
   protected function handleIntent($conversation, $message, $context)
@@ -117,7 +123,11 @@ class ChatbotEngine
     $conversation->touch();
   }
 
-  protected function send($conversation, $text, $metadata = null)
+  protected function send(
+  $conversation,
+  $text,
+  $metadata = null
+  )
   {
     $conversation->messages()->create([
     'message_text' => $text,
@@ -127,6 +137,12 @@ class ChatbotEngine
     $conversation->touch();
 
     $this->pruneMessages($conversation);
+
+    // return $text;
+    return [
+      'text' => is_array($text) ? $text['text'] : $text,
+      'metadata' => $metadata
+    ];
   }
 
   protected function persistContext($conversation, $context)
