@@ -126,19 +126,23 @@ class ChatbotEngine
   protected function send(
   $conversation,
   $text,
-  // $metadata = null
+  $metadata = null
   )
   {
     $conversation->messages()->create([
     'message_text' => $text,
     'sender' => 'bot',
-    // 'metadata' => $metadata
+    'metadata' => $metadata
     ]);
     $conversation->touch();
 
     $this->pruneMessages($conversation);
 
-    return $text;
+    // return $text;
+    return [
+      'text' => is_array($text) ? $text['text'] : $text,
+      'metadata' => $metadata
+    ];
   }
 
   protected function persistContext($conversation, $context)
