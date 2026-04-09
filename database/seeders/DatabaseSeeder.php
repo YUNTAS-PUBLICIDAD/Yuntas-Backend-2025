@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
                 'role_id' => $adminRole->id,
             ]
         );
-        
+
         // 3. Slots de Imágenes
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
         ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
         BlogContentSlot::firstOrCreate(['name' => 'Descripciones']);
         BlogContentSlot::firstOrCreate(['name' => 'Beneficios']);
         BlogContentSlot::firstOrCreate(['name' => 'Testimonios']);
-        
+
         // 5. Fuentes de Leads
      $inicioSource =   LeadSource::firstOrCreate(['name' => 'Inicio']);
       $productosSource =  LeadSource::firstOrCreate(['name' => 'Productos']);
@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
         // $productosSource = LeadSource::where('name', 'Productos')->first();
         // $detalleSource = LeadSource::where('name', 'Producto detalle')->first();
         // WhatsappPopup::updateOrCreate(
-        //     ['lead_source_id' => $inicioSource->id],    
+        //     ['lead_source_id' => $inicioSource->id],
         //     [
         //         'nombre' => 'Popup Inicio',
         //         'mensaje' => "👋 ¡Bienvenido(a) a *Yuntas Publicidad*!\n\n" .
@@ -85,7 +85,7 @@ class DatabaseSeeder extends Seeder
         //     ]
         // );
         // WhatsappPopup::firstOrCreate(
-        //     ['lead_source_id' => $productosSource->id],    
+        //     ['lead_source_id' => $productosSource->id],
         //     [
         //         'nombre' => 'Popup Productos',
         //         'mensaje' => "📦 *¡Hola {nombre}!* 📦\n\n" .
@@ -110,7 +110,7 @@ class DatabaseSeeder extends Seeder
         //     ]
         // );
         // WhatsappPopup::firstOrCreate(
-        //     ['lead_source_id' => $detalleSource->id],    
+        //     ['lead_source_id' => $detalleSource->id],
         //     [
         //         'nombre' => 'Popup Producto detalle',
         //         'mensaje' => "📢 *Bienvenido a Yuntas Publicidad* 📢\n\n" .
@@ -133,19 +133,19 @@ class DatabaseSeeder extends Seeder
         //     ]
         // );
 
-        $product = Product::firstOrCreate(
-          ['slug' => 'producto-demo'],
-          [
-            'name' => 'Producto Demo',
-            'hero_title' => 'Producto Demo Hero',
-            'description' => 'Description de prueba',
-            'price' => 100,
-            'status' => 'active',
-            'meta_title' => 'Producto Demo',
-            'meta_description' => 'Meta descripción demo',
-            'keywords' => ['demo', 'producto']
-          ]
-        );
+        // $product = Product::firstOrCreate(
+        //   ['slug' => 'producto-demo'],
+        //   [
+        //     'name' => 'Producto Demo',
+        //     'hero_title' => 'Producto Demo Hero',
+        //     'description' => 'Description de prueba',
+        //     'price' => 100,
+        //     'status' => 'active',
+        //     'meta_title' => 'Producto Demo',
+        //     'meta_description' => 'Meta descripción demo',
+        //     'keywords' => ['demo', 'producto']
+        //   ]
+        // );
 
         // $templateProducto = Template::updateOrCreate(
         //   [
@@ -343,5 +343,8 @@ TemplateContent::updateOrCreate(
 
         // Chatbot
         $this->call(ChatbotSeeder::class);
+
+        // Products
+        $this->call(ProductSeeder::class);
     }
 }
