@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 use App\Traits\ValidatesImageSecurity;
 use App\Traits\SanitizesInput;
+use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
@@ -380,32 +380,93 @@ class ProductService
         return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
     }
 
+    // public function searchForChatbot(string $query)
+    // {
+    //   $words = collect(explode(' ', strtolower($query)))
+    //           ->filter(fn($w) => strlen($w) > 2) // quitar ruido tipo "de", "el"
+    //           ->values();
+
+    //       $products = Product::query()
+    //           ->with(['images.slot'])
+    //           ->where(function ($q) use ($words) {
+    //               foreach ($words as $word) {
+    //                   $q->orWhere('name', 'like', "%{$word}%");
+    //               }
+    //           })
+    //           ->limit(3)
+    //           ->get();
+
+    //       return $products->map(function ($product) {
+    //           $image = $product->images->firstWhere('slot.name', 'List');
+
+    //           return [
+    //               'id' => $product->id,
+    //               'name' => $product->name,
+    //               'slug' => $product->slug,
+    //               'price' => $product->price,
+    //               'image' => $image?->url,
+    //           ];
+    //       });
+    // }
+    //
+
     public function searchForChatbot(string $query)
     {
+      $cacheKey = 'chatbot_search_' . md5($query);
+
+      return Cache::remember($cacheKey, 60, function () use ($query){
       $words = collect(explode(' ', strtolower($query)))
-              ->filter(fn($w) => strlen($w) > 2) // quitar ruido tipo "de", "el"
-              ->values();
+          ->filter(fn($w) => strlen($w) > 2)
+          ->values();
+
+          if($words->isEmpty()){
+            return collect();
+          }
 
           $products = Product::query()
-              ->with(['images.slot'])
-              ->where(function ($q) use ($words) {
-                  foreach ($words as $word) {
-                      $q->orWhere('name', 'like', "%{$word}%");
-                  }
-              })
-              ->limit(3)
-              ->get();
+            ->with(['images.slot'])
+            ->where(function ($q) use ($words) {
+              foreach($words as $word){
+                $q->orWhere('name', 'like', "%{$word}%");
+              }
+            })
+            ->orderByDesc('updated_at') // Mejora relevancia
+            ->limit(3)
+            ->get();
 
-          return $products->map(function ($product) {
+            return $products->map(function ($product) {
               $image = $product->images->firstWhere('slot.name', 'List');
 
               return [
-                  'id' => $product->id,
-                  'name' => $product->name,
-                  'slug' => $product->slug,
-                  'price' => $product->price,
-                  'image' => $image?->url,
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'price' => $product->price,
+                'image' => $image?->url
               ];
-          });
+            });
+      });
+    }
+
+    public function getFeaturedForChatbot()
+    {
+      return Cache::remember('chatbot_featured_products', 60, function () {
+      return Product::query()
+        ->with(['images.slot'])
+        ->orderByDesc('updated_at')
+        ->limit(3)
+        ->get()
+        ->map(function ($product) {
+          $image = $product->images->firstWhere('slot.name', 'List' );
+
+          return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'price' => $product->price,
+            'image' => $image?->url
+          ];
+        });
+      });
     }
 }
