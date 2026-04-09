@@ -51,4 +51,28 @@ Log::info('Con conversación resuelta', [
         'context' => []
       ]);
     }
+
+    public function whatsapp(Request $request)
+    {
+      $phone = $request->phone;
+      $message = $request->message;
+
+      // Buscar o crear conversaction
+      $conversation = ChatbotConversation::firstOrCreate([
+        'channel' => 'whatsapp',
+        'external_id' => $phone
+      ]);
+
+      $engine = app(ChatbotEngine::class);
+
+      $response = $engine->handleMessage(
+      $conversation,
+      $message,
+      'whatsapp'
+      );
+
+      return response()->json([
+        'reply' => $response
+      ]);
+    }
 }
