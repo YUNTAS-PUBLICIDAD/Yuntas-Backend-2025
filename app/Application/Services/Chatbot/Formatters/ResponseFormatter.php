@@ -23,26 +23,32 @@ class ResponseFormatter
 
   protected function formatWhatsapp($text, $metadata)
   {
-    if(!$metadata) return $text;
-
     $extra = '';
 
-    foreach ($metadata as $item){
-      if(($item['type'] ?? null) === 'products'){
-        $products = $item['products'] ?? [];
+        if ($metadata) {
+            foreach ($metadata as $item){
+                if(($item['type'] ?? null) === 'products'){
+                    $products = $item['products'] ?? [];
 
-        foreach ($products as $p){
-          $extra .= "\n• {$p['name']} - S/ {$p['price']}";
-          $extra .= "\nhttps://tusitio.com/productos/{$p['slug']}\n";
+                    foreach ($products as $p){
+                        $extra .= "\n• {$p['name']} - S/ {$p['price']}";
+                        $extra .= "\nhttps://tusitio.com/productos/{$p['slug']}\n";
+                    }
+                }
+
+                if(($item['type'] ?? null) === 'whatsapp'){
+                    $extra .= "\nHabla con un asesor:\nhttps://wa.me/XXXXXXXXX";
+                }
+
+                if(($item['type'] ?? null) === 'contact_page'){
+                    $extra .= "\nMás info:\nhttps://tusitio.com{$item['url']}";
+                }
+            }
         }
-      }
-      if(($item['type'] ?? null) === 'whatsapp'){
-        $extra .= "\nHabla con un asesor:\nhttps://wa.me/XXXXXXXXX";
-      }
-      if(($item['type'] ?? null) === 'contact_page'){
-      $extra .= "\nMás info:\nhttps://tusitio.com{$item['url']}";
-      }
-    }
-    return trim($text . "\n" . $extra);
+
+        return [
+            'text' => trim($text . "\n" . $extra),
+            'metadata' => $metadata
+        ];
   }
 }
