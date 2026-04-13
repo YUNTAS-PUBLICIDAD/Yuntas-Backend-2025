@@ -11,11 +11,17 @@ class ChatbotConversation extends Model
       'lead_id',
       'started_at',
       'ended_at',
-      'context'
+      'context',
+      'channel',
+      'external_id',
+      'uuid'
     ];
 
     protected $casts = [
-      'context' => 'array'
+      'context' => 'array',
+      'started_at' => 'datetime',
+      'ended_at' => 'datetime',
+      'uuid' => 'string'
     ];
 
     public function messages()
