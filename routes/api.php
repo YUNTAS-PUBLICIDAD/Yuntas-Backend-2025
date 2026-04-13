@@ -73,17 +73,17 @@ Route::post('claims', [ClaimController::class, 'store'])->middleware('throttle:f
 Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
   Route::post('/', [ContactMessageController::class, 'store']);
   });
-  
+
   // ------------------- POPUP: EMAIL -------------------
   Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
     Route::post('/enviar', [EmailPopupController::class, 'enviar']);
     });
-    
+
     // ------------------- POPUP: WHATSAPP -------------------
     Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
       Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
       });
-      
+
       // ==============================================================================
       //                                WEBHOOKS
       // ==============================================================================
@@ -91,10 +91,14 @@ Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
       Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
         Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
         });
-        
+
         // Chatbot
         Route::post('/chatbot/message', [ChatbotController::class, 'handle'])->middleware('throttle:forms');
-        
+
+        // Chatbot Whatsapp (entrada desde Baileys)
+        Route::post('/chatbot/whatsapp', [ChatbotController::class, 'whatsapp'])
+        ->middleware('throttle:webhooks');
+
         // ==============================================================================
         //                          ADMINISTRACIÓN (ADMIN PANEL)
         // ==============================================================================
@@ -196,7 +200,7 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::post('/trigger', [DeployController::class, 'trigger']);
   });
 
-  
+
   Route::prefix('admin/popups')->group(function () {
     Route::get('/', [PopupController::class, 'index']);
     Route::post('/', [PopupController::class, 'store']);
