@@ -69,7 +69,9 @@ Log::info('Con conversación resuelta', [
       $cleanPhone = $this->normalizePhone($phone);
 
       if (!preg_match('/^9\d{8}$/', $cleanPhone)) {
-          throw new \Exception('Número inválido');
+        return response()->json([
+        'error' => 'Número inválido'
+        ], 400);
       }
 
       // Log::info('WHATSAPP INPUT', [
