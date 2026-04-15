@@ -11,6 +11,8 @@ use App\Models\Lead;
 // use App\Models\Product;
 // use App\Models\WhatsappProducto;
 use Exception;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -74,15 +76,15 @@ class WhatsappPopupController extends Controller
         //     'nombre' => $lead->name,
         // ];
         $variables = TemplateVariableBuilder::forLead($lead);
-        
+
         // if (!$plantillaPopup) {
           //     return response()->json([
             //         'success' => false,
             //         'message' => 'No hay plantilla configurada para esta fuente'
             //     ], 500);
             // }
-            
-            
+
+
             // Si es detalle de producto, agregar variables y obtener imagen
             // LÓGICA DE PRODUCTO
             $imagenUrl = null;
@@ -99,7 +101,7 @@ class WhatsappPopupController extends Controller
                 'message' => 'Producto no encotrado'
                ], 404);
               }
-              
+
               // variables adicionales
               // $variables = array_merge($variables, [
               //   'producto_nombre' => $lead->product->name ?? '',
@@ -108,7 +110,7 @@ class WhatsappPopupController extends Controller
               //   'hora' => now('America/Lima')->format('H:i'),
               //   'email' => $lead->email,
               //   ]);
-              //   } 
+              //   }
               // $variables = array_merge($variables, [
 
               //   // 'nombre' => $lead->name,
@@ -155,11 +157,11 @@ class WhatsappPopupController extends Controller
 
 
                   Log::info('Template renderizado correctamente', [
-                    'source_id' => $request->source_id, 
+                    'source_id' => $request->source_id,
                     'variables_keys' => array_keys($variables)
                     // 'variables' => $variables, 'template' => $templateData
                   ]);
-                  
+
                 } catch (Exception $e) {
                   Log::error('Error al renderizar template', [
 
@@ -172,14 +174,14 @@ class WhatsappPopupController extends Controller
                     'message' => $e->getMessage()
                   ], 500);
                 }
-        
+
                 // if(!$templateData){
                 //   return response()->json([
                 //     'success' => false,
                 //     'message' => 'No hay template configurado'
                 //   ], 500);
                 // }
-        
+
                 $mensaje = $templateData['message'];
 
                 // Fallback solo si no hay imagen de producto
@@ -189,8 +191,8 @@ class WhatsappPopupController extends Controller
 
         // Enviar mensaje al lead
         // $resultado = $this->enviarWhatsappALead(
-        //     $lead, 
-        //     $plantillaPopup, 
+        //     $lead,
+        //     $plantillaPopup,
         //     $variables,
         //     $imagenUrl
         // );
@@ -281,7 +283,32 @@ class WhatsappPopupController extends Controller
                     'imagePath' => $imagePath
                 ]);
 
-                $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
+                // $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
+
+                $response = Http::timeout(10)->retry(3, 1000, function ($exception, $request){
+                  if($exception instanceof ConnectionException){
+                    Log::warning('Retrying Whatsapp request', [
+                      'error' => $exception->getMessage()
+                    ]);
+                    return true;
+                  }
+
+                  if($exception instanceof RequestException){
+                    $status = $exception->response?->status();
+
+                    // Retry solo en 5xx (no en 4xx)
+                    return $status >= 500;
+                  }
+
+                  return false;
+
+                })->post("{$this->whatsappServiceUrl}/api/whatsapp/send-image", $payload);
+
+                Log::info('Response Whatsapp RAW (image)', [
+                  'status' => $response->status(),
+                  'body' => $response->body(),
+                  'json' => $response->json()
+                ]);
             } else {
                 $payload['message'] = $mensaje;
 
@@ -293,14 +320,33 @@ class WhatsappPopupController extends Controller
                 Log::info('Payload send-message', ['payload' => $payload]);
                 $response = Http::timeout(30)->post("{$this->whatsappServiceUrl}/api/whatsapp/send-message", $payload);
 
-                Log::info('Response raw send-message', [
-                  'body' => $response->body(),
-                  'status' => $response->status(),
+                // Log::info('Response raw send-message', [
+                //   'body' => $response->body(),
+                //   'status' => $response->status(),
+                // ]);
+
+                Log::info('Response WhatsApp RAW (text)', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'json' => $response->json()
                 ]);
             }
 
-            $success = $response->json()['success'] ?? false;
+            $responseData = $response->json();
+
+            $success = $responseData['success'] ?? false;
+
+            // $success = $response->json()['success'] ?? false;
             $responseChatId = $response->json()['chatId'] ?? null;
+
+            $errorMessage = null;
+
+            if(!$success){
+              $error = $responseData['error'] ?? 'Error desconocido';
+
+              // Evitar array -> string
+              $errorMessage = is_array($error) ? json_encode($error) : $error;
+            }
 
             // Guardar registro del mensaje
             WhatsappMessage::create([
@@ -311,7 +357,8 @@ class WhatsappPopupController extends Controller
                 'image_url' => $imagenUrl,
                 'sent_at' => now(),
                 'chat_id' => $responseChatId,
-                'error_message' => $success ? null : ($response->json()['message'] ?? 'Error desconocido'),
+                // 'error_message' => $success ? null : ($response->json()['message'] ?? 'Error desconocido'),
+                'error_message' => $errorMessage
             ]);
 
             return ['success' => $success];
