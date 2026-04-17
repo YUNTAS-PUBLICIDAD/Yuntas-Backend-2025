@@ -28,7 +28,7 @@ class ProductInterceptor implements Interceptor
                 $products = $productService->getFeaturedForChatbot();
 
                 return InterceptionResult::stopWithMetadata(
-                    'Estos son algunos productos 👇',
+                    'Te paso algunas opciones que podrían servirte 👇',
                     [
                         'type' => 'products',
                         'products' => $products->values()
@@ -45,7 +45,8 @@ class ProductInterceptor implements Interceptor
                     $fallback = $productService->getFeaturedForChatbot();
 
                     return InterceptionResult::stopWithMetadata(
-                        'No encontré exactamente eso, pero mira estas opciones 👇',
+                    'No encontré eso exacto, pero mira esto 👇',
+
                         [
                             'type' => 'products',
                             'products' => $fallback->values()
@@ -55,7 +56,7 @@ class ProductInterceptor implements Interceptor
 
                 // ✅ Encontró coincidencias
                 return InterceptionResult::stopWithMetadata(
-                    'Encontré esto 👇',
+                    'Esto encaja con lo que buscas 👇',
                     [
                         'type' => 'products',
                         'products' => $products->values()
