@@ -425,7 +425,9 @@ class ProductService
 
           $products = Product::query()
             ->with(['images.slot'])
-            ->where(function ($q) use ($words) {
+            ->where(function ($q) use ($words, $query) {
+              // Match completo primero (mas relevante)
+              $q->where('name', 'like', "%{$query}");
               foreach($words as $word){
                 $q->orWhere('name', 'like', "%{$word}%");
               }
