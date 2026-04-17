@@ -9,6 +9,7 @@ use App\Application\Services\Chatbot\Formatters\ResponseFormatter;
 use App\Application\Services\Chatbot\Intent\IntentMatcher;
 use App\Application\Services\Chatbot\States\StateResolver;
 use App\Models\ChatbotConversation;
+use App\Application\Services\Product\ProductService;
 
 
 // INPUT
@@ -85,6 +86,20 @@ class ChatbotEngine
     $intent = app(IntentMatcher::class)->match($message);
 
     if(!$intent){
+
+     // Fallback inteligente
+     $products = app(ProductService::class)->searchForChatbot($message);
+
+     if($products->isNotEmpty()){
+       return [
+         'text' => 'Tal vez esto te sirva 👇',
+         'metadata' => [
+          'type' => 'products',
+          'products' => $products->values()
+         ]
+       ];
+     }
+
       // return 'No entendí, ¿puedes reformular?';
       return [
         'text' => 'No entendí, ¿puedes reformular?',
