@@ -72,7 +72,12 @@ class ChatbotEngine
         ->format($response['text'], $response['metadata'] ?? null, $channel);
 
     // return $this->send($conversation, $formatted);
-    $this->send($conversation, $formatted['text']);
+    // $this->send($conversation, $formatted['text']);
+    $this->send(
+    $conversation,
+    $formatted['text'],
+    $formatted['metadata'] ?? null
+    );
   }
 
   protected function handleIntent($conversation, $message, $context)

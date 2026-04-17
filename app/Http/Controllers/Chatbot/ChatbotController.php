@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Chatbot;
 use App\Application\Services\Chatbot\Engine\ChatbotEngine;
 use App\Http\Controllers\Controller;
 use App\Models\ChatbotConversation;
+use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+
 
 class ChatbotController extends Controller
 {
@@ -57,22 +59,84 @@ Log::info('Con conversación resuelta', [
       $phone = $request->phone;
       $message = $request->message;
 
-      // Buscar o crear conversaction
-      $conversation = ChatbotConversation::firstOrCreate([
-        'channel' => 'whatsapp',
-        'external_id' => $phone
-      ]);
+      // $cleanPhone = preg_replace('/\D/', '', $phone);
 
-      $engine = app(ChatbotEngine::class);
+      // // Asegurar formato Perú
+      // if (strlen($cleanPhone) === 9) {
+      //     $cleanPhone = '51' . $cleanPhone;
+      // }
 
-      $response = $engine->handleMessage(
-      $conversation,
-      $message,
-      'whatsapp'
+      $cleanPhone = $this->normalizePhone($phone);
+
+      if (!preg_match('/^9\d{8}$/', $cleanPhone)) {
+        return response()->json([
+        'error' => 'Número inválido'
+        ], 400);
+      }
+
+      // Log::info('WHATSAPP INPUT', [
+      // 'raw_phone' => $phone,
+      // 'clean_phone' => $cleanPhone,
+      // 'message' => $message
+      // ]);
+
+      // $existingLead = Lead::where('phone', $cleanPhone)->first();
+      // Log::info('LEAD SEARCH RESULT', [
+      //   'found' => !!$existingLead,
+      //   'lead_id' => $existingLead?->id,
+      //   'lead' => $existingLead?->phone
+      // ]);
+
+      // Buscar por número en lead sino crearlo
+      // 1. Lead siempre único por teléfono
+      $lead = Lead::firstOrCreate(
+        ['phone' => $cleanPhone],
+        [
+          'name' => 'Usuario Whatsapp',
+          // 'email' => null,
+          'email' => 'temp_' . $cleanPhone . '@noemail.com',
+          'source_id' => null
+        ]
       );
+
+      // Log::info('LEAD FINAL', [
+      //   'lead_id' => $lead->id,
+      //   'phone' => $lead->phone
+      // ]);
+
+      // 2. Conversación siempre ligada al lead
+      $conversation = ChatbotConversation::firstOrCreate(
+        [
+          'channel' => 'whatsapp',
+          'external_id' => $cleanPhone
+        ],
+        [
+          'lead_id' => $lead->id,
+          'started_at' => now(),
+          'context' => []
+        ]
+      );
+
+      // 3. Garantizar consistencia (sin if raro)
+      if($conversation->lead_id !== $lead->id){
+        $conversation->update(['lead_id' => $lead->id]);
+      }
+      // 4. Chatbot
+      $response = app(ChatbotEngine::class)
+        ->handleMessage($conversation, $message, 'whatsapp');
 
       return response()->json([
         'reply' => $response
       ]);
+    }
+
+    function normalizePhone($phone)
+    {
+      $clean = preg_replace('/\D/', '', $phone);
+      // Si viene con 51 -> lo quitamos
+      if (strlen($clean) === 11 && str_starts_with($clean, '51')) {
+        return substr($clean, 2);
+      }
+      return $clean;
     }
 }
