@@ -30,6 +30,14 @@ class UpdatePopupRequest extends FormRequest
       // 'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
       // 'image_alt' => 'sometimes|string|max:255',
       // 'image_title' => 'nullable|string|max:255',
+      // 'product_id' => 'sometimes|nullable|exists:products,id',
+      // 'product_id' => [
+      //   'sometimes',
+      //   'nullable',
+      //   'exists:products,id',
+      //   Rule::requiredIf(fn () => $this->page_target === 'product-detail')
+      // ],
+      'product_id' => 'nullable|exists:products,id',
       'page_target' => 'sometimes|string',
       'delay_seconds' => 'sometimes|integer|min:0|max:60',
       'priority' => 'sometimes|integer|min:1|max:10',

@@ -126,25 +126,25 @@ class ImageService
     // if(!extension_loaded('gd')){
     //   throw new RuntimeException('Server misconfigured: GD extension required');
     // }
-    if(!extension_loaded('gd')){
-      throw new RuntimeException('GD not installed');
-    }
-    $manager = new ImageManager(new Driver());
-    try {
+    // if(!extension_loaded('gd')){
+    //   throw new RuntimeException('GD not installed');
+    // }
+    // $manager = new ImageManager(new Driver());
+    // try {
     // $image = Image::decode($file)->scaleDown(width: 1200);
     // $image = $manager->read($file)
     //   ->resize(1200, null, function ($constraint){
     //     $constraint->aspectRatio();
     //     $constraint->upsize();
     //   });
-    $image = $manager->read($file)
-      ->scaleDown(width: 1200);
-    } catch (Throwable $e) {
-     throw new RuntimeException('Invalid image content');
-    }
+    // $image = $manager->read($file)
+    //   ->scaleDown(width: 1200);
+    // } catch (Throwable $e) {
+    //  throw new RuntimeException('Invalid image content');
+    // }
 
     // $encoded = $image->encode(new WebpEncoder(quality: 80));
-    $encoded = $image->toWebp(80);
+    // $encoded = $image->toWebp(80);
 
     // $extension = $file->extension();
 
@@ -152,11 +152,11 @@ class ImageService
 
     // $path = $file->storeAs($directory, $filename, $disk);
 
-    $filename = Str::uuid().'_'.time().'.webp';
-    $path = "{$directory}/{$filename}";
+    $filename = Str::uuid().'_'.time().'.'.$file->getClientOriginalExtension();
+    $path = $file->storeAs($directory, $filename, $disk);
 
     // Storage::disk($disk)->put($path, (string) $image);
-    Storage::disk($disk)->put($path, (string) $encoded);
+    // Storage::disk($disk)->put($path, (string) $encoded);
     return Storage::url($path);
   }
 

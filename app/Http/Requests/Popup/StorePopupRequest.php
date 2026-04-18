@@ -36,6 +36,12 @@ class StorePopupRequest extends FormRequest
       'start_date' => 'nullable|date',
       'end_date' => 'nullable|date',
       'active' => 'sometimes|boolean',
+      'product_id'=> 'nullable|exists:products,id',
+      // 'product_id' => [
+      //     'nullable',
+      //     'exists:products,id',
+      //     Rule::requiredIf(fn () => $this->page_target === 'product-detail')
+      // ],
 
       // Imágenes
       'images' => ['required', 'array', 'size:3'],
