@@ -22,7 +22,8 @@ class Popup extends Model
     'priority',
     'start_date',
     'end_date',
-    'active'
+    'active',
+    'product_id'
   ];
 
   protected $casts = [
@@ -91,6 +92,11 @@ class Popup extends Model
   public function images()
   {
     return $this->hasMany(PopupImage::class);
+  }
+
+  public function product()
+  {
+    return $this->belongsTo(Product::class);
   }
 
 }
