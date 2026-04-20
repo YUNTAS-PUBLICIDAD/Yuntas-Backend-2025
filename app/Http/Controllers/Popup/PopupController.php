@@ -398,7 +398,7 @@ class PopupController extends Controller
   public function getPopup(Request $request)
   {
     $page = $request->query('page');
-    $productId = $request->query('product_id');
+    // $productId = $request->query('product_id');
     if (! $page) {
       return response()->json(['message' => 'El parámetro "page" es obligatorio'], 400);
     }
@@ -417,29 +417,31 @@ class PopupController extends Controller
     // ->orderBy('priority')
     // ->first();
 
-    $query = Popup::active()
+    $popup = Popup::active()
       ->inSchedule()
       ->with('images')
       ->where(function ($q) use ($page) {
         $q->where('page_target', $page)
           ->orWhere('page_target', 'all');
-      });
+      })
+      ->orderBy('priority')
+      ->first();
 
-      // Lógica inteligente
-      if($page === 'product-detail'){
-        $query->where(function ($q) use ($productId) {
-          if($productId){
-            $q->where('product_id', $productId);
-          }
+      // // Lógica inteligente
+      // if($page === 'product-detail'){
+      //   $query->where(function ($q) use ($productId) {
+      //     if($productId){
+      //       $q->where('product_id', $productId);
+      //     }
 
-          // o popup genérico
-          $q->orWhereNull('product_id');
-        })
-        // prioridad: específico primero
-        ->orderByRaw('product_id IS NULL'); // false primero
-      }
+      //     // o popup genérico
+      //     $q->orWhereNull('product_id');
+      //   })
+      //   // prioridad: específico primero
+      //   ->orderByRaw('product_id IS NULL'); // false primero
+      // }
 
-      $popup = $query->orderBy('priority')->first();
+      // $popup = $query->orderBy('priority')->first();
 
     return response()->json($popup);
   }
