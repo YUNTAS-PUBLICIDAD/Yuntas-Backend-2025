@@ -132,16 +132,28 @@ class PopupController extends Controller
     DB::beginTransaction();
     try {
       Log::info('STORE POPUP - inicio');
+
+     Log::info('DEBUG PRODUCT_ID INPUT', [
+      'product_id' => $request->input('product_id'),
+      'has_product_id' => $request->has('product_id'),
+      'all' => $request->all(),
+     ]);
+
       Log::info('Request data', [
         'all' => $request->all(),
         'files' => $request->files->all()
       ]);
+
+      Log::info('RAW REQUEST', $request->all());
+      Log::info('PAGE TARGET', [$request->input('page_target')]);
+      Log::info('PRODUCT ID', [$request->input('product_id')]);
 // dd($request->all(), $request->file('images'));
       $data = $request->validated();
 
       Log::info('Data validada', $data);
 
       $data = $request->validated();
+      // dd($request->validated());
       $data['page_target'] = Str::slug($data['page_target']);
 
       // Crear popup sin imágenes
@@ -291,6 +303,11 @@ class PopupController extends Controller
       //   }
       // }
 
+      // NO sobrescribir product_id si no viene en el request
+      if(!$request->has('product_id')){
+        unset($data['product_id']);
+      }
+
       $popup->update($data);
       DB::commit();
 
@@ -381,21 +398,50 @@ class PopupController extends Controller
   public function getPopup(Request $request)
   {
     $page = $request->query('page');
+    // $productId = $request->query('product_id');
     if (! $page) {
       return response()->json(['message' => 'El parámetro "page" es obligatorio'], 400);
     }
+
+
 
     // $popup = Popup::active()
     //   ->forPage($page)
     //   ->inSchedule()
     //   ->orderBy('priority')
     //   ->first();
+    // $popup = Popup::active()
+    // ->forPage($page)
+    // ->inSchedule()
+    // ->with('images')
+    // ->orderBy('priority')
+    // ->first();
+
     $popup = Popup::active()
-    ->forPage($page)
-    ->inSchedule()
-    ->with('images')
-    ->orderBy('priority')
-    ->first();
+      ->inSchedule()
+      ->with('images')
+      ->where(function ($q) use ($page) {
+        $q->where('page_target', $page)
+          ->orWhere('page_target', 'all');
+      })
+      ->orderBy('priority')
+      ->first();
+
+      // // Lógica inteligente
+      // if($page === 'product-detail'){
+      //   $query->where(function ($q) use ($productId) {
+      //     if($productId){
+      //       $q->where('product_id', $productId);
+      //     }
+
+      //     // o popup genérico
+      //     $q->orWhereNull('product_id');
+      //   })
+      //   // prioridad: específico primero
+      //   ->orderByRaw('product_id IS NULL'); // false primero
+      // }
+
+      // $popup = $query->orderBy('priority')->first();
 
     return response()->json($popup);
   }

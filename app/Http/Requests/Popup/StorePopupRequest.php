@@ -22,6 +22,7 @@ class StorePopupRequest extends FormRequest
    */
   public function rules(): array
   {
+    $isProduct = $this->page_target === 'product-detail';
     return [
       'lead_source_id' => 'required|integer|exists:lead_sources,id',
       'title' => 'required|string|max:255',
@@ -36,13 +37,58 @@ class StorePopupRequest extends FormRequest
       'start_date' => 'nullable|date',
       'end_date' => 'nullable|date',
       'active' => 'sometimes|boolean',
+      'product_id'=> 'nullable|exists:products,id',
+      // 'product_id' => [
+      //     'nullable',
+      //     'exists:products,id',
+      //     Rule::requiredIf(fn () => $this->page_target === 'product-detail')
+      // ],
 
       // Imágenes
-      'images' => ['required', 'array', 'size:3'],
+      // 'images' => ['required', 'array', 'size:3'],
+      'images' => [
+                 Rule::requiredIf(!$isProduct),
+                 'array',
+             ],
+      // 'images' => [
+      //     Rule::requiredIf(fn () => $this->page_target !== 'product-detail'),
+      //     'array'
+      // ],
+      // 'images' => [
+      //     Rule::requiredIf(fn () => $this->page_target !== 'product-detail'),
+      //     'sometimes',
+      //     'array'
+      // ],
+
       'images.*' => ['required', 'array'],
+      // 'images.*' => [
+      //     Rule::requiredIf(fn () => $this->page_target !== 'product-detail'),
+      //     'array'
+      // ],
       'images.*.file' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+      // 'images.*.file' => [
+      //     Rule::requiredIf(fn () => $this->page_target !== 'product-detail'),
+      //     'image',
+      //     'mimes:jpg,jpeg,png,webp',
+      //     'max:2048'
+      // ],
+      // 'images.*.file' => [
+      //     'sometimes',
+      //     'image',
+      //     'mimes:jpg,jpeg,png,webp',
+      //     'max:2048'
+      // ],
+
      'images.*.device' => ['required', Rule::in(['desktop', 'mobile'])],
+     // 'images.*.device' => [
+     //     'sometimes',
+     //     Rule::in(['desktop', 'mobile'])
+     // ],
      'images.*.slot' => ['required', Rule::in(['left', 'right', 'center'])],
+     // 'images.*.slot' => [
+     //     'sometimes',
+     //     Rule::in(['left', 'right', 'center'])
+     // ],
      'images.*.alt' => 'nullable|string|max:255',
      'images.*.title' => 'nullable|string|max:255',
     ];

@@ -15,9 +15,9 @@ class StoreProductRequest extends FormRequest
     {
         return [
             // Datos Básicos
-            'name' => 'required|string|max:150', 
+            'name' => 'required|string|max:150',
             'slug' => 'nullable|string|max:160|unique:products,slug',
-            'price' => 'required|numeric|min:0', 
+            'price' => 'required|numeric|min:0',
             'hero_title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status' => 'nullable|in:active,inactive',
@@ -25,23 +25,28 @@ class StoreProductRequest extends FormRequest
             // SEO
             'meta_title' => 'nullable|string|max:70',
             'meta_description' => 'nullable|string|max:160',
-            'keywords' => 'nullable', 
-            
+            'keywords' => 'nullable',
+
             // Imagen Principal
             'main_image' => 'required|image|mimes:webp|max:5120',
             'main_image_title' => 'nullable|string|max:50',
-            'main_image_alt' => 'nullable|string|max:80', 
+            'main_image_alt' => 'nullable|string|max:80',
 
             // Galería
             'gallery' => 'nullable|array',
-            'gallery.*.slot' => 'required|string|in:Hero,Specs,Benefits,Popups,Gallery',
+            // 'gallery.*.slot' => 'required|string|in:Hero,Specs,Benefits,Popups,Gallery',
+            'gallery.*.slot' => [
+                'required',
+                'string',
+                'in:Hero,Specs,Benefits,PopupLeft,PopupRight,PopupMobile'
+            ],
             'gallery.*.image' => 'required|image|mimes:webp|max:5120',
             'gallery.*.title' => 'nullable|string|max:50',
             'gallery.*.alt' => 'nullable|string|max:80',
 
             // Relaciones
-            'categories' => 'nullable|array', 
-            'categories.*' => 'string|max:150', 
+            'categories' => 'nullable|array',
+            'categories.*' => 'string|max:150',
 
             // Contenido Dinámico
             'specifications' => 'nullable|array',
