@@ -39,16 +39,18 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Slots de Imágenes
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Desc']);
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Benefits']);
-        ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Testimonial']);
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'List']);
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Hero']);
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Specs']);
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Benefits']);
-        ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Popups']);
+        // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
+        // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
+        // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Desc']);
+        // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Benefits']);
+        // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Testimonial']);
+        // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'List']);
+        // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Hero']);
+        // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Specs']);
+        // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Benefits']);
+        // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Popups']);
+
+       $this->call(ImageSlotSeeder::class);
 
         // 4. Slots de Contenido
         ProductContentSlot::firstOrCreate(['name' => 'Especificaciones']);
