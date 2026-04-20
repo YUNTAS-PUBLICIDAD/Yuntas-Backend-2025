@@ -163,7 +163,7 @@ class ProductService
 
                     if ($image instanceof UploadedFile) {
                         // Nueva imagen: borrar anterior y subir nueva
-                        $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'Popups'];
+                        $uniqueSlots = ['Hero', 'Specs', 'Benefits', 'PopupLeft', 'PopupRight', 'PopupMobile'];
                         if (in_array($slotName, $uniqueSlots)) {
                             $this->deleteImagesBySlot($product, $slotName);
                         }
@@ -376,7 +376,7 @@ class ProductService
     // Validación específica para slots de productos
     private function validateSlot(string $slotName): string
     {
-        $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'Popups'];
+        $allowedSlots = ['List', 'Hero', 'Specs', 'Benefits', 'PopupLeft', 'PopupRight', 'PopupRight', 'PopupMobile'];
         return $this->validateWhitelist($slotName, $allowedSlots, 'slot');
     }
 
@@ -425,7 +425,9 @@ class ProductService
 
           $products = Product::query()
             ->with(['images.slot'])
-            ->where(function ($q) use ($words) {
+            ->where(function ($q) use ($words, $query) {
+              // Match completo primero (mas relevante)
+              $q->where('name', 'like', "%{$query}");
               foreach($words as $word){
                 $q->orWhere('name', 'like', "%{$word}%");
               }
