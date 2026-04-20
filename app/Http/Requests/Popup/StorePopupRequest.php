@@ -65,7 +65,14 @@ class StorePopupRequest extends FormRequest
       //     Rule::requiredIf(fn () => $this->page_target !== 'product-detail'),
       //     'array'
       // ],
-      'images.*.file' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+      // 'images.*.file' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+      'images.*.file' => [
+                  Rule::requiredIf(!$isProduct),
+                  'file',
+                  'image',
+                  'mimes:webp',
+                  'max:2048'
+              ],
       // 'images.*.file' => [
       //     Rule::requiredIf(fn () => $this->page_target !== 'product-detail'),
       //     'image',
