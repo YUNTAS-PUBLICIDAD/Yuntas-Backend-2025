@@ -92,10 +92,10 @@ class Popup extends Model
 
   public function setButtonTextColorAttribute($value)
   {
-    if($value !== null){
-      $this->attributes['button_text_color'] = strtolower(trim($value));
+    if(!$value){
+      $this->attributes['button_text_color'] = "#ffffff";
     }else {
-      $this->attributes['button_text_color'] = "#FFFFFF"; //Opcional
+      $this->attributes['button_text_color'] = strtolower(trim($value));
     }
   }
 
