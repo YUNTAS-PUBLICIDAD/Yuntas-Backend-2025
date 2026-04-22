@@ -14,6 +14,7 @@ class Popup extends Model
     'title',
     'button_text',
     'button_color',
+    'button_text_color',
     // 'image',
     // 'image_alt',
     // 'image_title',
@@ -86,6 +87,15 @@ class Popup extends Model
       $this->attributes['button_color'] = strtolower(trim($value));
     }else{
       $this->attributes['button_color'] = null;
+    }
+  }
+
+  public function setButtonTextColorAttribute($value)
+  {
+    if(!$value){
+      $this->attributes['button_text_color'] = "#ffffff";
+    }else {
+      $this->attributes['button_text_color'] = strtolower(trim($value));
     }
   }
 
