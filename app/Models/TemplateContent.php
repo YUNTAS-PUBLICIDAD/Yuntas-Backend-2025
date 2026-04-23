@@ -26,6 +26,11 @@ class TemplateContent extends Model
       return $this->BelongsTo(Template::class);
     }
 
+    public function buttons()
+    {
+      return $this->hasMany(TemplateButton::class)->orderBy('order');
+    }
+
     public function render(array $data): string
     {
       $message = $this->content;
