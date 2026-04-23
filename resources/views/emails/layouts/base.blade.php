@@ -67,15 +67,24 @@ $frontendUrl = 'https://yuntaspublicidad.com';
           </td>
         </tr>
 
-        <!-- BOTÓN (IMPORTANTE para conversión) -->
+        @if (!empty($buttons))
         <tr>
           <td align="center" style="padding:0 20px 30px;">
-            <a href="{{ $frontendUrl . '/productos' }}"
-              style="background:#0b1c3f; color:#ffffff; padding:12px 20px; text-decoration:none; border-radius:5px; display:inline-block;">
-              Ver Productos
-            </a>
+            <table cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                @foreach (collect($buttons)->where('active', true)->where('type', 'url')->sortBy('order') as $btn)
+                  <td align="center" style="padding:5px;">
+                    <a href="{{ $btn['payload']['url'] ?? '#' }}"
+                      style="background:#0b1c3f; color:#ffffff; padding:12px 20px; text-decoration:none; border-radius:5px; display:inline-block; font-size:14px;">
+                      {{ $btn['text'] ?? 'Ver más' }}
+                    </a>
+                  </td>
+                @endforeach
+              </tr>
+            </table>
           </td>
         </tr>
+        @endif
 
         <!-- FOOTER -->
         <tr>
