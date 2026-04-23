@@ -92,7 +92,7 @@ class EmailPopupController extends Controller
                       'template' => $template
                     ]);
                     $imagenUrl = null;
-      
+
                     // prioridad 1: producto
                     if ($lead->product_id && $lead->product) {
                       $lead->product->loadMissing('mainImage');
@@ -120,7 +120,7 @@ class EmailPopupController extends Controller
                     //           ->subject($template['subject'] ?? 'Mensaje')
                     //           ->setBody($template['message'], 'text/html');
                     // });
-                    
+
                     // $html = $template['message'];
 
                     // if(!empty($template['image_url'])){
@@ -131,13 +131,14 @@ class EmailPopupController extends Controller
 // }
 $html = view('emails.layouts.base', [
   'contenido' => $template['message'],
-  'imagenUrl' => $imagenUrl
+  'imagenUrl' => $imagenUrl,
+  'buttons' => $template['buttons'] ?? []
 ])->render();
-                    
+
                     Mail::send([], [], function ($message) use ($template, $lead, $html){
                       $message->to($lead->email)
                       ->subject($template['subject'] ?? 'Mensaje')
-                      // ->html($template['message']); 
+                      // ->html($template['message']);
                       ->html($html);
                     });
 
@@ -158,7 +159,7 @@ $html = view('emails.layouts.base', [
                         'message' => 'Email de Inicio enviado correctamente',
                         'lead_id' => $lead->id,
                     ], 200);
-                    
+
                 } catch (\Exception $e) {
                     EmailMessage::create([
                         'lead_id' => $lead->id,
@@ -176,7 +177,7 @@ $html = view('emails.layouts.base', [
                       'message' => $e->getMessage(),
                     ], 500);
                 }
-            // } 
+            // }
             // CASO 2: Producto
             // try {
             //   $product = $lead->product;
@@ -219,7 +220,7 @@ $html = view('emails.layouts.base', [
             //     'message' => $e->getMessage(),
             //   ],500);
             // }
-    
+
             // else if ($lead->source->name === 'Productos') {
             //     try {
             //         Mail::to($cliente['correo'])->send(new ProductosMailing($cliente));

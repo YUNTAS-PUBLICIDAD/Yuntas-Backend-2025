@@ -33,6 +33,15 @@ class UpdateTemplateRequest extends FormRequest
             'contents.*.variables' => 'sometimes|array',
             'contents.*.image' => 'sometimes|file|image',
             'contents.*.active' => 'sometimes|boolean',
+
+            // Template buttons
+            'contents.*.buttons' => 'sometimes|array',
+            'contents.*.buttons.*.id' => 'sometimes|integer|exists:template_buttons,id',
+            'contents.*.buttons.*.text' => 'sometimes|string|max:255',
+            'contents.*.buttons.*.type' => 'sometimes|string',
+            'contents.*.buttons.*.payload' => 'sometimes|array',
+            'contents.*.buttons.*.order' => 'sometimes|integer',
+            'contents.*.buttons.*.active' => 'sometimes|boolean',
         ];
     }
 }
