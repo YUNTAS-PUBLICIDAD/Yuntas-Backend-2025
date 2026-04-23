@@ -2,8 +2,7 @@
 namespace App\Application\Services\Template;
 use App\Models\Template;
 use Exception;
-use Log;
-
+use Illuminate\Support\Facades\Log;
 
 class TemplateService
 {
@@ -15,7 +14,8 @@ class TemplateService
     // ->first();
     return Template::with(['contents' => function ($q) use ($channel){
      $q->where('channel', $channel)
-     ->where('active', true);
+     ->where('active', true)
+     ->with('buttons');
     }])
     ->where('lead_source_id', $sourceId)
     ->where('active', true)
@@ -41,6 +41,7 @@ class TemplateService
       'message' => $content->render($data),
       'subject' => $content->subject ?? null,
       'image_url' => $content->image_url ? asset($content->image_url) : null,
+      'buttons' => $content->buttons ?? []
     ];
   }
 
@@ -76,11 +77,11 @@ class TemplateService
   //   $template = $this->getByProduct($productId, $step, $channel);
 
   //   if (!$template) {
-  //     throw new Exception("Template no encontrado para producto {$productId} paso {$step}", 1); 
+  //     throw new Exception("Template no encontrado para producto {$productId} paso {$step}", 1);
   //   }
   //   $content = $template->contents->first();
   //   if (!$content) {
-  //     throw new Exception("Contenido no encontrado para canal {$channel} paso {$step}"); 
+  //     throw new Exception("Contenido no encontrado para canal {$channel} paso {$step}");
   //   }
   //   $this->validateVariables($content, $data);
 
@@ -115,13 +116,13 @@ class TemplateService
   //   ];
   // }
 
-  
+
 
   private function validateVariables($content, array $data):void
   {
     foreach ($content->variables ?? [] as $var) {
       if (!array_key_exists($var, $data)) {
-        throw new \InvalidArgumentException("Falta variable: {$var} | DATA: " . json_encode($data)); 
+        throw new \InvalidArgumentException("Falta variable: {$var} | DATA: " . json_encode($data));
       }
     }
     Log::info('VALIDANDO VARIABLES', [
