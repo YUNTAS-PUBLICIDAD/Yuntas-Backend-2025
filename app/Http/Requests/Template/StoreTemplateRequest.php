@@ -32,6 +32,14 @@ class StoreTemplateRequest extends FormRequest
             'contents.*.variables' => 'array',
             'contents.*.image' => 'nullable|file|image',
             'contents.*.active' => 'required|boolean',
+
+            // Template Buttons
+            'contents.*.buttons' => 'array',
+            'contents.*.buttons.*.text' => 'required|string|max:255',
+            'contents.*.buttons.*.type' => 'required|string',
+            'contents.*.buttons.*.payload' => 'required|array',
+            'contents.*.buttons.*.order' => 'nullable|integer',
+            'contents.*.buttons.*.active' => 'required|boolean',
         ];
     }
 }
