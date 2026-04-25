@@ -348,5 +348,8 @@ TemplateContent::updateOrCreate(
 
         // Products
         $this->call(ProductSeeder::class);
+
+        // Settings
+        $this->call(SettingsSeeder::class);
     }
 }
