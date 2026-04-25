@@ -8,8 +8,8 @@ use App\Http\Requests\Template\UpdateTemplateRequest;
 use App\Models\Template;
 use App\Models\TemplateContent;
 use App\Service\Image\ImageService;
-use DB;
-use Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TemplateController extends Controller
 {
@@ -48,7 +48,7 @@ public function __construct(ImageService $imageService)
     // Lista templates
     public function index()
     {
-      return Template::with('contents')->get();
+      return Template::with('contents.buttons')->get();
     }
 
     /**
@@ -69,7 +69,7 @@ public function __construct(ImageService $imageService)
     // Mostrar un template específico
     public function show($id)
     {
-      return Template::with('contents')->findOrFail($id);
+      return Template::with('contents.buttons')->findOrFail($id);
     }
 
     /**
@@ -84,7 +84,7 @@ public function __construct(ImageService $imageService)
  *             mediaType="multipart/form-data",
  *             @OA\Schema(
  *                 required={"lead_source_id","name","active"},
- *                 
+ *
  *                 @OA\Property(property="lead_source_id", type="integer", example=1),
  *                 @OA\Property(property="name", type="string", example="Template bienvenida"),
  *                 @OA\Property(property="active", type="boolean", example=true),
@@ -122,15 +122,16 @@ public function __construct(ImageService $imageService)
             'active' => $data['active']
         ]);
 
-        if (!empty($data['contents'])) {
-            foreach ($data['contents'] as $i => $contentData) {
+            foreach ($data['contents'] ?? [] as $i => $contentData) {
 
+              $buttons = $contentData['buttons'] ?? [];
+              unset($contentData['buttons']);
+
+                // Imagen (consistente)
                 $file = $request->file("contents.$i.image");
-
                 if ($file) {
                     $contentData['image_url'] = $this->imageService->store($file, 'plantillas');
                 }
-
                 unset($contentData['image']);
 
                 // ⚠️ Evitar inserts vacíos
@@ -140,14 +141,15 @@ public function __construct(ImageService $imageService)
                 ) {
                     continue;
                 }
+                // Guardar referencia
+                $content = $template->contents()->create($contentData);
 
-                $template->contents()->create($contentData);
+                $this->syncButtons($content, $buttons);
             }
-        }
 
         DB::commit();
 
-        return $template->load('contents');
+        return $template->load('contents.buttons');
 
     } catch (\Throwable $e) {
       DB::rollBack();
@@ -167,14 +169,14 @@ public function __construct(ImageService $imageService)
  *     tags={"Templates"},
  *     summary="Actualizar template",
  *     security={{"sanctum":{}}},
- *     
+ *
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
  *         required=true,
  *         @OA\Schema(type="integer")
  *     ),
- *     
+ *
  *     @OA\RequestBody(
  *         required=false,
  *         @OA\MediaType(
@@ -208,7 +210,7 @@ public function __construct(ImageService $imageService)
       try {
         DB::beginTransaction();
 
-        $template = Template::with('contents')->findOrFail($id);
+        $template = Template::with('contents.buttons')->findOrFail($id);
 
         $data = $request->validated();
 
@@ -217,35 +219,65 @@ public function __construct(ImageService $imageService)
             collect($data)->except('contents')->toArray()
         );
 
-        if (!empty($data['contents'])) {
 
-            foreach ($data['contents'] as $i => $contentData) {
+        $existingContents = $template->contents()->get()->keyBy('id');
+
+        $idsToKeep = [];
+
+            foreach ($data['contents'] ?? [] as $i => $contentData) {
+
+              $buttons = $contentData['buttons'] ?? null;
+              unset($contentData['buttons']);
 
                 // 🔹 Buscar SIEMPRE dentro del template
                 $content = isset($contentData['id'])
-                    ? $template->contents()->where('id', $contentData['id'])->first()
-                    : null;
+                    ? $existingContents->get($contentData['id']) : null;
+                    // ? $template->contents()->where('id', $contentData['id'])->first()
+                    // : null;
 
-                // 🔹 Archivo
-                $file = $request->file("contents_{$i}_image");
+                // 🔹 Imagen mismo formato que store
+                $file = $request->file("contents.$i.image");
 
                 if ($file) {
                     $contentData['image_url'] = $content
                         ? $this->imageService->update($file, $content->image_url, 'plantillas')
                         : $this->imageService->store($file, 'plantillas');
                 }
+                unset($contentData['image']);
+
+                // Filtro
+                if(
+                empty($contentData['content']) && empty($contentData['image_url'])
+                ){
+                  continue;
+                }
 
                 if ($content) {
                     $content->update($contentData);
                 } else {
-                    $template->contents()->create($contentData);
+                    // Fix: reasignar
+                    $content = $template->contents()->create($contentData);
                 }
-            }
+                $idsToKeep[] = $content->id;
+                // Sync botones SOLO si vienen
+                if(!is_null($buttons)){
+                  $this->syncButtons($content, $buttons);
+                }
+        }
+
+        // $template->contents()
+        //   ->whereNotIn('id', $idsToKeep)
+        //   ->delete();
+
+        if (array_key_exists('contents', $data)){
+          $template->contents()
+          ->whereNotIn('id', $idsToKeep)
+          ->delete();
         }
 
         DB::commit();
 
-        return $template->load('contents');
+        return $template->load('contents.buttons');
 
     } catch (\Throwable $e) {
 
@@ -267,14 +299,14 @@ public function __construct(ImageService $imageService)
  *     tags={"Templates"},
  *     summary="Eliminar template",
  *     security={{"sanctum":{}}},
- *     
+ *
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
  *         required=true,
  *         @OA\Schema(type="integer")
  *     ),
- *     
+ *
  *     @OA\Response(response=200, description="Eliminado"),
  *     @OA\Response(response=404, description="No encontrado")
  * )
@@ -283,9 +315,31 @@ public function __construct(ImageService $imageService)
     public function destroy($id)
     {
       $template = Template::findOrFail($id);
-      $template->contents()->delete();
+      // $template->contents()->delete();
       $template->delete();
       return response()->json(['message' => 'Template eliminado']);
+    }
+
+    // CORE: Sync botones
+    private function syncButtons($content, array $buttonsData)
+    {
+      $existing = $content->buttons()->get()->keyBy('id');
+
+      $idsToKeep = [];
+
+      foreach ($buttonsData as $buttonData){
+        if(isset($buttonData['id']) && $existing->has($buttonData['id'])){
+          $button = $existing[$buttonData['id']];
+          $button->update($buttonData);
+          $idsToKeep[] = $button->id;
+        }else {
+          $new = $content->buttons()->create($buttonData);
+          $idsToKeep[] = $new->id;
+        }
+      }
+      $content->buttons()
+        ->whereNotIn('id', $idsToKeep)
+        ->delete();
     }
 
 }
