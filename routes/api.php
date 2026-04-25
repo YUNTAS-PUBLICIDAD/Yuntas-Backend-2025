@@ -25,6 +25,7 @@ use App\Http\Controllers\Whatsapp\WhatsappCampanaController;
 use App\Http\Controllers\Admin\MessageStatsController;
 use App\Http\Controllers\Webhooks\WebhooksController;
 use App\Http\Controllers\Deploy\DeployController;
+use App\Http\Controllers\Settings\SettingsController;
 
 // ==============================================================================
 //                              AUTENTICACIÓN
@@ -220,6 +221,14 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::post('{id}', [PopupImageController::class, 'update']);
     Route::patch('{id}', [PopupImageController::class, 'update']);
   });
+
+  Route::prefix('admin/settings')->group(function () {
+    Route::patch('/general', [SettingsController::class, 'updateGeneral']);
+    Route::patch('/contact', [SettingsController::class, 'updateContact']);
+    Route::patch('/chatbot', [SettingsController::class, 'updateChatbot']);
+  });
 });
 
 Route::get('popup', [PopupController::class, 'getPopup'])->middleware('throttle:public');
+
+Route::get('settings', [SettingsController::class, 'index']);
