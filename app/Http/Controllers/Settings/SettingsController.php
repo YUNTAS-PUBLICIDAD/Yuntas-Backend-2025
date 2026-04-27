@@ -120,6 +120,10 @@ class SettingsController extends Controller
       'auto_close_seconds' => 'sometimes|nullable|integer|min:0'
     ]);
 
+    if (!array_key_exists('auto_close_seconds', $request->all())) {
+      $validated['auto_close_seconds'] = null;
+    }
+
     $settings = $this->service->getChatbot();
 
     // if($request->hasFile('icon')){
