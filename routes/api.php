@@ -23,6 +23,7 @@ use App\Http\Controllers\Email\EmailCampanaController;
 use App\Http\Controllers\Whatsapp\WhatsappProductController;
 use App\Http\Controllers\Whatsapp\WhatsappCampanaController;
 use App\Http\Controllers\Admin\MessageStatsController;
+use App\Http\Controllers\Chatbot\ChatbotAdminController;
 use App\Http\Controllers\Webhooks\WebhooksController;
 use App\Http\Controllers\Deploy\DeployController;
 use App\Http\Controllers\Settings\SettingsController;
@@ -226,6 +227,19 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::patch('/general', [SettingsController::class, 'updateGeneral']);
     Route::patch('/contact', [SettingsController::class, 'updateContact']);
     Route::patch('/chatbot', [SettingsController::class, 'updateChatbot']);
+  });
+
+  Route::prefix('admin/chatbot/flows')->group(function () {
+
+      Route::get('/', [ChatbotAdminController::class, 'index']);
+      Route::post('/', [ChatbotAdminController::class, 'store']);
+      Route::get('/{id}', [ChatbotAdminController::class, 'show']);
+      Route::put('/{id}', [ChatbotAdminController::class, 'update']);
+      Route::delete('/{id}', [ChatbotAdminController::class, 'destroy']);
+
+      // 🔥 GRAPH EDITOR
+      Route::get('/{id}/graph', [ChatbotAdminController::class, 'getGraph']);
+      Route::post('/{id}/graph', [ChatbotAdminController::class, 'saveGraph']);
   });
 });
 
