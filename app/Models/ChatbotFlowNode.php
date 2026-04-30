@@ -18,8 +18,8 @@ class ChatbotFlowNode extends Model
 
      protected $casts = [
          'position' => 'array',
-         'metadata' => 'array',
-         'options' => 'array',
+         'metadata' => 'array', // array asociativo -> JSON objecto {}
+         'options' => 'array', // array indexado -> JSON array {}
      ];
 
      public function flow()

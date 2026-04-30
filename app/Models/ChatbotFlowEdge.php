@@ -11,7 +11,8 @@ class ChatbotFlowEdge extends Model
          'uuid',
          'from_uuid',
          'to_uuid',
-         'label'
+         'label',
+         'source_handle'
      ];
 
      public function flow()
