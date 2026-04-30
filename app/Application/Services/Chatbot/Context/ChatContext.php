@@ -11,11 +11,17 @@ class ChatContext
   public static function fromArray(?array $data): self
   {
     $ctx = new self();
-    if(!$data) return $ctx;
+    // if(!$data) return $ctx;
+    if(!$data){
+      $ctx->data = [];
+      return $ctx;
+    }
 
     $ctx->name = data_get($data, 'user.name');
     $ctx->phone = data_get($data, 'user.phone');
     $ctx->state = data_get($data, 'conversation.state', 'ready');
+
+    $ctx->data = data_get($data, 'data', []);
 
     return $ctx;
   }
@@ -29,7 +35,8 @@ class ChatContext
     ],
     'conversation' => [
       'state' => $this->state
-    ]
+    ],
+    'data' => $this->data
     ];
   }
 }

@@ -58,6 +58,56 @@ class ChatbotEngine
         return $this->send($conversation, $response);
       }
 
+      // app(FlowTriggerResolver::class)->tryStart($message, $context);
+
+      $started = app(FlowTriggerResolver::class)->tryStart($message, $context);
+
+      if($started){
+        // $flowResponse = app(FlowEngine::class)
+        // ->handle($conversation, $message, $context);
+
+        // if($flowResponse){
+        //   $this->persistContext($conversation, $context);
+
+        //   return $this->send(
+        //   $conversation,
+        //   $flowResponse['text'],
+        //   $flowResponse['metadata'] ?? null
+        //   );
+        // }
+      $flowResponses = app(FlowEngine::class)
+      ->handle($conversation, $message, $context);
+
+      if(!empty($flowResponses)){
+        $this->persistContext($conversation, $context);
+
+        foreach($flowResponses as $res){
+          $this->send(
+            $conversation,
+            $res['text'],
+            $res['metadata'] ?? null
+          );
+        }
+
+        return end($flowResponses);
+      }
+      }
+
+      // FLOW ENGINE
+      // $flowResponse = app(FlowEngine::class)
+      // ->handle($conversation, $message, $context);
+
+      // if($flowResponse){
+      //   $this->persistContext($conversation, $context);
+
+      //   return $this->send(
+      //   $conversation,
+      //   $flowResponse['text'],
+      //   $flowResponse['metadata'] ?? null
+      //   );
+      // }
+
+
       // Intent
       $response = $this->handleIntent($conversation, $message ,$context);
 
