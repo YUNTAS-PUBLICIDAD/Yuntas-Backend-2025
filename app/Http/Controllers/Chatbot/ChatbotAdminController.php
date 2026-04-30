@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatbotFlow;
 use App\Models\ChatbotFlowEdge;
 use App\Models\ChatbotFlowNode;
+use App\Models\ChatbotFlowTrigger;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -58,27 +60,90 @@ class ChatbotAdminController extends Controller
 
     public function getGraph($id)
     {
+
+        $flow = ChatbotFlow::findOrFail($id);
         $nodes = ChatbotFlowNode::where('flow_id', $id)->get();
         $edges = ChatbotFlowEdge::where('flow_id', $id)->get();
+        $triggers = ChatbotFlowTrigger::where('flow_id', $id)->get();
 
         return response()->json([
+            'name' => $flow->name,
+            'start_node_uuid' => $flow->start_node_uuid,
             'nodes' => $nodes->map(fn($n) => [
                 'id'       => $n->uuid,
                 'type'     => $n->type,
-                'position' => $n->position,
+                'position' => $this->ensurePosition($n->position),
                 'data'     => [
-                    'message'  => $n->message,
-                    'metadata' => $n->metadata,
-                    'options'  => $n->options,
+                    'type' => $n->type ?? 'message',
+                    'message'  => $n->message ?? '',
+                    'metadata' => $n->metadata ? (object) $n->metadata : (object) [],
+                    'options'  => $n->options ?? [],
                 ],
             ]),
             'edges' => $edges->map(fn($e) => [
                 'id'     => $e->uuid,
                 'source' => $e->from_uuid,
                 'target' => $e->to_uuid,
-                'label'  => $e->label,
+                'label'  => $e->label ?? '',
+                'sourceHandle' => $e->source_handle,
+            ]),
+            // Triggers ya no definen nodo (pero devolvemos por compatibilidad)
+            'triggers' => $triggers->map(fn($t) => [
+              'id' => $t->id,
+              'type' => $t->type,
+              'value' => $t->value,
+              // 'node_id' => $t->node_uuid
             ]),
         ]);
+    }
+
+    // ─────────────────────────────────────────
+        // Normaliza la posición a siempre devolver
+        // un stdClass serializable como JSON objeto.
+        //
+        // Casos cubiertos:
+        //   null / vacío              → {x:0, y:0}
+        //   array ['x'=>1, 'y'=>2]    → {x:1, y:2}
+        //   stdClass {x:1, y:2}       → {x:1, y:2}
+        //   string JSON '{"x":1}'     → {x:1, y:0}
+        // ─────────────────────────────────────────
+
+    // =====================
+    // POSITION NORMALIZER
+    // =====================
+    private function ensurePosition(mixed $raw): object
+    {
+      if(empty($raw)){
+        return (object) ['x' => 0, 'y' => 0];
+      }
+
+      // Cast PHP array (viene del model con cast 'array')
+      if(is_array($raw)){
+        return (object)[
+          'x' => (float) ($raw['x'] ?? 0),
+          'y' => (float) ($raw['y'] ?? 0),
+        ];
+      }
+
+      // stdClass (viene del model con cast 'object')
+      if(is_object($raw)){
+        return (object)[
+          'x' => (float) ($raw->x ?? 0),
+          'y' => (float) ($raw->y ?? 0)
+        ];
+      }
+
+      // String JSON como fallback
+      if(is_string($raw)){
+        $decoded = json_decode($raw, true);
+        if(is_array($decoded)) {
+          return (object)[
+            'x' => (float) ($decoded['x'] ?? 0),
+            'y' => (float) ($decoded['y'] ?? 0),
+          ];
+        }
+      }
+      return (object) ['x' => 0, 'y' => 0];
     }
 
     // =====================
@@ -87,135 +152,103 @@ class ChatbotAdminController extends Controller
 
     public function saveGraph(Request $request, $id)
     {
-        // ─────────────────────────────────────────
-        // VALIDACIÓN
-        // ─────────────────────────────────────────
-        $data = $request->validate([
-            'nodes'          => 'required|array',
-            'nodes.*.id'     => 'required|string',
-            'edges'          => 'present|array',   // present pero puede ser vacío
-            'edges.*.id'     => 'required_with:edges.*|string',
-            'edges.*.source' => 'required_with:edges.*|string',
-            'edges.*.target' => 'required_with:edges.*|string',
-        ]);
-
-        $nodes = $data['nodes'];
-        $edges = $data['edges'] ?? [];
-
-        // ─────────────────────────────────────────
-        // BUG FIX #1 (backend):
-        // Normalizamos los UUIDs entrantes antes de comparar.
-        // El frontend puede mandar IDs con prefijo "reactflow__edge-"
-        // o strings compuestos — limpiamos para evitar duplicados.
-        //
-        // Regla: si el id del edge contiene "--" lo recortamos a
-        // "edge-{source}-{target}" para tener una clave estable.
-        // ─────────────────────────────────────────
-        $edges = collect($edges)->map(function ($edge) {
-            if (
-                isset($edge['id']) &&
-                str_starts_with($edge['id'], 'reactflow__edge')
-            ) {
-                $edge['id'] = 'edge-' . ($edge['source'] ?? '') . '-' . ($edge['target'] ?? '');
-            }
-            return $edge;
-        })->unique('id')->values()->toArray();
-
-        // Colecciones de UUIDs que llegan del frontend
-        $incomingNodeUuids = collect($nodes)->pluck('id')->filter()->values();
-        $incomingEdgeUuids = collect($edges)->pluck('id')->filter()->values();
-
         DB::beginTransaction();
 
         try {
-            // ─────────────────────────────────────────
-            // PROTECCIÓN: flow debe existir
-            // ─────────────────────────────────────────
-            $flow = ChatbotFlow::where('id', $id)->firstOrFail();
+            $flow = ChatbotFlow::findOrFail($id);
 
-            // ─────────────────────────────────────────
-            // BUG FIX #1 (delete seguro):
-            // Antes, si $incomingEdgeUuids estaba vacío se
-            // saltaba el delete y no se borraban edges huérfanos.
-            // Ahora borramos SIEMPRE los que no están en la lista.
-            // Si la lista está vacía → borramos TODOS los edges del flow.
-            // ─────────────────────────────────────────
-            if ($incomingNodeUuids->isNotEmpty()) {
-                ChatbotFlowNode::where('flow_id', $id)
-                    ->whereNotIn('uuid', $incomingNodeUuids)
-                    ->delete();
-            } else {
-                // Sin nodos entrantes → borrar todo (edge case raro pero seguro)
-                ChatbotFlowNode::where('flow_id', $id)->delete();
+            $payload = $request->all();
+
+            // DEBUG (haz esto una vez)
+            logger()->info('GRAPH PAYLOAD', $payload);
+
+            $nodes = $payload['nodes'] ?? [];
+            $edges = $payload['edges'] ?? [];
+            $triggers = $payload['triggers'] ?? [];
+            $startNode = $payload['start_node_uuid'] ?? null;
+
+            // =====================
+            // VALIDACIONES SERIAS
+            // =====================
+            if(!$startNode){
+              throw new Exception('El flow debe tener un nodo inicial');
             }
 
-            if ($incomingEdgeUuids->isNotEmpty()) {
-                ChatbotFlowEdge::where('flow_id', $id)
-                    ->whereNotIn('uuid', $incomingEdgeUuids)
-                    ->delete();
-            } else {
-                // Sin edges → limpiar todos los del flow (estado válido)
-                ChatbotFlowEdge::where('flow_id', $id)->delete();
+            $nodeIds = collect($nodes)->pluck('id');
+
+            if(!$nodeIds->contains($startNode)){
+              throw new Exception('El nodo inicial no existe en el flow');
             }
 
-            // ─────────────────────────────────────────
-            // UPSERT NODES
-            // ─────────────────────────────────────────
+            // =====================
+            // UPDATE FLOW
+            // =====================
+            $flow->update([
+              'name' => $payload['name'] ?? $flow->name,
+              'start_node_uuid' => $startNode
+              // 'start_node_uuid' => $payload['start_node_uuid'] ?? null
+            ]);
+
+            // =====================
+            // RESET
+            // =====================
+            // 🔴 LIMPIAR TODO (simple y seguro)
+            ChatbotFlowNode::where('flow_id', $id)->delete();
+            ChatbotFlowEdge::where('flow_id', $id)->delete();
+            ChatbotFlowTrigger::where('flow_id', $id)->delete();
+
+            // 🟢 INSERT NODES
             foreach ($nodes as $node) {
-                if (empty($node['id'])) continue;
-
-                ChatbotFlowNode::updateOrCreate(
-                    [
-                        'uuid'    => $node['id'],
-                        'flow_id' => $id,
-                    ],
-                    [
-                        'type'     => $node['type']              ?? 'custom',
-                        'position' => $node['position']          ?? ['x' => 0, 'y' => 0],
-                        'message'  => $node['data']['message']   ?? '',
-                        'metadata' => $node['data']['metadata']  ?? [],
-                        'options'  => $node['data']['options']   ?? [],
-                    ]
-                );
+                ChatbotFlowNode::create([
+                    'uuid'    => $node['id'],
+                    'flow_id' => $id,
+                    'type'    => $node['data']['type'] ?? 'message',
+                    'position'=> $node['position'] ?? ['x'=>0,'y'=>0],
+                    'message' => $node['data']['message'] ?? '',
+                    'metadata'=> $node['data']['metadata'] ?? [],
+                    'options' => $node['data']['options'] ?? [],
+                ]);
             }
 
-            // ─────────────────────────────────────────
-            // UPSERT EDGES
-            // ─────────────────────────────────────────
+            // 🟢 INSERT EDGES
             foreach ($edges as $edge) {
-                if (empty($edge['id'])) continue;
+                ChatbotFlowEdge::create([
+                    'uuid'      => $edge['id'],
+                    'flow_id'   => $id,
+                    'from_uuid' => $edge['source'],
+                    'to_uuid'   => $edge['target'],
+                    'label'     => $edge['label'] ?? '',
+                    'source_handle' => $edge['sourceHandle'] ?? null,
+                ]);
+            }
 
-                ChatbotFlowEdge::updateOrCreate(
-                    [
-                        'uuid'    => $edge['id'],
-                        'flow_id' => $id,
-                    ],
-                    [
-                        'from_uuid' => $edge['source'] ?? null,
-                        'to_uuid'   => $edge['target'] ?? null,
-                        'label'     => $edge['label']  ?? '',
-                    ]
-                );
+            // TRIGGERS
+            foreach ($triggers as $trigger){
+              ChatbotFlowTrigger::create([
+                'flow_id' => $id,
+                'type' => $trigger['type'], // Keyword | intent | event
+                'value' => $trigger['value'], // "hola"
+                // 'node_uuid' => $trigger['node_id'] // start node
+                'node_uuid' => null
+              ]);
             }
 
             DB::commit();
 
             return response()->json([
-                'status'  => 'ok',
-                'message' => 'Graph saved successfully',
-                'stats'   => [
-                    'nodes' => count($nodes),
-                    'edges' => count($edges),
-                ],
+                'status' => 'ok',
+                'nodes'  => count($nodes),
+                'edges'  => count($edges),
+                'triggers' => count($triggers)
             ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
 
             return response()->json([
-                'status'  => 'error',
-                'message' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
+
 }
