@@ -189,6 +189,7 @@ class ImageService
     'image/jpeg',
     'image/png',
     'image/webp',
+    'image/svg+xml',
   ];
 
   private function validateMime(UploadedFile $file): void
