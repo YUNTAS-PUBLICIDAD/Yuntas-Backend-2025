@@ -22,24 +22,28 @@ class StoreTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-             'lead_source_id' => 'required|integer',
-            'name' => 'required|string|max:255',
-            'active' => 'required|boolean',
-            'contents' => 'array',
-            'contents.*.channel' => 'required|string',
-            'contents.*.subject' => 'nullable|string',
-            'contents.*.content' => 'required|string',
-            'contents.*.variables' => 'array',
-            'contents.*.image' => 'nullable|file|image',
-            'contents.*.active' => 'required|boolean',
+        'lead_source_id' => 'required|integer',
+               'name' => 'required|string|max:255',
+               'active' => 'required|boolean',
 
-            // Template Buttons
-            'contents.*.buttons' => 'array',
-            'contents.*.buttons.*.text' => 'required|string|max:255',
-            'contents.*.buttons.*.type' => 'required|string',
-            'contents.*.buttons.*.payload' => 'required|array',
-            'contents.*.buttons.*.order' => 'nullable|integer',
-            'contents.*.buttons.*.active' => 'required|boolean',
+               'contents' => 'required|array|min:1',
+
+               'contents.*.channel' => 'required|in:whatsapp,email',
+               'contents.*.subject' => 'nullable|string',
+               'contents.*.content' => 'required|string',
+               'contents.*.variables' => 'array',
+               'contents.*.variables.*' => 'string',
+               'contents.*.image' => 'nullable|file|image|mimes:webp|max:1024',
+               'contents.*.active' => 'required|boolean',
+
+               // Buttons
+               'contents.*.buttons' => 'array',
+               'contents.*.buttons.*.text' => 'required|string|max:255',
+               'contents.*.buttons.*.type' => 'required|in:url',
+               'contents.*.buttons.*.payload' => 'required|array',
+               'contents.*.buttons.*.payload.url' => 'required|url',
+               'contents.*.buttons.*.order' => 'nullable|integer',
+               'contents.*.buttons.*.active' => 'required|boolean',
         ];
     }
 }

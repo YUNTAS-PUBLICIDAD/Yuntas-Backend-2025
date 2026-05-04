@@ -3,6 +3,7 @@
 namespace App\Service\Image;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -116,6 +117,14 @@ class ImageService
     string $directory = 'images',
     string $disk = 'public'
   ): string {
+
+    Log::info('STORE IMAGE', [
+      'directory' => $directory,
+      'disk' => $disk,
+      'extension' => $file->getClientOriginalExtension(),
+      'size' => $file->getSize(),
+      'mime' => $file->getMimeType(),
+    ]);
     if (! $file->isValid()) {
       throw new \RuntimeException('Invalid uploaded file');
     }
@@ -162,6 +171,7 @@ class ImageService
 
   public function remove(string $imagePath, string $disk = 'public'): bool
   {
+
     // $relativePath = str_replace('/storage/', '', $imagePath);
     // $relativePath = ltrim(parse_url($imagePath, PHP_URL_PATH), '/storage/');
     // $relativePath = str_replace('/storage/', '', parse_url($imagePath, PHP_URL_PATH));
@@ -170,6 +180,11 @@ class ImageService
       return false;
     }
     $relativePath = str_replace('/storage/', '', $path);
+    Log::info('REMOVE IMAGE', [
+      'input' => $imagePath,
+      'parsed_path' => $relativePath,
+      'exists' => Storage::disk($disk)->exists($relativePath),
+    ]);
 
     if (! Storage::disk($disk)->exists($relativePath)) {
       return false;
