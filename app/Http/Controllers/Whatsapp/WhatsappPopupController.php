@@ -149,10 +149,19 @@ class WhatsappPopupController extends Controller
  'variables' => $variables
                   ]);
 
-                  $templateData = $this->templateService->render(
-                    $request->source_id,
-                  'whatsapp',
-                  $variables
+                  // $templateData = $this->templateService->render(
+                  //   $request->source_id,
+                  // 'whatsapp',
+                  // $variables
+                  // );
+
+                  $context = $lead->product_id ? "PRODUCTO" : "INICIO";
+
+                  $templateData = $this->templateService->renderByContext(
+                    'whatsapp',
+                    $context,
+                    $variables,
+                    $lead->product_id
                   );
 
 
@@ -182,7 +191,8 @@ class WhatsappPopupController extends Controller
                 //   ], 500);
                 // }
 
-                $mensaje = $templateData['message'];
+                // $mensaje = $templateData['message'];
+                $mensaje = $templateData['content'];
 
                 // Fallback solo si no hay imagen de producto
                 if (!$imagenUrl) {
