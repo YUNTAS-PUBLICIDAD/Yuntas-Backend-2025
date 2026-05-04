@@ -97,21 +97,20 @@ class TemplateService
 
   public function getByContext(string $channel, string $context): ?Template
   {
-      return Template::with(['variants' => function ($q) use ($channel, $context) {
-          $q->where('channel', $channel)
-            ->where('context', $context)
-            ->where('active', true);
-            // ->with(['assets', 'productAssets']);
-      }])
-      ->with(['variants' => function ($q) use ($channel, $context) {
-             $q->where('channel', $channel)
-               ->where('context', $context)
-               ->where('active', true)
-               ->with(['assets', 'productAssets']);
-         }])
-      ->where('active', true)
-      ->latest()
-      ->first();
+    return Template::where('active', true)
+        ->whereHas('variants', function ($q) use ($channel, $context) {
+            $q->where('channel', $channel)
+              ->where('context', $context)
+              ->where('active', true);
+        })
+        ->with(['variants' => function ($q) use ($channel, $context) {
+            $q->where('channel', $channel)
+              ->where('context', $context)
+              ->where('active', true)
+              ->with(['assets', 'productAssets']);
+        }])
+        ->latest()
+        ->first();
   }
 
   public function renderByContext(
@@ -151,7 +150,7 @@ class TemplateService
        }
 
        // PRIORIDAD 2 → global asset
-       if (!$imageUrl) {
+       if (!$imageUrl && $context !== "PRODUCTO") {
            $asset = $variant->assets->where('key', 'image')->first();
            if ($asset) {
                $imageUrl = asset($asset->path);
@@ -165,6 +164,11 @@ class TemplateService
            'content' => $variant->render($data),
            'subject' => $variant->subject,
            'image_url' => $imageUrl,
+           'product_assets' => $variant->productAssets->map(fn ($a) => [
+            'product_id' => $a->product_id,
+            'path' => $a->path,
+            'key' => $a->key
+           ])->values(),
        ];
   }
 
