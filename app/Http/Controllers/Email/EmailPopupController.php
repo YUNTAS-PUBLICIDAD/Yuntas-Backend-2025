@@ -79,10 +79,19 @@ class EmailPopupController extends Controller
             // if ($lead->source->name === 'Inicio') {
                 try {
                     // Mail::to($cliente['correo'])->send(new InicioMailing($cliente));
-                    $template = $this->templateService->render(
-                      $lead->source_id,
+                    // $template = $this->templateService->render(
+                    //   $lead->source_id,
+                    //   'email',
+                    //   $data
+                    // );
+
+                    $context = $lead->product_id ? "PRODUCTO": "INICIO";
+
+                    $template = $this->templateService->renderByContext(
                       'email',
-                      $data
+                      $context,
+                      $data,
+                      $lead->product_id
                     );
 
                     // Log para inspección
@@ -130,8 +139,8 @@ class EmailPopupController extends Controller
     // $html = '<img src="'.$imagenUrl.'" style="max-width:100%;"><br>' . $html;
 // }
 $html = view('emails.layouts.base', [
-  'contenido' => $template['message'],
-  'imagenUrl' => $imagenUrl,
+  'contenido' => $template['content'],
+  'imagenUrl' => $template['image_url'],
   'buttons' => $template['buttons'] ?? []
 ])->render();
 
