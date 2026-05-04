@@ -79,10 +79,19 @@ class EmailPopupController extends Controller
             // if ($lead->source->name === 'Inicio') {
                 try {
                     // Mail::to($cliente['correo'])->send(new InicioMailing($cliente));
-                    $template = $this->templateService->render(
-                      $lead->source_id,
+                    // $template = $this->templateService->render(
+                    //   $lead->source_id,
+                    //   'email',
+                    //   $data
+                    // );
+
+                    $context = $lead->product_id ? "PRODUCTO": "INICIO";
+
+                    $template = $this->templateService->renderByContext(
                       'email',
-                      $data
+                      $context,
+                      $data,
+                      $lead->product_id
                     );
 
                     // Log para inspección
@@ -91,21 +100,28 @@ class EmailPopupController extends Controller
                       'variables' => $data,
                       'template' => $template
                     ]);
-                    $imagenUrl = null;
+                    $imagenUrl = $template['image_url'] ?? null;
 
-                    // prioridad 1: producto
-                    if ($lead->product_id && $lead->product) {
+                    // // prioridad 1: producto
+                    // if ($lead->product_id && $lead->product) {
+                    //   $lead->product->loadMissing('mainImage');
+
+                    //   if ($lead->product->mainImage?->url) {
+                    //     $imagenUrl = asset($lead->product->mainImage->url);
+                    //   }
+                    // }
+
+                    // // prioridad 2: template
+                    // if (!$imagenUrl && !empty($template['image_url'])) {
+                    //   $imagenUrl = $template['image_url'];
+                    // }
+
+                    // 🔥 fallback SOLO si el service no resolvió nada
+                    if (!$imagenUrl && $lead->product) {
                       $lead->product->loadMissing('mainImage');
-
-                      if ($lead->product->mainImage?->url) {
-                        $imagenUrl = asset($lead->product->mainImage->url);
-                      }
+                      $imagenUrl = $lead->product->mainImage?->url;
                     }
 
-                    // prioridad 2: template
-                    if (!$imagenUrl && !empty($template['image_url'])) {
-                      $imagenUrl = $template['image_url'];
-                    }
                     Log::info('DEBUG IMAGEN', [
                       'image_url_template'  => $template['image_url']
                     ]);
@@ -130,7 +146,8 @@ class EmailPopupController extends Controller
     // $html = '<img src="'.$imagenUrl.'" style="max-width:100%;"><br>' . $html;
 // }
 $html = view('emails.layouts.base', [
-  'contenido' => $template['message'],
+  'contenido' => $template['content'],
+  // 'imagenUrl' => $template['image_url'],
   'imagenUrl' => $imagenUrl,
   'buttons' => $template['buttons'] ?? []
 ])->render();

@@ -23,9 +23,13 @@ use App\Http\Controllers\Email\EmailCampanaController;
 use App\Http\Controllers\Whatsapp\WhatsappProductController;
 use App\Http\Controllers\Whatsapp\WhatsappCampanaController;
 use App\Http\Controllers\Admin\MessageStatsController;
+use App\Http\Controllers\Chatbot\ChatbotAdminController;
 use App\Http\Controllers\Webhooks\WebhooksController;
 use App\Http\Controllers\Deploy\DeployController;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Template\TemplateAssetController;
+use App\Http\Controllers\Template\TemplateProductAssetController;
+use App\Http\Controllers\Template\TemplateVariantController;
 
 // ==============================================================================
 //                              AUTENTICACIÓN
@@ -211,11 +215,25 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::delete('{id}', [PopupController::class, 'destroy']);
   });
   Route::prefix('admin/templates')->group(function() {
-    Route::get('/', [TemplateController::class, 'index']);
-    Route::get('/{id}', [TemplateController::class, 'show']);
-    Route::post('/', [TemplateController::class, 'store']);
-    Route::put('/{id}', [TemplateController::class, 'update']);
-    Route::delete('/{id}', [TemplateController::class, 'destroy']);
+    // TEMPLATE CRUD
+       Route::post('/upload-image', [TemplateAssetController::class, 'store']);
+       Route::post('/product-assets/upload', [TemplateProductAssetController::class, 'upload']);
+       Route::delete('/product-assets', [TemplateProductAssetController::class, 'destroy']);
+       Route::get('/', [TemplateController::class, 'index']);
+       Route::post('/', [TemplateController::class, 'store']);
+       Route::get('/{id}', [TemplateController::class, 'show']);
+       Route::put('/{id}', [TemplateController::class, 'update']);
+       Route::delete('/{id}', [TemplateController::class, 'destroy']);
+
+
+       // =========================
+       // VARIANTS (CHILD RESOURCE)
+       // =========================
+       // Route::get('/{id}/variants', [TemplateVariantController::class, 'index']);
+       // Route::post('/{id}/variants', [TemplateVariantController::class, 'store']);
+
+       // Route::put('/variants/{variantId}', [TemplateVariantController::class, 'update']);
+       // Route::delete('/variants/{variantId}', [TemplateVariantController::class, 'destroy']);
   });
   Route::prefix('admin/popup-images')->group(function(){
     Route::post('{id}', [PopupImageController::class, 'update']);
@@ -226,6 +244,19 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
     Route::patch('/general', [SettingsController::class, 'updateGeneral']);
     Route::patch('/contact', [SettingsController::class, 'updateContact']);
     Route::patch('/chatbot', [SettingsController::class, 'updateChatbot']);
+  });
+
+  Route::prefix('admin/chatbot/flows')->group(function () {
+
+      Route::get('/', [ChatbotAdminController::class, 'index']);
+      Route::post('/', [ChatbotAdminController::class, 'store']);
+      Route::get('/{id}', [ChatbotAdminController::class, 'show']);
+      Route::put('/{id}', [ChatbotAdminController::class, 'update']);
+      Route::delete('/{id}', [ChatbotAdminController::class, 'destroy']);
+
+      // 🔥 GRAPH EDITOR
+      Route::get('/{id}/graph', [ChatbotAdminController::class, 'getGraph']);
+      Route::post('/{id}/graph', [ChatbotAdminController::class, 'saveGraph']);
   });
 });
 
