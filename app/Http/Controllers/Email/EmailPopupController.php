@@ -100,21 +100,28 @@ class EmailPopupController extends Controller
                       'variables' => $data,
                       'template' => $template
                     ]);
-                    $imagenUrl = null;
+                    $imagenUrl = $template['image_url'] ?? null;
 
-                    // prioridad 1: producto
-                    if ($lead->product_id && $lead->product) {
+                    // // prioridad 1: producto
+                    // if ($lead->product_id && $lead->product) {
+                    //   $lead->product->loadMissing('mainImage');
+
+                    //   if ($lead->product->mainImage?->url) {
+                    //     $imagenUrl = asset($lead->product->mainImage->url);
+                    //   }
+                    // }
+
+                    // // prioridad 2: template
+                    // if (!$imagenUrl && !empty($template['image_url'])) {
+                    //   $imagenUrl = $template['image_url'];
+                    // }
+
+                    // 🔥 fallback SOLO si el service no resolvió nada
+                    if (!$imagenUrl && $lead->product) {
                       $lead->product->loadMissing('mainImage');
-
-                      if ($lead->product->mainImage?->url) {
-                        $imagenUrl = asset($lead->product->mainImage->url);
-                      }
+                      $imagenUrl = $lead->product->mainImage?->url;
                     }
 
-                    // prioridad 2: template
-                    if (!$imagenUrl && !empty($template['image_url'])) {
-                      $imagenUrl = $template['image_url'];
-                    }
                     Log::info('DEBUG IMAGEN', [
                       'image_url_template'  => $template['image_url']
                     ]);
@@ -140,7 +147,8 @@ class EmailPopupController extends Controller
 // }
 $html = view('emails.layouts.base', [
   'contenido' => $template['content'],
-  'imagenUrl' => $template['image_url'],
+  // 'imagenUrl' => $template['image_url'],
+  'imagenUrl' => $imagenUrl,
   'buttons' => $template['buttons'] ?? []
 ])->render();
 
