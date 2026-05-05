@@ -14,6 +14,13 @@ class TemplateController extends Controller
           protected TemplateService $service
       ) {}
 
+      public function variables()
+      {
+        return response()->json(
+        $this->service->getAvailableVariables()
+        );
+      }
+
       public function index()
       {
           return $this->service->list();
@@ -64,6 +71,10 @@ class TemplateController extends Controller
               'variants.*.content' => 'required|string',
               'variants.*.variables' => 'array',
               'variants.*.active' => 'boolean',
+
+              // CTA
+              'variants.*.cta_text' => 'nullable|string|max:255',
+              'variants.*.cta_url' => 'nullable|url|max:500',
 
               'variants.*.assets' => 'array',
               'variants.*.assets.*.key' => 'required|string',
