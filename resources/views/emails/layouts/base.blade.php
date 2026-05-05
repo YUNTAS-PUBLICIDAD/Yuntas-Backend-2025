@@ -1,6 +1,5 @@
 @php
 $frontendUrl = 'https://yuntaspublicidad.com';
-
 @endphp
 
 <!DOCTYPE html>
@@ -21,13 +20,8 @@ $frontendUrl = 'https://yuntaspublicidad.com';
       .text {
         font-size: 14px !important;
       }
-
-      .header-text {
-        font-size: 18px !important;
-      }
     }
   </style>
-
 </head>
 
 <body style="margin:0; padding:0; background:#f4f6f9; font-family: Arial, sans-serif;">
@@ -37,69 +31,85 @@ $frontendUrl = 'https://yuntaspublicidad.com';
     <td align="center">
 
       <!-- CONTENEDOR -->
-      <table class="container" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden;">
+      <table class="container" width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff; border-radius:8px; overflow:hidden;">
 
-        <!-- HEADER -->
-        <tr>
-          <td style="background:#0b1c3f; padding:20px; text-align:center;">
-            <h1 class="header-text" style="color:#ffffff; margin:0; font-size:22px;">
-              YUNTAS PUBLICIDAD
-            </h1>
-            <p style="color:#8fd3ff; margin:5px 0 0; font-size:13px;">
-              Impulsamos tu negocio
+        <!-- TOP BAR (simula cliente email) -->
+        <!--<tr>
+          <td style="background:#f2f2f2; padding:10px 15px;">
+            <div style="display:flex; gap:6px;">
+              <div style="width:10px; height:10px; background:#ff5f57; border-radius:50%;"></div>
+              <div style="width:10px; height:10px; background:#ffbd2e; border-radius:50%;"></div>
+              <div style="width:10px; height:10px; background:#28c840; border-radius:50%;"></div>
+            </div>
+          </td>
+        </tr>-->
+        <!-- HEADER SIMPLE (branding real, no fake UI) -->
+               <tr>
+                 <td style="padding:20px; text-align:center; border-bottom:1px solid #eee;">
+                   <strong style="font-size:18px; color:#0b1c3f;">
+                     YUNTAS PUBLICIDAD
+                   </strong>
+                 </td>
+               </tr>
+
+        <!-- SUBJECT -->
+        <!--<tr>
+          <td style="padding:10px 20px; border-bottom:1px solid #eee;">
+            <p style="font-size:11px; color:#999; margin:0;">
+              De: no-reply@yuntaspublicidad.com
+            </p>
+
+            <p style="font-size:14px; font-weight:bold; margin:4px 0 0; color:#111;">
+              {{ $subject ?? 'Mensaje' }}
             </p>
           </td>
-        </tr>
+        </tr>-->
 
         <!-- IMAGEN -->
         @if ($imagenUrl)
         <tr>
-          <td style="text-align:center; background:#f9fafc;">
-            <img src="{{ $imagenUrl }}" style="width:100%; max-width:600px; display:block;">
+          <td style="text-align:center;">
+            <img src="{{ $imagenUrl }}"
+                 style="width:100%; max-width:600px; display:block;">
           </td>
         </tr>
         @endif
 
         <!-- CONTENIDO -->
         <tr>
-          <td class="padding text" style="padding:30px; color:#333; font-size:15px; line-height:1.6;">
+          <td class="padding text"
+              style="padding:24px; color:#333; font-size:14px; line-height:1.6;">
             {!! $contenido !!}
           </td>
         </tr>
 
-        @if (!empty($buttons))
+        <!-- CTA -->
+        @if (!empty($cta_url))
         <tr>
           <td align="center" style="padding:0 20px 30px;">
-            <table cellpadding="0" cellspacing="0" role="presentation">
-              <tr>
-                @foreach (collect($buttons)->where('active', true)->where('type', 'url')->sortBy('order') as $btn)
-                  <td align="center" style="padding:5px;">
-                    <a href="{{ $btn['payload']['url'] ?? '#' }}"
-                      style="background:#0b1c3f; color:#ffffff; padding:12px 20px; text-decoration:none; border-radius:5px; display:inline-block; font-size:14px;">
-                      {{ $btn['text'] ?? 'Ver más' }}
-                    </a>
-                  </td>
-                @endforeach
-              </tr>
-            </table>
+            <a href="{{ $cta_url }}"
+               target="_blank"
+               style="
+                background:#111;
+                color:#fff;
+                padding:10px 20px;
+                text-decoration:none;
+                border-radius:6px;
+                font-size:13px;
+                font-weight:600;
+                display:inline-block;
+               ">
+              {{ $cta_text ?? 'Ver más' }}
+            </a>
           </td>
         </tr>
         @endif
 
-        <!-- FOOTER -->
+        <!-- FOOTER (minimalista como preview) -->
         <tr>
-          <td style="background:#0b1c3f; padding:20px; text-align:center;">
-            <p style="color:#ffffff; font-size:12px; margin:0;">
-              © {{ date('Y') }} Yuntas Publicidad
-            </p>
-
-            <p style="color:#8fd3ff; font-size:11px; margin:6px 0;">
-              Urb. Alameda La Rivera Mz F Lt 30
-            </p>
-
-            <p style="color:#8fd3ff; font-size:11px; margin:0;">
-              +51 912 849 782
-            </p>
+          <td style="padding:15px; text-align:center; font-size:11px; color:#aaa; border-top:1px solid #f0f0f0;">
+            © {{ date('Y') }} YuntasPublicidad
           </td>
         </tr>
 
