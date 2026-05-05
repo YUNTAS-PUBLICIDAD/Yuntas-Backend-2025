@@ -46,3 +46,6 @@ composer.lock
 # Testing
 .phpunit.result.cache
 coverage/
+
+/storage/app/public/*
+!/storage/app/public/.gitignore

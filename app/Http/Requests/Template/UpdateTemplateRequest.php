@@ -22,26 +22,33 @@ class UpdateTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lead_source_id' => 'sometimes|integer',
-            'name' => 'sometimes|string|max:255',
-            'active' => 'sometimes|boolean',
-            'contents' => 'sometimes|array',
-            'contents.*.id' => 'sometimes|integer|exists:template_contents,id',
-            'contents.*.channel' => 'sometimes|string',
-            'contents.*.subject' => 'sometimes|string|nullable',
-            'contents.*.content' => 'sometimes|string',
-            'contents.*.variables' => 'sometimes|array',
-            'contents.*.image' => 'sometimes|file|image',
-            'contents.*.active' => 'sometimes|boolean',
+        'lead_source_id' => 'sometimes|integer',
+               'name' => 'sometimes|string|max:255',
+               'active' => 'sometimes|boolean',
 
-            // Template buttons
-            'contents.*.buttons' => 'sometimes|array',
-            'contents.*.buttons.*.id' => 'sometimes|integer|exists:template_buttons,id',
-            'contents.*.buttons.*.text' => 'sometimes|string|max:255',
-            'contents.*.buttons.*.type' => 'sometimes|string',
-            'contents.*.buttons.*.payload' => 'sometimes|array',
-            'contents.*.buttons.*.order' => 'sometimes|integer',
-            'contents.*.buttons.*.active' => 'sometimes|boolean',
+               'contents' => 'required|array|min:1',
+
+               'contents.*.id' => 'nullable|integer|exists:template_contents,id',
+
+               'contents.*.channel' => 'required_with:contents.*.content|in:whatsapp,email',
+               'contents.*.subject' => 'nullable|string',
+               'contents.*.content' => 'required|string',
+
+               'contents.*.variables' => 'array',
+               'contents.*.variables.*' => 'string',
+
+               'contents.*.image' => 'nullable|file|image|mimes:webp|max:1024',
+               'contents.*.active' => 'required|boolean',
+
+               // Buttons
+               'contents.*.buttons' => 'array',
+               'contents.*.buttons.*.id' => 'nullable|integer|exists:template_buttons,id',
+               'contents.*.buttons.*.text' => 'required|string|max:255',
+               'contents.*.buttons.*.type' => 'required|in:url',
+               'contents.*.buttons.*.payload' => 'required|array',
+               'contents.*.buttons.*.payload.url' => 'required|url',
+               'contents.*.buttons.*.order' => 'nullable|integer',
+               'contents.*.buttons.*.active' => 'required|boolean',
         ];
     }
 }
