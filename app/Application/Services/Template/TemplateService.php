@@ -53,15 +53,17 @@ class TemplateService
     ];
   }
 
-  public function getAvailableVariables(?Lead $lead = null): array
+  public function getAvailableVariables(): array
   {
 
-    $preview = $lead ? TemplateVariableBuilder::forLead($lead) : TemplateVariableBuilder::forLead(new Lead());
+    // $preview = $lead ? TemplateVariableBuilder::forLead($lead) : TemplateVariableBuilder::forLead(new Lead());
 
-    return [
-      'variables' => array_keys($preview),
-      'preview' => $preview
-    ];
+    return TemplateVariableBuilder::schema();
+
+    // return [
+    //   'variables' => array_keys($preview),
+    //   'preview' => $preview
+    // ];
   }
 
   private function validateVariables($content, array $data):array
@@ -164,6 +166,8 @@ class TemplateService
            'content' => $variant->render($data),
            'subject' => $variant->subject,
            'image_url' => $imageUrl,
+           'cta_text' => $variant->cta_text,
+           'cta_url' => $variant->cta_url,
            'product_assets' => $variant->productAssets->map(fn ($a) => [
             'product_id' => $a->product_id,
             'path' => $a->path,
@@ -206,6 +210,8 @@ class TemplateService
                         'subject' => $variantData['subject'] ?? null,
                         'content' => $variantData['content'],
                         'variables' => $variantData['variables'] ?? [],
+                        'cta_text' => $variantData['cta_text'] ?? null,
+                        'cta_url' => $variantData['cta_url'] ?? null,
                         'active' => $variantData['active'] ?? true,
                     ]);
 
