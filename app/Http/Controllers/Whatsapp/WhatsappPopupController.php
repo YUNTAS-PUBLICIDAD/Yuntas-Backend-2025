@@ -87,20 +87,20 @@ class WhatsappPopupController extends Controller
 
             // Si es detalle de producto, agregar variables y obtener imagen
             // LÓGICA DE PRODUCTO
-            $imagenUrl = null;
+            // $imagenUrl = null;
 
-            // CONTEXTO: PRODUCTO DETALLE
-            if ($lead->product_id) {
-              // $imagenUrl = $lead->product;
-              // ->where('slot_id', 5) // Slot de imagen principal
-              // ->first()?->url;
-              $product = $lead->product;
-              if (!$product) {
-               return response()->json([
-                'success' => false,
-                'message' => 'Producto no encotrado'
-               ], 404);
-              }
+            // // CONTEXTO: PRODUCTO DETALLE
+            // if ($lead->product_id) {
+            //   // $imagenUrl = $lead->product;
+            //   // ->where('slot_id', 5) // Slot de imagen principal
+            //   // ->first()?->url;
+            //   $product = $lead->product;
+            //   if (!$product) {
+            //    return response()->json([
+            //     'success' => false,
+            //     'message' => 'Producto no encotrado'
+            //    ], 404);
+            //   }
 
               // variables adicionales
               // $variables = array_merge($variables, [
@@ -131,9 +131,9 @@ class WhatsappPopupController extends Controller
                 // $product->loadMissing('images');
                 // $imagen = $product->images->firstWhere('slot_id', 5);
                 // $imagenUrl = $imagen?->url;
-                $product->loadMissing('mainImage');
-                $imagenUrl = $product->mainImage?->url;
-            }
+                // $product->loadMissing('mainImage');
+                // $imagenUrl = $product->mainImage?->url;
+            // }
                 // Render Template
                 try {
 
@@ -149,11 +149,28 @@ class WhatsappPopupController extends Controller
  'variables' => $variables
                   ]);
 
-                  $templateData = $this->templateService->render(
-                    $request->source_id,
-                  'whatsapp',
-                  $variables
+                  // $templateData = $this->templateService->render(
+                  //   $request->source_id,
+                  // 'whatsapp',
+                  // $variables
+                  // );
+
+                  $context = $lead->product_id ? "PRODUCTO" : "INICIO";
+
+                  $templateData = $this->templateService->renderByContext(
+                    'whatsapp',
+                    $context,
+                    $variables,
+                    $lead->product_id
                   );
+
+                  $imagenUrl = $templateData['image_url'] ?? null;
+
+                  // fallback SOLO si el servicio no resolvió nada
+                  if(!$imagenUrl && $lead->product){
+                    $lead->product->loadMissing('mainImage');
+                    $imagenUrl = $lead->product->maiImage?->url;
+                  }
 
 
                   Log::info('Template renderizado correctamente', [
@@ -182,12 +199,13 @@ class WhatsappPopupController extends Controller
                 //   ], 500);
                 // }
 
-                $mensaje = $templateData['message'];
+                // $mensaje = $templateData['message'];
+                $mensaje = $templateData['content'];
 
                 // Fallback solo si no hay imagen de producto
-                if (!$imagenUrl) {
-                  $imagenUrl = $templateData['image_url'];
-                }
+                // if (!$imagenUrl) {
+                //   $imagenUrl = $templateData['image_url'];
+                // }
 
         // Enviar mensaje al lead
         // $resultado = $this->enviarWhatsappALead(
