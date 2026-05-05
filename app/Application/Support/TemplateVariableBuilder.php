@@ -53,4 +53,28 @@ class TemplateVariableBuilder
     'hora' => now('America/Lima')->format('H:i'),
   ];
   }
+
+  public static function schema(): array
+  {
+    return [
+      'variables' => [
+        'nombre',
+        'email',
+        'telefono',
+        'producto_nombre',
+        'descripcion',
+        'fecha',
+        'hora'
+      ],
+      'preview' => [
+      'nombre' => 'Juan Pérez',
+      'email' => 'juan@email.com',
+      'telefono' => '999999999',
+      'producto_nombre' => 'Proyecto holografico',
+      'descripcion' => 'Los proyectores holográficos 3D, también conocidos como ventiladores holográficos, proyectan imágenes tridimensionales',
+      'fecha' => now('America/Lima')->format('d/m/Y'),
+      'hora' => now('America/Lima')->format('H:i'),
+      ]
+    ];
+  }
 }

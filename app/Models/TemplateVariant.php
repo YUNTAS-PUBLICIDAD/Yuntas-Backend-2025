@@ -15,6 +15,8 @@ class TemplateVariant extends Model
      'context',
      'subject',
      'content',
+     'cta_text',
+     'cta_url',
      'variables',
      'active'
     ];

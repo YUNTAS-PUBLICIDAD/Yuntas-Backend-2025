@@ -149,7 +149,9 @@ $html = view('emails.layouts.base', [
   'contenido' => $template['content'],
   // 'imagenUrl' => $template['image_url'],
   'imagenUrl' => $imagenUrl,
-  'buttons' => $template['buttons'] ?? []
+  'cta_text' => $template['cta_text'] ?? null,
+  'cta_url' => $template['cta_url'] ?? null
+  // 'buttons' => $template['buttons'] ?? []
 ])->render();
 
                     Mail::send([], [], function ($message) use ($template, $lead, $html){
