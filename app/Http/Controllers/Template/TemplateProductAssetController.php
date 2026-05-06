@@ -39,34 +39,60 @@ class TemplateProductAssetController extends Controller
 
   public function destroy(Request $request)
   {
-    $data = $request->validate([
-    'product_id' => 'required|integer',
-    'variant_id' => 'required|integer',
-    'key' => 'required|string',
-    ]);
+ //    $data = $request->validate([
+ //    'product_id' => 'required|integer',
+ //    'variant_id' => 'required|integer',
+ //    'key' => 'required|string',
+ //    ]);
 
- $asset =  ProductTemplateAsset::where([
-    'product_id' => $data['product_id'],
-    'template_variant_id' => $data['variant_id'],
-    'key' => $data['key'],
-    ])->first();
+ // $asset =  ProductTemplateAsset::where([
+ //    'product_id' => $data['product_id'],
+ //    'template_variant_id' => $data['variant_id'],
+ //    'key' => $data['key'],
+ //    ])->first();
 
-    if(!$asset){
-      return response()->json(['message' => 'Not found'], 404);
-    }
-    // Eliminar archivo fisico
-   $deleted = $this->imageService->remove($asset->path);
+ //    if(!$asset){
+ //      return response()->json(['message' => 'Not found'], 404);
+ //    }
+ //    // Eliminar archivo fisico
+ //   $deleted = $this->imageService->remove($asset->path);
 
-   Log::info('DELETE PRODUCT TEMPLATE ASSET', [
-    'path' => $asset->path,
-    'file_deleted' => $deleted
-   ]);
+ //   Log::info('DELETE PRODUCT TEMPLATE ASSET', [
+ //    'path' => $asset->path,
+ //    'file_deleted' => $deleted
+ //   ]);
 
-    // Eliminar registro DB
-    $asset->delete();
+ //    // Eliminar registro DB
+ //    $asset->delete();
 
-    return response()->json([
-      'message' => 'deleted'
-    ]);
+ //    return response()->json([
+ //      'message' => 'deleted'
+ //    ]);
+ //  }
+
+ $data = $request->validate([
+  'path' => 'required|string'
+ ]);
+
+ // Intentar encontrar en DB
+ $asset = ProductTemplateAsset::where('path', $data['path'])->first();
+
+ // Eliminar archivo físico siempre
+ $deleted = $this->imageService->remove($data['path']);
+
+ Log::info('DELETE PRODUCT TEMPLATE ASSET', [
+  'path' => $data['path'],
+  'db_found' => (bool) $asset,
+  'file_deleted' => $deleted
+ ]);
+
+ // Si existe en DB, eliminar registro
+ if($asset){
+  $asset->delete();
+ }
+
+ return response()->json([
+    'message' => 'deleted'
+ ]);
   }
 }
