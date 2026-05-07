@@ -32,13 +32,20 @@ Log::info('Con conversación resuelta', [
 ]);
 
       // Ejecutar motor
-      app(ChatbotEngine::class)->handleMessage($conversation, $request->message);
+   $newMessages =  app(ChatbotEngine::class)->handleMessage($conversation, $request->message);
 
       // Devolver últimos mensajes
       return response()->json([
         // 'conversation_id' => $conversation->id,
         'conversation_id' => $conversation->uuid,
-        'messages' => $conversation->messages()->latest()->take(8)->get()->reverse()->values()]);
+        // 'messages' => $conversation->messages()->latest()->take(8)->get()->reverse()->values()]);
+        // 'messages' => $conversation->messages()->orderBy('id', 'desc')
+        'messages' => $newMessages, ]);
+        // ->take(8)
+        // ->get()
+        // ->sortBy('id')
+        // ->values()
+        // ]);
     }
 
     protected function resolveConversation($request)
