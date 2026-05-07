@@ -32,6 +32,8 @@ class ChatbotEngine
   public function handleMessage($conversation, string $message, string $channel = 'web')
   {
 
+    $sentMessages = [];
+
     $this->cleanupIfNeeded();
 
     $this->storeMessage($conversation, $message);
@@ -55,43 +57,56 @@ class ChatbotEngine
 
       if($response){
         $this->persistContext($conversation, $context);
-        return $this->send($conversation, $response);
+        // return $this->send($conversation, $response);
+        $sentMessages[] = $this->send(
+          $conversation,
+          $response
+        );
+
+        return $sentMessages;
       }
 
-      // app(FlowTriggerResolver::class)->tryStart($message, $context);
+      // Intentar iniciar flow
+      app(FlowTriggerResolver::class)->tryStart($message, $context);
 
-      $started = app(FlowTriggerResolver::class)->tryStart($message, $context);
+      // Si existe flow activo
+      if(data_get($context->data, 'flow')){
+        $flowResponses = app(FlowEngine::class)
+        ->handle($conversation, $message, $context);
 
-      if($started){
-        // $flowResponse = app(FlowEngine::class)
-        // ->handle($conversation, $message, $context);
+        if(!empty($flowResponses)){
+          $this->persistContext($conversation, $context);
 
-        // if($flowResponse){
-        //   $this->persistContext($conversation, $context);
-
-        //   return $this->send(
-        //   $conversation,
-        //   $flowResponse['text'],
-        //   $flowResponse['metadata'] ?? null
-        //   );
-        // }
-      $flowResponses = app(FlowEngine::class)
-      ->handle($conversation, $message, $context);
-
-      if(!empty($flowResponses)){
-        $this->persistContext($conversation, $context);
-
-        foreach($flowResponses as $res){
-          $this->send(
+          foreach($flowResponses as $res){
+            $sentMessages[] = $this->send(
             $conversation,
             $res['text'],
             $res['metadata'] ?? null
-          );
+            );
+          }
+          return $sentMessages;
         }
+      }
 
-        return end($flowResponses);
-      }
-      }
+      // $started = app(FlowTriggerResolver::class)->tryStart($message, $context);
+
+      // if($started){
+      // $flowResponses = app(FlowEngine::class)
+      // ->handle($conversation, $message, $context);
+
+      // if(!empty($flowResponses)){
+      //   $this->persistContext($conversation, $context);
+
+      //   foreach($flowResponses as $res){
+      //     $sentMessages[] = $this->send(
+      //     $conversation,
+      //     $res['text'],
+      //     $res['metadata'] ?? null
+      //     );
+      //   }
+      //   return $sentMessages;
+      // }
+      // }
 
       // FLOW ENGINE
       // $flowResponse = app(FlowEngine::class)
@@ -124,11 +139,12 @@ class ChatbotEngine
 
     // return $this->send($conversation, $formatted);
     // $this->send($conversation, $formatted['text']);
-    $this->send(
+    $sentMessages[] = $this->send(
     $conversation,
     $formatted['text'],
     $formatted['metadata'] ?? null
     );
+    return $sentMessages;
   }
 
   protected function handleIntent($conversation, $message, $context)
@@ -199,7 +215,7 @@ class ChatbotEngine
   $metadata = null
   )
   {
-    $conversation->messages()->create([
+    $message = $conversation->messages()->create([
     'message_text' => $text,
     'sender' => 'bot',
     'metadata' => $metadata
@@ -209,10 +225,11 @@ class ChatbotEngine
     $this->pruneMessages($conversation);
 
     // return $text;
-    return [
-      'text' => is_array($text) ? $text['text'] : $text,
-      'metadata' => $metadata
-    ];
+    // return [
+    //   'text' => is_array($text) ? $text['text'] : $text,
+    //   'metadata' => $metadata
+    // ];
+    return $message;
   }
 
   protected function persistContext($conversation, $context)
