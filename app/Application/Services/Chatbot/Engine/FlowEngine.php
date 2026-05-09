@@ -449,19 +449,27 @@ class FlowEngine
             }
         }
 
-        Log::warning('FLOW: no option matched');
+        // Log::warning('FLOW: no option matched');
 
         // 🚨 CLAVE:
         // devolver null para delegar al intent engine
         // return null;
 
+        // return [
+        // 'text' => 'No entendí esa opción.',
+        //     'metadata' => [
+        //         'type' => 'options',
+        //         'options' => $node['options']
+        //     ],
+        //     'next' => $node['id']
+        // ];
+
+        Log::warning('FLOW: option without edge');
+
         return [
-        'text' => 'No entendí esa opción.',
-            'metadata' => [
-                'type' => 'options',
-                'options' => $node['options']
-            ],
-            'next' => $node['id']
+            'text' => null,
+            'metadata' => null,
+            'next' => null
         ];
     }
 
