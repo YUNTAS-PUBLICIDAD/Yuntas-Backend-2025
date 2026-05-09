@@ -414,40 +414,104 @@ class ProductService
     {
       $cacheKey = 'chatbot_search_' . md5($query);
 
-      return Cache::remember($cacheKey, 60, function () use ($query){
-      $words = collect(explode(' ', strtolower($query)))
-          ->filter(fn($w) => strlen($w) > 2)
-          ->values();
+      return Cache::remember($cacheKey, 60, function () use ($query) {
 
-          if($words->isEmpty()){
-            return collect();
-          }
+             $query = $this->normalizeText(trim($query));
 
-          $products = Product::query()
-            ->with(['images.slot'])
-            ->where(function ($q) use ($words, $query) {
-              // Match completo primero (mas relevante)
-              $q->where('name', 'like', "%{$query}");
-              foreach($words as $word){
-                $q->orWhere('name', 'like', "%{$word}%");
-              }
-            })
-            ->orderByDesc('updated_at') // Mejora relevancia
-            ->limit(3)
-            ->get();
+             $words = collect(explode(' ', $query))
+                 ->filter(fn ($w) => strlen($w) > 2)
+                 ->values();
 
-            return $products->map(function ($product) {
-              $image = $product->images->firstWhere('slot.name', 'List');
+             if ($words->isEmpty()) {
+                 return collect();
+             }
 
-              return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'slug' => $product->slug,
-                'price' => $product->price,
-                'image' => $image?->url
-              ];
-            });
-      });
+             $products = Product::query()
+                 ->with(['images.slot'])
+                 ->get()
+                 ->map(function ($product) use ($query, $words) {
+
+                     $name = $this->normalizeText($product->name);
+
+                     $score = 0;
+
+                     // Match exacto completo
+                     if ($name === $query) {
+                         $score += 100;
+                     }
+
+                     // Contiene frase completa
+                     if (str_contains($name, $query)) {
+                         $score += 50;
+                     }
+
+                     // Match por palabras ponderado
+                     foreach ($words as $word) {
+
+                         // Exact match palabra
+                         if ($name === $word) {
+                             $score += 80;
+                             continue;
+                         }
+
+                         // Empieza por
+                         if (str_starts_with($name, $word)) {
+                             $score += 30;
+                         }
+
+                         // Contiene
+                         if (str_contains($name, $word)) {
+                             $score += 10;
+                         }
+                     }
+
+                     return [
+                         'score' => $score,
+                         'product' => $product
+                     ];
+                 })
+
+                 // Solo relevantes
+                 ->filter(fn ($item) => $item['score'] > 0)
+
+                 // Mejor score primero
+                 ->sortByDesc('score')
+
+                 // Solo el mejor
+                 ->take(1);
+
+             return $products->map(function ($item) {
+
+                 $product = $item['product'];
+
+                 $image = $product->images
+                     ->firstWhere('slot.name', 'List');
+
+                 return [
+                     'id' => $product->id,
+                     'name' => $product->name,
+                     'slug' => $product->slug,
+                     'price' => $product->price,
+                     'image' => $image?->url
+                 ];
+             })->values();
+         });
+    }
+
+    private function normalizeText(string $text): string
+    {
+      $text = mb_strtolower($text);
+
+      $replace = [
+             'á' => 'a',
+             'é' => 'e',
+             'í' => 'i',
+             'ó' => 'o',
+             'ú' => 'u',
+             'ñ' => 'n',
+         ];
+
+         return strtr($text, $replace);
     }
 
     public function getFeaturedForChatbot()
