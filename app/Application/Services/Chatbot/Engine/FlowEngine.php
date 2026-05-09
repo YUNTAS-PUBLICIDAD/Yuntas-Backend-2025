@@ -2,6 +2,8 @@
 
 namespace App\Application\Services\Chatbot\Engine;
 
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -216,6 +218,7 @@ class FlowEngine
                 'id' => $n->uuid,
                 'type' => $n->type,
                 'message' => $n->message,
+                'metadata' => $n->metadata ? json_decode($n->metadata, true) : [],
                 'options' => $n->options
                     ? json_decode($n->options, true)
                     : []
@@ -248,6 +251,7 @@ class FlowEngine
             'id' => $node['id'],
             'type' => $node['type'] ?? 'message',
             'message' => $node['message'] ?? '',
+            'metadata' => $node['metadata'] ?? [],
             'options' => $node['options'] ?? []
         ];
     }
@@ -315,6 +319,12 @@ class FlowEngine
                 //     'metadata' => null,
                 //     'next' => $this->nextFromEdge($node['id'])
                 // ];
+
+            case 'catalog':
+              return $this->resolveCatalog(
+                $node,
+                $message
+              );
 
             default:
 
@@ -473,10 +483,70 @@ class FlowEngine
         ];
     }
 
+    protected function resolveCatalog($node, $message)
+    {
+      $metadata = $node['metadata'] ?? [];
+
+          $categoryId = $metadata['category_id'] ?? null;
+
+          // ─────────────────────
+          // VALIDACIÓN
+          // ─────────────────────
+          if (!$categoryId) {
+
+              return [
+                  'text' => 'Categoría no configurada.',
+                  'metadata' => null,
+                  'next' => null
+              ];
+          }
+
+          // ─────────────────────
+          // PRODUCTOS DIRECTOS
+          // ─────────────────────
+          $products = Product::query()
+              ->whereHas('categories', function ($q) use ($categoryId) {
+                  $q->where('categories.id', $categoryId);
+              })
+              ->take(6)
+              ->get();
+
+          if ($products->isEmpty()) {
+
+              return [
+                  'text' => 'No encontré productos en esta categoría.',
+                  'metadata' => null,
+                  'next' => null
+              ];
+          }
+
+          return [
+              'text' => $node['message'],
+
+              'metadata' => [
+                  'type' => 'products',
+
+                  'products' => $products
+                      ->map(fn ($p) => [
+                          'id' => $p->id,
+                          'name' => $p->name,
+                          'slug' => $p->slug,
+                          'price' => $p->price,
+                          'image' => $p->image
+                      ])
+                      ->values()
+                      ->toArray()
+              ],
+
+              'next' => null
+          ];
+    }
+
     protected function isInteractiveNode($node)
     {
       return in_array($node['type'], [
-        'menu'
+        'menu',
+        // 'catalog'
       ]);
     }
 
