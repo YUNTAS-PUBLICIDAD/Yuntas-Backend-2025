@@ -17,7 +17,8 @@ class ResponseFormatter
   {
    return [
     'text' => $text,
-    'metadata' => $metadata
+    // 'metadata' => $metadata
+    'metadata' => !empty($metadata) ? $metadata : null
    ];
   }
 
