@@ -16,7 +16,8 @@ class ActionExecutor
     ->merge($answer->actions)
     ->sortBy('pivot.priority');
 
-    $metadata = [];
+    // $metadata = [];
+    $metadata = null;
 
     foreach ($actions as $action){
       if(!app(ConditionEvaluator::class)->evaluate($action, $conversation, $message)){
@@ -25,7 +26,8 @@ class ActionExecutor
       match($action->action_type){
         'update_context' => $this->update($action, $context, $message),
         'call_n8n' => $this->callN8N($action, $conversation),
-        'send_metadata' => $metadata[] = $action->parameters,
+        // 'send_metadata' => $metadata[] = $action->parameters,
+        'send_metadata' => ($metadata = $action->parameters),
         default => null,
       };
     }

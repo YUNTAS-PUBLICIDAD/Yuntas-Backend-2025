@@ -10,7 +10,7 @@ use App\Application\Services\Chatbot\Intent\IntentMatcher;
 use App\Application\Services\Chatbot\States\StateResolver;
 use App\Models\ChatbotConversation;
 use App\Application\Services\Product\ProductService;
-
+use Illuminate\Support\Facades\Log;
 
 // INPUT
 //  ↓
@@ -40,12 +40,30 @@ class ChatbotEngine
 
     $context = ChatContext::fromArray($conversation->context);
 
+    Log::info('CHATBOT: context loaded', [
+    'context' => $context->toArray()
+    ]);
+
     // Interceptores
     $interception = app(Pipeline::class)
       ->processInterceptors($conversation, $message, $context);
 
       if($interception->stop){
-        return $this->send($conversation, $interception->response, $interception->metadata ?? null);
+        // return $this->send($conversation, $interception->response, $interception->metadata ?? null);
+        $formatted = app(ResponseFormatter::class)
+        ->format($interception->response, !empty($interception->metadata) ? $interception->metadata : null, $channel);
+
+        Log::info('CHATBOT interceptor formatted', [
+          'formatted' => $formatted
+        ]);
+
+        $sentMessages[] = $this->send(
+          $conversation,
+          $formatted['text'],
+          $formatted['metadata'] ?? null
+        );
+
+        return $sentMessages;
       }
 
       $message = $interception->message;
@@ -69,10 +87,18 @@ class ChatbotEngine
       // Intentar iniciar flow
       app(FlowTriggerResolver::class)->tryStart($message, $context);
 
+      Log::info('CHATBOT: after trigger resolver', [
+        'flow' => data_get($context->data, 'flow')
+      ]);
+
       // Si existe flow activo
       if(data_get($context->data, 'flow')){
+        Log::info('CHATBOT: entering flow engine');
         $flowResponses = app(FlowEngine::class)
         ->handle($conversation, $message, $context);
+        Log::info('CHATBOT: flow responses', [
+          'responses' => $flowResponses
+        ]);
 
         if(!empty($flowResponses)){
           $this->persistContext($conversation, $context);
@@ -123,8 +149,14 @@ class ChatbotEngine
       // }
 
 
+      Log::info('CHATBOT: entering intent engine', [
+        'message' => $message
+      ]);
       // Intent
       $response = $this->handleIntent($conversation, $message ,$context);
+      Log::info('CHATBOT: raw intent response', [
+        'response' => $response
+      ]);
 
       $this->persistContext($conversation, $context);
 
@@ -136,6 +168,15 @@ class ChatbotEngine
       // );
       $formatted = app(ResponseFormatter::class)
         ->format($response['text'], $response['metadata'] ?? null, $channel);
+
+        Log::info('CHATBOT: formatted response', [
+          'formatted' => $formatted
+        ]);
+
+        Log::info('CHATBOT: sending response', [
+            'text' => $formatted['text'] ?? null,
+            'metadata' => $formatted['metadata'] ?? null
+        ]);
 
     // return $this->send($conversation, $formatted);
     // $this->send($conversation, $formatted['text']);
@@ -149,7 +190,13 @@ class ChatbotEngine
 
   protected function handleIntent($conversation, $message, $context)
   {
+    Log::info('INTENT: matching', [
+      'message' => $message
+    ]);
     $intent = app(IntentMatcher::class)->match($message);
+    Log::info('INTENT: result', [
+      'intent' => $intent?->id
+    ]);
 
     if(!$intent){
 
@@ -158,7 +205,7 @@ class ChatbotEngine
 
      if($products->isNotEmpty()){
        return [
-         'text' => 'Tal vez esto te sirva 👇',
+         'text' => 'Encontré un producto relacionado con lo que buscas 👇',
          'metadata' => [
           'type' => 'products',
           'products' => $products->values()
@@ -168,7 +215,7 @@ class ChatbotEngine
 
       // return 'No entendí, ¿puedes reformular?';
       return [
-        'text' => 'No entendí, ¿puedes reformular?',
+        'text' => 'Puedo ayudarte con productos LED, letreros, neón, pantallas y cotizaciones. ¿Qué necesitas exactamente?',
         'metadata' => null
       ];
     }
@@ -196,7 +243,8 @@ class ChatbotEngine
     // return $this->parse($answer->answer_text, $context);
     return [
     'text' => $this->parse($answer->answer_text, $context),
-    'metadata' => $metadata
+    // 'metadata' => $metadata
+    'metadata' => !empty($metadata) ? $metadata : null
     ];
   }
 
