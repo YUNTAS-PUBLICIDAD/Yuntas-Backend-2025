@@ -7,8 +7,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Application\Services\CRM\LeadService;
 use App\Application\DTOs\CRM\LeadDTO;
-use App\Http\Requests\CRM\StoreLeadRequest; 
-use App\Http\Requests\CRM\UpdateLeadRequest; 
+use App\Application\Services\Lead\LeadCaptureService;
+use App\Http\Requests\CRM\StoreLeadRequest;
+use App\Http\Requests\CRM\UpdateLeadRequest;
 use App\Models\EmailMessage;
 use App\Models\WhatsappMessage;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 class LeadController extends Controller
 {
     public function __construct(
-        private LeadService $leadService
+        private LeadService $leadService,
+        private LeadCaptureService $leadCaptureService
     ) {}
 
     /**
@@ -53,7 +55,7 @@ class LeadController extends Controller
         });
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'data' => $leadsWithStats,
             'totals' => $this->calculateGlobalTotals(),
         ]);
@@ -201,6 +203,26 @@ class LeadController extends Controller
                 ],
             ],
         ];
+    }
+
+    public function capture(
+    StoreLeadRequest $request
+    ): JsonResponse{
+      try {
+      $lead = $this->leadCaptureService
+      ->capture($request->validated());
+
+      return response()->json([
+        'success' => true,
+        'message' => 'Lead capturado correctamente.',
+        'data' => $lead,
+      ], 201);
+      }catch(\Exception $e){
+        return response()->json([
+          'success' => false,
+          'message' => $e->getMessage()
+        ], 500);
+      }
     }
 
 }
