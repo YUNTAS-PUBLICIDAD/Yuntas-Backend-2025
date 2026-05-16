@@ -1,5 +1,6 @@
 <?php
 
+use App\Application\Services\Automation\AutomationRunnerService;
 use App\Models\ChatbotConversation;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -11,6 +12,10 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Ejecutar en desarrollo php artisan schedule:work
+// Schedule::call(function () {
+//   ChatbotConversation::where('updated_at', '<', now()->subDay())->delete();
+// })->hourly();
+
 Schedule::call(function () {
-  ChatbotConversation::where('updated_at', '<', now()->subDay())->delete();
-})->hourly();
+  app(AutomationRunnerService::class)->runPending();
+})->everyMinute();
