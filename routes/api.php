@@ -27,6 +27,7 @@ use App\Http\Controllers\Chatbot\ChatbotAdminController;
 use App\Http\Controllers\Webhooks\WebhooksController;
 use App\Http\Controllers\Deploy\DeployController;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Template\ProductOverrideAssetController;
 use App\Http\Controllers\Template\TemplateAssetController;
 use App\Http\Controllers\Template\TemplateProductAssetController;
 use App\Http\Controllers\Template\TemplateVariantController;
@@ -221,6 +222,10 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
        Route::post('/upload-image', [TemplateAssetController::class, 'store']);
        Route::post('/product-assets/upload', [TemplateProductAssetController::class, 'upload']);
        Route::delete('/product-assets', [TemplateProductAssetController::class, 'destroy']);
+       Route::post(
+          '/product-overrides/upload',
+          [ProductOverrideAssetController::class, 'store']
+       );
        Route::get('/', [TemplateController::class, 'index']);
        Route::post('/', [TemplateController::class, 'store']);
        Route::get('/{id}', [TemplateController::class, 'show']);
@@ -251,6 +256,8 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
       Route::post('/{id}/graph', [ChatbotAdminController::class, 'saveGraph']);
   });
 });
+
+Route::post('/leads/capture', [LeadController::class, 'capture']);
 
 Route::get('popup', [PopupController::class, 'getPopup'])->middleware('throttle:public');
 

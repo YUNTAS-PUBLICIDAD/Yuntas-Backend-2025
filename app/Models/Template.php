@@ -3,36 +3,33 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Template extends Model
 {
 protected $fillable = [
   // 'lead_source_id',
   'name',
+  'context',
   'active',
 ];
 
-// public function leadSource()
+
+// public function variants()
 // {
-//   return $this->belongsTo(LeadSource::class);
+//   return $this->hasMany(TemplateVariant::class);
 // }
 
-// public function contents()
-// {
-//   return $this->hasMany(TemplateContent::class);
-// }
-
-// Helper útil
-// public function getContentByChannel($channel)
-// {
-//   return $this->contents()
-//   ->where('channel', $channel)
-//   ->where('active', true)
-//   ->first();
-// }
-
-public function variants()
+public function steps(): HasMany
 {
-  return $this->hasMany(TemplateVariant::class);
+  return $this->hasMany(TemplateStep::class)
+  ->orderBy('step');
+}
+
+public function executions(): HasMany
+{
+  return $this->hasMany(
+  AutomationExecution::class
+  );
 }
 }
