@@ -232,56 +232,56 @@ class DatabaseSeeder extends Seeder
         // =========================
         // 🟢 TEMPLATE: PRODUCTOS
         // =========================
-        $templateProductos = Template::updateOrCreate(
-            ['lead_source_id' => $productosSource->id],
-            [
-                'name' => 'Template Productos',
-                'active' => true,
-            ]
-        );
+        // $templateProductos = Template::updateOrCreate(
+        //     ['lead_source_id' => $productosSource->id],
+        //     [
+        //         'name' => 'Template Productos',
+        //         'active' => true,
+        //     ]
+        // );
 
-        TemplateContent::updateOrCreate(
-            [
-                'template_id' => $templateProductos->id,
-                'channel' => 'whatsapp',
-            ],
-            [
-                'content' => "📦 Hola {{nombre}}, mira nuestros productos...",
-                'variables' => ['nombre'],
-                'image_url' => null,
-                'active' => true,
-            ]
-        );
+        // TemplateContent::updateOrCreate(
+        //     [
+        //         'template_id' => $templateProductos->id,
+        //         'channel' => 'whatsapp',
+        //     ],
+        //     [
+        //         'content' => "📦 Hola {{nombre}}, mira nuestros productos...",
+        //         'variables' => ['nombre'],
+        //         'image_url' => null,
+        //         'active' => true,
+        //     ]
+        // );
 
         // =========================
         // 🟢 TEMPLATE: DETALLE
         // =========================
-        $templateDetalle = Template::updateOrCreate(
-            ['lead_source_id' => $detalleSource->id],
-            [
-                'name' => 'Template Detalle Producto',
-                'active' => true,
-            ]
-        );
+        // $templateDetalle = Template::updateOrCreate(
+        //     ['lead_source_id' => $detalleSource->id],
+        //     [
+        //         'name' => 'Template Detalle Producto',
+        //         'active' => true,
+        //     ]
+        // );
 
-        TemplateContent::updateOrCreate(
-            [
-                'template_id' => $templateDetalle->id,
-                'channel' => 'whatsapp',
-            ],
-            [
-                'content' => "📢 Producto: {{producto_nombre}}\nDescripción: {{descripcion}}\nFecha: {{fecha}}",
-                'variables' => [
-                    'producto_nombre',
-                    'descripcion',
-                    'fecha',
-                    'hora',
-                    'email'
-                ],
-                'image_url' => null,
-                'active' => true,
-            ]
-        );
+        // TemplateContent::updateOrCreate(
+        //     [
+        //         'template_id' => $templateDetalle->id,
+        //         'channel' => 'whatsapp',
+        //     ],
+        //     [
+        //         'content' => "📢 Producto: {{producto_nombre}}\nDescripción: {{descripcion}}\nFecha: {{fecha}}",
+        //         'variables' => [
+        //             'producto_nombre',
+        //             'descripcion',
+        //             'fecha',
+        //             'hora',
+        //             'email'
+        //         ],
+        //         'image_url' => null,
+        //         'active' => true,
+        //     ]
+        // );
 
 //         TemplateContent::updateOrCreate(
 //     [
@@ -297,40 +297,40 @@ class DatabaseSeeder extends Seeder
 //     ]
 // );
 
-TemplateContent::updateOrCreate(
-    [
-        'template_id' => $templateProductos->id,
-        'channel' => 'email',
-    ],
-    [
-        'subject' => 'Nuestros productos para tu negocio',
-        'content' => "Hola {{nombre}},\n\nTenemos una variedad de productos publicitarios ideales para ti.\n\nSi deseas más información, responde este correo.",
-        'variables' => ['nombre'],
-        'image_url' => null,
-        'active' => true,
-    ]
-);
+// TemplateContent::updateOrCreate(
+//     [
+//         'template_id' => $templateProductos->id,
+//         'channel' => 'email',
+//     ],
+//     [
+//         'subject' => 'Nuestros productos para tu negocio',
+//         'content' => "Hola {{nombre}},\n\nTenemos una variedad de productos publicitarios ideales para ti.\n\nSi deseas más información, responde este correo.",
+//         'variables' => ['nombre'],
+//         'image_url' => null,
+//         'active' => true,
+//     ]
+// );
 
-TemplateContent::updateOrCreate(
-    [
-        'template_id' => $templateDetalle->id,
-        'channel' => 'email',
-    ],
-    [
-        'subject' => 'Detalle del producto consultado',
-        'content' => "Hola {{nombre}},\n\nProducto: {{producto_nombre}}\nDescripción: {{descripcion}}\nFecha: {{fecha}}\nHora: {{hora}}\n\nNos estaremos comunicando contigo.",
-        'variables' => [
-            'nombre',
-            'producto_nombre',
-            'descripcion',
-            'fecha',
-            'hora',
-            'email'
-        ],
-        'image_url' => null,
-        'active' => true,
-    ]
-);
+// TemplateContent::updateOrCreate(
+//     [
+//         'template_id' => $templateDetalle->id,
+//         'channel' => 'email',
+//     ],
+//     [
+//         'subject' => 'Detalle del producto consultado',
+//         'content' => "Hola {{nombre}},\n\nProducto: {{producto_nombre}}\nDescripción: {{descripcion}}\nFecha: {{fecha}}\nHora: {{hora}}\n\nNos estaremos comunicando contigo.",
+//         'variables' => [
+//             'nombre',
+//             'producto_nombre',
+//             'descripcion',
+//             'fecha',
+//             'hora',
+//             'email'
+//         ],
+//         'image_url' => null,
+//         'active' => true,
+//     ]
+// );
 
         // 7. Documento ID
         DocumentType::firstOrCreate(['code' => '1','label' => 'dni']);

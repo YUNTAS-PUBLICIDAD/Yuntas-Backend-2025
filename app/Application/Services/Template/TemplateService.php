@@ -15,43 +15,43 @@ class TemplateService
 
   public function __construct(private ImageService $imageService){}
 
-  public function getBySource(int $sourceId, string $channel): ?Template
-  {
-    // return Template::where('lead_source_id', $sourceId)
-    // ->where('active', true)
-    // ->first();
-    return Template::with(['contents' => function ($q) use ($channel){
-     $q->where('channel', $channel)
-     ->where('active', true)
-     ->with('buttons');
-    }])
-    ->where('lead_source_id', $sourceId)
-    ->where('active', true)
-    ->first();
-  }
+  // public function getBySource(int $sourceId, string $channel): ?Template
+  // {
+  //   // return Template::where('lead_source_id', $sourceId)
+  //   // ->where('active', true)
+  //   // ->first();
+  //   return Template::with(['contents' => function ($q) use ($channel){
+  //    $q->where('channel', $channel)
+  //    ->where('active', true)
+  //    ->with('buttons');
+  //   }])
+  //   ->where('lead_source_id', $sourceId)
+  //   ->where('active', true)
+  //   ->first();
+  // }
 
-  public function render(int $sourceId, string $channel, array $data)
-  {
-    $template = $this->getBySource($sourceId, $channel);
-    if(!$template) {
-      throw new Exception("Template no encontrado");
-    };
-    // $content = $template->contents->first();
-    $content = $template->contents->where('channel', $channel)->where('active', true)->sortByDesc('id')->first();
+  // public function render(int $sourceId, string $channel, array $data)
+  // {
+  //   $template = $this->getBySource($sourceId, $channel);
+  //   if(!$template) {
+  //     throw new Exception("Template no encontrado");
+  //   };
+  //   // $content = $template->contents->first();
+  //   $content = $template->contents->where('channel', $channel)->where('active', true)->sortByDesc('id')->first();
 
-    if(!$content){
-      throw new Exception("Contenido no encontrado para canal {$channel}");
-    };
+  //   if(!$content){
+  //     throw new Exception("Contenido no encontrado para canal {$channel}");
+  //   };
 
-    $this->validateVariables($content, $data);
+  //   $this->validateVariables($content, $data);
 
-    return [
-      'message' => $content->render($data),
-      'subject' => $content->subject ?? null,
-      'image_url' => $content->image_url ? asset($content->image_url) : null,
-      'buttons' => $content->buttons ?? []
-    ];
-  }
+  //   return [
+  //     'message' => $content->render($data),
+  //     'subject' => $content->subject ?? null,
+  //     'image_url' => $content->image_url ? asset($content->image_url) : null,
+  //     'buttons' => $content->buttons ?? []
+  //   ];
+  // }
 
   public function getAvailableVariables(): array
   {
@@ -66,207 +66,250 @@ class TemplateService
     // ];
   }
 
-  private function validateVariables($content, array $data):array
-  {
-    // foreach ($content->variables ?? [] as $var) {
-    //   if (!array_key_exists($var, $data)) {
-    //     throw new \InvalidArgumentException("Falta variable: {$var} | DATA: " . json_encode($data));
-    //   }
-    // }
-    // Log::info('VALIDANDO VARIABLES', [
-    //   'esperadas' => $content->variables,
-    //   'recibidas' => array_keys($data),
-    // ]);
+  // private function validateVariables($content, array $data):array
+  // {
+  //   // foreach ($content->variables ?? [] as $var) {
+  //   //   if (!array_key_exists($var, $data)) {
+  //   //     throw new \InvalidArgumentException("Falta variable: {$var} | DATA: " . json_encode($data));
+  //   //   }
+  //   // }
+  //   // Log::info('VALIDANDO VARIABLES', [
+  //   //   'esperadas' => $content->variables,
+  //   //   'recibidas' => array_keys($data),
+  //   // ]);
 
-    $missing = [];
+  //   $missing = [];
 
-    foreach ($content->variables ?? [] as $var){
-      if(!array_key_exists($var, $data)){
-        $missing[] = $var;
-        $data[$var] = ''; // fallback automático
-      }
-    }
+  //   foreach ($content->variables ?? [] as $var){
+  //     if(!array_key_exists($var, $data)){
+  //       $missing[] = $var;
+  //       $data[$var] = ''; // fallback automático
+  //     }
+  //   }
 
-    if(!empty($missing)){
-      Log::warning('Variables faltantes en template', [
-        'faltantes' => $missing,
-        'template_id' => $content->template_id ?? null,
-        'channel' => $content->channel ?? null,
-      ]);
-    }
-    return $data;
-  }
+  //   if(!empty($missing)){
+  //     Log::warning('Variables faltantes en template', [
+  //       'faltantes' => $missing,
+  //       'template_id' => $content->template_id ?? null,
+  //       'channel' => $content->channel ?? null,
+  //     ]);
+  //   }
+  //   return $data;
+  // }
 
-  public function getByContext(string $channel, string $context): ?Template
-  {
-    return Template::where('active', true)
-        ->whereHas('variants', function ($q) use ($channel, $context) {
-            $q->where('channel', $channel)
-              ->where('context', $context)
-              ->where('active', true);
-        })
-        ->with(['variants' => function ($q) use ($channel, $context) {
-            $q->where('channel', $channel)
-              ->where('context', $context)
-              ->where('active', true)
-              ->with(['assets', 'productAssets']);
-        }])
-        ->latest()
-        ->first();
-  }
+  // public function getByContext(string $channel, string $context): ?Template
+  // {
+  //   return Template::where('active', true)
+  //       ->whereHas('variants', function ($q) use ($channel, $context) {
+  //           $q->where('channel', $channel)
+  //             ->where('context', $context)
+  //             ->where('active', true);
+  //       })
+  //       ->with(['variants' => function ($q) use ($channel, $context) {
+  //           $q->where('channel', $channel)
+  //             ->where('context', $context)
+  //             ->where('active', true)
+  //             ->with(['assets', 'productAssets']);
+  //       }])
+  //       ->latest()
+  //       ->first();
+  // }
 
-  public function renderByContext(
-    string $channel,
-    string $context,
-    array $data,
-    ?int $productId = null
-  ){
-    $template = $this->getByContext($channel, $context);
+  // public function renderByContext(
+  //   string $channel,
+  //   string $context,
+  //   array $data,
+  //   ?int $productId = null
+  // ){
+  //   $template = $this->getByContext($channel, $context);
 
-       if (!$template) {
-           throw new Exception("Template no encontrado para {$context}");
-       }
+  //      if (!$template) {
+  //          throw new Exception("Template no encontrado para {$context}");
+  //      }
 
-       // $variant = $template->variants->first();
-       $variant = $template->variants
-         ->where('channel', $channel)
-         ->where('context', $context)
-         ->first();
+  //      // $variant = $template->variants->first();
+  //      $variant = $template->variants
+  //        ->where('channel', $channel)
+  //        ->where('context', $context)
+  //        ->first();
 
-       if (!$variant) {
-           throw new Exception("Variant no encontrada");
-       }
+  //      if (!$variant) {
+  //          throw new Exception("Variant no encontrada");
+  //      }
 
-       // 🔥 imagen dinámica
-       $imageUrl = null;
+  //      // 🔥 imagen dinámica
+  //      $imageUrl = null;
 
-       // PRIORIDAD 1 → product asset
-       if ($productId) {
-           $productAsset = $variant->productAssets
-               ->where('product_id', $productId)
-               ->first();
+  //      // PRIORIDAD 1 → product asset
+  //      if ($productId) {
+  //          $productAsset = $variant->productAssets
+  //              ->where('product_id', $productId)
+  //              ->first();
 
-           if ($productAsset) {
-               $imageUrl = asset($productAsset->path);
-           }
-       }
+  //          if ($productAsset) {
+  //              $imageUrl = asset($productAsset->path);
+  //          }
+  //      }
 
-       // PRIORIDAD 2 → global asset
-       if (!$imageUrl && $context !== "PRODUCTO") {
-           $asset = $variant->assets->where('key', 'image')->first();
-           if ($asset) {
-               $imageUrl = asset($asset->path);
-           }
-       }
+  //      // PRIORIDAD 2 → global asset
+  //      if (!$imageUrl && $context !== "PRODUCTO") {
+  //          $asset = $variant->assets->where('key', 'image')->first();
+  //          if ($asset) {
+  //              $imageUrl = asset($asset->path);
+  //          }
+  //      }
 
-       $data = $this->validateVariables($variant, $data);
+  //      $data = $this->validateVariables($variant, $data);
 
-       return [
-           // 'message' => $variant->render($data),
-           'content' => $variant->render($data),
-           'subject' => $variant->subject,
-           'image_url' => $imageUrl,
-           'cta_text' => $variant->cta_text,
-           'cta_url' => $variant->cta_url,
-           'product_assets' => $variant->productAssets->map(fn ($a) => [
-            'product_id' => $a->product_id,
-            'path' => $a->path,
-            'key' => $a->key
-           ])->values(),
-       ];
-  }
+  //      return [
+  //          // 'message' => $variant->render($data),
+  //          'content' => $variant->render($data),
+  //          'subject' => $variant->subject,
+  //          'image_url' => $imageUrl,
+  //          'cta_text' => $variant->cta_text,
+  //          'cta_url' => $variant->cta_url,
+  //          'product_assets' => $variant->productAssets->map(fn ($a) => [
+  //           'product_id' => $a->product_id,
+  //           'path' => $a->path,
+  //           'key' => $a->key
+  //          ])->values(),
+  //      ];
+  // }
 
   public function save(array $data, ?int $id = null)
     {
-        return DB::transaction(function () use ($data, $id) {
+      return DB::transaction(function () use ($data, $id) {
 
-            // =========================
-            // TEMPLATE
-            // =========================
-            $template = $id
-                ? Template::findOrFail($id)
-                : new Template();
+              // =========================
+              // TEMPLATE
+              // =========================
 
-            $template->fill([
-                'name' => $data['name'],
-                'active' => $data['active'] ?? true,
-            ]);
+              $template = $id
+                  ? Template::findOrFail($id)
+                  : new Template();
 
-            $template->save();
+              $template->fill([
+                  'name' => $data['name'],
+                  'context' => $data['context'],
+                  'active' => $data['active'] ?? true,
+              ]);
 
-            // =========================
-            // VARIANTS (wipe simple)
-            // =========================
-            if (array_key_exists('variants', $data)) {
+              $template->save();
 
-                // ⚠️ Simple y seguro (para tu caso actual)
-                $template->variants()->delete();
+              // =========================
+              // CLEAN OLD
+              // =========================
 
-                foreach ($data['variants'] as $variantData) {
+              $template->steps()->delete();
 
-                    $variant = $template->variants()->create([
-                        'channel' => $variantData['channel'],
-                        'context' => $variantData['context'],
-                        'subject' => $variantData['subject'] ?? null,
-                        'content' => $variantData['content'],
-                        'variables' => $variantData['variables'] ?? [],
-                        'cta_text' => $variantData['cta_text'] ?? null,
-                        'cta_url' => $variantData['cta_url'] ?? null,
-                        'active' => $variantData['active'] ?? true,
-                    ]);
+              // =========================
+              // STEPS
+              // =========================
 
-                    // =========================
-                    // GLOBAL ASSETS
-                    // =========================
-                    if (!empty($variantData['assets'])) {
-                        $variant->assets()->createMany(
-                            array_map(fn ($asset) => [
-                                'key' => $asset['key'],
-                                'path' => $asset['path'],
-                                'meta' => $asset['meta'] ?? null,
-                            ], $variantData['assets'])
-                        );
-                    }
+              foreach (($data['steps'] ?? []) as $stepData) {
 
-                    ProductTemplateAsset::where('template_variant_id', $variant->id)->delete();
+                  $step = $template->steps()->create([
+                      'step' => $stepData['step'],
+                      'delay_value' => $stepData['delay_value'],
+                      'delay_unit' => $stepData['delay_unit'],
+                      'active' => $stepData['active'] ?? true,
+                  ]);
 
-                    // =========================
-                    // PRODUCT ASSETS (🔥 NUEVO)
-                    // =========================
-                    // if(!empty($variantData['product_assets'])){
-                    //   foreach ($variantData['product_assets'] as $asset){
-                    //     ProductTemplateAsset::create([
-                    //       'product_id' => $asset['product_id'],
-                    //       'template_variant_id' => $variant->id,
-                    //       'key'=> $asset['key'],
-                    //       'path' => $asset['path']
-                    //     ]);
-                    //   }
-                    // }
+                  // =========================
+                  // VARIANTS
+                  // =========================
 
-                    foreach (($variantData['product_assets'] ?? []) as $asset) {
-                      ProductTemplateAsset::create([
-                        'product_id' => $asset['product_id'],
-                        'template_variant_id' => $variant->id,
-                        'key'=> $asset['key'],
-                        'path' => $asset['path']
+                  foreach (($stepData['variants'] ?? []) as $variantData) {
+
+                      $variant = $step->variants()->create([
+
+                          'channel' => $variantData['channel'],
+
+                          'subject' => $variantData['subject'] ?? null,
+
+                          'content' => $variantData['content'] ?? null,
+
+                          'variables' => $variantData['variables'] ?? [],
+
+                          'cta_text' => $variantData['cta_text'] ?? null,
+
+                          'cta_url' => $variantData['cta_url'] ?? null,
+
+                          'active' => $variantData['active'] ?? true,
                       ]);
-                    }
-                }
-            }
 
-            return $template->load(['variants.assets', 'variants.productAssets']);
-        });
+                      // =========================
+                      // ASSETS
+                      // =========================
+
+                      foreach (($variantData['assets'] ?? []) as $asset) {
+
+                          $variant->assets()->create([
+                              'key' => $asset['key'],
+                              'path' => $asset['path'],
+                              'meta' => $asset['meta'] ?? null,
+                          ]);
+                      }
+
+                      // =========================
+                      // PRODUCT OVERRIDES
+                      // =========================
+
+                      foreach (($variantData['product_overrides'] ?? []) as $override) {
+
+                          $variant->productOverrides()->create([
+
+                              'product_id'
+                                  => $override['product_id'],
+
+                              'subject'
+                                  => $override['subject'] ?? null,
+
+                              'content'
+                                  => $override['content'] ?? null,
+
+                              'cta_text'
+                                  => $override['cta_text'] ?? null,
+
+                              'cta_url'
+                                  => $override['cta_url'] ?? null,
+
+                              'variables'
+                                  => $override['variables'] ?? [],
+
+                              'assets'
+                                  => $override['assets'] ?? [],
+
+                              'active'
+                                  => $override['active'] ?? true,
+                          ]);
+                      }
+                  }
+              }
+
+              return $this->get($template->id);
+          });
     }
 
     public function get(int $id)
     {
-        return Template::with(['variants.assets', 'variants.productAssets'])->findOrFail($id);
+        // return Template::with(['variants.assets', 'variants.productAssets'])->findOrFail($id);
+
+        return Template::with([
+                'steps.variants.assets',
+                'steps.variants.productOverrides'
+            ])->findOrFail($id);
     }
 
     public function list()
     {
-        return Template::with(['variants.assets', 'variants.productAssets'])
+        // return Template::with(['variants.assets', 'variants.productAssets'])
+        //     ->latest()
+        //     ->paginate(20);
+        return Template::with([
+                'steps.variants.assets',
+                'steps.variants.productOverrides'
+            ])
             ->latest()
             ->paginate(20);
     }

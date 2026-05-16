@@ -60,31 +60,104 @@ class TemplateController extends Controller
       // =========================
       private function validateRequest(Request $request): array
       {
-          return $request->validate([
-              'name' => 'required|string|max:255',
-              'active' => 'boolean',
+        return $request->validate([
 
-              'variants' => 'array',
-              'variants.*.channel' => 'required|string|in:whatsapp,email',
-              'variants.*.context' => 'required|string',
-              'variants.*.subject' => 'nullable|string',
-              'variants.*.content' => 'required|string',
-              'variants.*.variables' => 'array',
-              'variants.*.active' => 'boolean',
+               'name' => 'required|string|max:255',
 
-              // CTA
-              'variants.*.cta_text' => 'nullable|string|max:255',
-              'variants.*.cta_url' => 'nullable|url|max:500',
+               'context' => 'required|string',
 
-              'variants.*.assets' => 'array',
-              'variants.*.assets.*.key' => 'required|string',
-              'variants.*.assets.*.path' => 'required|string',
-              'variants.*.assets.*.meta' => 'nullable',
+               'active' => 'boolean',
 
-              'variants.*.product_assets' => 'array',
-              'variants.*.product_assets.*.product_id' => 'required|integer|exists:products,id',
-              'variants.*.product_assets.*.key' => 'required|string',
-              'variants.*.product_assets.*.path' => 'required|string',
-          ]);
+               // =========================
+               // STEPS
+               // =========================
+
+               'steps' => 'array',
+
+               'steps.*.step' => 'required|integer|min:1',
+
+               'steps.*.delay_value' => 'required|integer|min:0',
+
+               'steps.*.delay_unit' => 'required|in:minutes,hours,days',
+
+               'steps.*.active' => 'boolean',
+
+               // =========================
+               // VARIANTS
+               // =========================
+
+               'steps.*.variants' => 'array',
+
+               'steps.*.variants.*.channel'
+                   => 'required|in:whatsapp,email',
+
+               'steps.*.variants.*.subject'
+                   => 'nullable|string',
+
+               'steps.*.variants.*.content'
+                   => 'nullable|string',
+
+               'steps.*.variants.*.variables'
+                   => 'array',
+
+               'steps.*.variants.*.cta_text'
+                   => 'nullable|string|max:255',
+
+               'steps.*.variants.*.cta_url'
+                   => 'nullable|url|max:500',
+
+               'steps.*.variants.*.active'
+                   => 'boolean',
+
+               // =========================
+               // ASSETS
+               // =========================
+
+               'steps.*.variants.*.assets'
+                   => 'array',
+
+               'steps.*.variants.*.assets.*.key'
+                   => 'required|string',
+
+               'steps.*.variants.*.assets.*.path'
+                   => 'required|string',
+
+               'steps.*.variants.*.assets.*.meta'
+                   => 'nullable',
+
+               // =========================
+               // PRODUCT OVERRIDES
+               // =========================
+
+               'steps.*.variants.*.product_overrides'
+                   => 'array',
+
+               'steps.*.variants.*.product_overrides.*.product_id'
+                   => 'required|exists:products,id',
+
+               'steps.*.variants.*.product_overrides.*.subject'
+                   => 'nullable|string',
+
+               'steps.*.variants.*.product_overrides.*.content'
+                   => 'nullable|string',
+
+               'steps.*.variants.*.product_overrides.*.cta_text'
+                   => 'nullable|string',
+
+               'steps.*.variants.*.product_overrides.*.cta_url'
+                   => 'nullable|url',
+                   'steps.*.variants.*.product_overrides.*.assets'
+                       => 'array',
+
+                   'steps.*.variants.*.product_overrides.*.assets.*.key'
+                       => 'required|string',
+
+                   'steps.*.variants.*.product_overrides.*.assets.*.path'
+                       => 'required|string',
+
+                   'steps.*.variants.*.product_overrides.*.assets.*.meta'
+                       => 'nullable',
+
+           ]);
       }
 }
