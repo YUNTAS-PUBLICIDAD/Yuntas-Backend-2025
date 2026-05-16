@@ -14,7 +14,7 @@ class TemplateAssetController extends Controller
   public function store(Request $request)
   {
     $request->validate([
-      'file' => 'required|file|mimes:webp|max:2048'
+      'file' => 'required|image|mimes:webp|max:2048'
     ]);
 
     $path = $this->imageService->store(
