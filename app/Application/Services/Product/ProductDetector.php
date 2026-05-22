@@ -1,6 +1,9 @@
 <?php
 namespace App\Application\Services\Product;
 
+use App\Models\Product;
+use Illuminate\Support\Facades\Log;
+
 class ProductDetector
 {
 
@@ -20,5 +23,24 @@ class ProductDetector
       }
     }
     return 'none';
+  }
+
+
+  public function detect(string $message): ?Product
+  {
+
+    $result = app(ProductSearchService::class)
+    ->search($message, 1)
+    ->first();
+
+    if(!$result){
+    return null;
+    }
+
+    if($result['score'] < 15){
+    return null;
+    }
+
+    return $result['product'];
   }
 }
