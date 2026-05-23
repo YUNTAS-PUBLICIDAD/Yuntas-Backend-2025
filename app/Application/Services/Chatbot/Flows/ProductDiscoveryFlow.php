@@ -143,7 +143,7 @@ class ProductDiscoveryFlow
                      ->toArray(),
 
                  'whatsapp_url'
-                     => "https://wa.me/51935855675?text={$whatsappMessage}"
+                     => "https://wa.me/51912849782?text={$whatsappMessage}"
              ]
          ];
      }
