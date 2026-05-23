@@ -5,6 +5,7 @@ namespace App\Application\Services\Chatbot\Engine;
 use App\Application\Services\Chatbot\Actions\ActionExecutor;
 use App\Application\Services\Chatbot\Context\ChatContext;
 use App\Application\Services\Chatbot\Engine\Pipeline;
+use App\Application\Services\Chatbot\Flows\ProductDiscoveryFlow;
 use App\Application\Services\Chatbot\Formatters\ResponseFormatter;
 use App\Application\Services\Chatbot\Intent\IntentMatcher;
 use App\Application\Services\Chatbot\States\StateResolver;
@@ -92,26 +93,89 @@ class ChatbotEngine
       ]);
 
       // Si existe flow activo
-      if(data_get($context->data, 'flow')){
+      if(data_get($context->data, 'flow.active')){
         Log::info('CHATBOT: entering flow engine');
-        $flowResponses = app(FlowEngine::class)
-        ->handle($conversation, $message, $context);
-        Log::info('CHATBOT: flow responses', [
-          'responses' => $flowResponses
-        ]);
+        // $flowResponses = app(FlowEngine::class)
+        // ->handle($conversation, $message, $context);
+        // Log::info('CHATBOT: flow responses', [
+        //   'responses' => $flowResponses
+        // ]);
 
-        if(!empty($flowResponses)){
-          $this->persistContext($conversation, $context);
+        // if(!empty($flowResponses)){
+        //   $this->persistContext($conversation, $context);
 
-          foreach($flowResponses as $res){
-            $sentMessages[] = $this->send(
-            $conversation,
-            $res['text'],
-            $res['metadata'] ?? null
-            );
-          }
-          return $sentMessages;
-        }
+        //   foreach($flowResponses as $res){
+        //     $sentMessages[] = $this->send(
+        //     $conversation,
+        //     $res['text'],
+        //     $res['metadata'] ?? null
+        //     );
+        //   }
+        //   return $sentMessages;
+        // }
+
+        $flowType = data_get(
+               $context->data,
+               'flow.type'
+           );
+
+           // CONVERSATIONAL FLOW
+           if($flowType === 'conversational'){
+
+               $flowName = data_get(
+                   $context->data,
+                   'flow.name'
+               );
+
+               if($flowName === 'product_discovery'){
+
+                   $response = app(ProductDiscoveryFlow::class)
+                       ->handle($message, $context);
+
+                   $this->persistContext(
+                       $conversation,
+                       $context
+                   );
+
+                   $sentMessages[] = $this->send(
+                       $conversation,
+                       $response['text'],
+                       $response['metadata'] ?? null
+                   );
+
+                   return $sentMessages;
+               }
+           }
+
+           // VISUAL FLOW
+           if($flowType === 'visual'){
+
+               $flowResponses = app(FlowEngine::class)
+                   ->handle(
+                       $conversation,
+                       $message,
+                       $context
+                   );
+
+               if(!empty($flowResponses)){
+
+                   $this->persistContext(
+                       $conversation,
+                       $context
+                   );
+
+                   foreach($flowResponses as $res){
+
+                       $sentMessages[] = $this->send(
+                           $conversation,
+                           $res['text'],
+                           $res['metadata'] ?? null
+                       );
+                   }
+
+                   return $sentMessages;
+               }
+           }
       }
 
       // $started = app(FlowTriggerResolver::class)->tryStart($message, $context);
@@ -308,9 +372,20 @@ class ChatbotEngine
 
   protected function cleanupIfNeeded()
   {
-    cache()->remember('chatbot_cleanup', 3600, function () {
-      ChatbotConversation::where('updated_at', '<', now()->subDay())->delete();
-    });
+
+    if(!cache()->add('chatbot_cleanup', true, 3600)){
+      return;
+    }
+
+    // cache()->remember('chatbot_cleanup', 3600, function () {
+    //   ChatbotConversation::where('updated_at', '<', now()->subDay())->delete();
+    // });
+
+    ChatbotConversation::where(
+     'updated_at',
+     '<',
+     now()->subDay()
+    )->delete();
   }
 
 }
