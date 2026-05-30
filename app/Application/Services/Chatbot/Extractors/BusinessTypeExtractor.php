@@ -6,26 +6,127 @@ class BusinessTypeExtractor
 {
   protected array $map = [
 
-          'restaurante' => [
-              'restaurante',
-              'polleria',
-              'cevicheria',
-              'fast food',
-              'comida'
-          ],
+  'restaurante' => [
+        'restaurante',
+        'restaurant',
+        'comida'
+    ],
 
-          'retail' => [
-              'tienda',
-              'retail',
-              'minimarket',
-              'market'
-          ],
+    'polleria' => [
+        'polleria',
+        'pollo a la brasa'
+    ],
 
-          'barberia' => [
-              'barberia',
-              'barber',
-              'salon'
-          ]
+    'cevicheria' => [
+        'cevicheria',
+        'ceviche'
+    ],
+
+    'cafeteria' => [
+        'cafeteria',
+        'cafe',
+        'coffee shop',
+        'cafetería'
+    ],
+
+    'bar' => [
+        'bar',
+        'pub',
+        'cantina'
+    ],
+
+    'discoteca' => [
+        'discoteca',
+        'club nocturno',
+        'night club'
+    ],
+
+    'barberia' => [
+        'barberia',
+        'barber',
+        'barbershop'
+    ],
+
+    'salon_belleza' => [
+        'salon',
+        'salon de belleza',
+        'peluqueria',
+        'estetica'
+    ],
+
+    'gimnasio' => [
+        'gym',
+        'gimnasio',
+        'crossfit',
+        'fitness'
+    ],
+
+    'clinica_estetica' => [
+        'clinica estetica',
+        'medicina estetica',
+        'spa',
+        'spa facial'
+    ],
+
+    'odontologia' => [
+        'odontologia',
+        'dentista',
+        'consultorio dental'
+    ],
+
+    'hotel' => [
+        'hotel',
+        'hostal',
+        'hospedaje'
+    ],
+
+    'retail' => [
+        'retail',
+        'tienda',
+        'boutique',
+        'showroom'
+    ],
+
+    'ropa' => [
+        'tienda de ropa',
+        'ropa',
+        'moda',
+        'boutique'
+    ],
+
+    'tecnologia' => [
+        'tecnologia',
+        'computadoras',
+        'celulares',
+        'electronica'
+    ],
+
+    'farmacia' => [
+        'farmacia',
+        'botica'
+    ],
+
+    'inmobiliaria' => [
+        'inmobiliaria',
+        'proyecto inmobiliario'
+    ],
+
+    'casino' => [
+        'casino',
+        'tragamonedas'
+    ],
+
+    'centro_comercial' => [
+        'centro comercial',
+        'mall'
+    ],
+
+    'feria' => [
+        'feria',
+        'stand',
+        'modulo comercial'
+    ]
+
       ];
 
       public function extract(string $message): ?string
