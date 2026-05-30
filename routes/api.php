@@ -90,6 +90,9 @@ Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
       Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
       });
 
+    // ------------------- TRACKING DE PÁGINAS (Público) -------------------
+    Route::post('page-view', [\App\Http\Controllers\PageView\TrackingController::class, 'store'])->middleware('throttle:public');
+
       // ==============================================================================
       //                                WEBHOOKS
       // ==============================================================================
@@ -254,6 +257,12 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
       // 🔥 GRAPH EDITOR
       Route::get('/{id}/graph', [ChatbotAdminController::class, 'getGraph']);
       Route::post('/{id}/graph', [ChatbotAdminController::class, 'saveGraph']);
+  });
+
+  // ------------------- DASHBOARD TRACKING (Privado) -------------------
+  Route::prefix('dashboard')->group(function () {
+      Route::get('most-viewed-pages', [\App\Http\Controllers\PageView\TrackingController::class, 'mostViewedPages']);
+      Route::get('user-type-stats', [\App\Http\Controllers\PageView\TrackingController::class, 'userTypeStats']);
   });
 });
 

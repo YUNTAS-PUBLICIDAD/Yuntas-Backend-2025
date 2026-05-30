@@ -21,6 +21,11 @@ class AuthController extends Controller
             $dto = LoginDTO::fromRequest($request);
             $data = $this->authService->login($dto);
 
+            // Eliminar vistas de página previas si se provee session_id (ya que es un usuario logueado administrativo)
+            if ($request->filled('session_id')) {
+                \App\Models\TrackingPageView::where('session_id', $request->session_id)->delete();
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Inicio de sesión exitoso',
