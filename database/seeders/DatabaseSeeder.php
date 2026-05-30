@@ -351,5 +351,8 @@ class DatabaseSeeder extends Seeder
 
         // Settings
         $this->call(SettingsSeeder::class);
+
+        // Registro de páginas oficiales para tracking
+        $this->call(TrackingPagesTableSeeder::class);
     }
 }
