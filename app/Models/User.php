@@ -66,4 +66,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(ClaimResponse::class, 'admin_id');
     }
+
+    /**
+     * Relación con las vistas de página registradas del usuario.
+     */
+    public function trackingPageViews(): HasMany
+    {
+        return $this->hasMany(TrackingPageView::class, 'user_id');
+    }
 }
