@@ -40,6 +40,9 @@ class RepositoryServiceProvider extends ServiceProvider
         // agregar el ejemplo del repositorio de email
         \App\Domain\Repositories\Support\EmailRepositoryInterface::class
             => \App\Infrastructure\Persistence\Eloquent\Repositories\Support\EmailRepository::class,
+
+        \App\Domain\Repositories\PageView\TrackingPageViewRepositoryInterface::class
+            => \App\Infrastructure\Persistence\Eloquent\Repositories\PageView\EloquentTrackingPageViewRepository::class,
     ];
 
     public function register(): void
