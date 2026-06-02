@@ -19,7 +19,7 @@ interface TrackingPageViewRepositoryInterface
     /**
      * Obtener páginas más vistas.
      */
-    public function getMostViewedPages(): array;
+    public function getMostViewedPages(?string $month = null): array;
  
     /**
      * Obtener estadísticas de tipos de usuario.

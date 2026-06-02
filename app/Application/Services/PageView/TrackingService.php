@@ -55,9 +55,9 @@ class TrackingService
     /**
      * Obtener estadísticas de páginas más vistas.
      */
-    public function getMostViewedPages(): array
+    public function getMostViewedPages(?string $month = null): array
     {
-        return $this->pageViewRepository->getMostViewedPages();
+        return $this->pageViewRepository->getMostViewedPages($month);
     }
  
     /**
