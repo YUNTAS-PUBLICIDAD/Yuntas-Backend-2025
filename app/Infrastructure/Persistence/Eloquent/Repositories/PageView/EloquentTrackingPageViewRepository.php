@@ -37,11 +37,18 @@ class EloquentTrackingPageViewRepository implements TrackingPageViewRepositoryIn
     /**
      * Obtener páginas más vistas.
      */
-    public function getMostViewedPages(): array
+    public function getMostViewedPages(?string $month = null): array
     {
-        return DB::table('tracking_page_views as tpv')
-            ->join('tracking_pages as tp', 'tp.id', '=', 'tpv.tracking_page_id')
-            ->select('tp.name', DB::raw('COUNT(tpv.id) AS total_views'))
+        $query = DB::table('tracking_page_views as tpv')
+            ->join('tracking_pages as tp', 'tp.id', '=', 'tpv.tracking_page_id');
+
+        if ($month) {
+            [$year, $monthNumber] = explode('-', $month);
+            $query->whereYear('tpv.viewed_at', $year)
+                  ->whereMonth('tpv.viewed_at', $monthNumber);
+        }
+
+        return $query->select('tp.name', DB::raw('COUNT(tpv.id) AS total_views'))
             ->groupBy('tp.id', 'tp.name')
             ->orderByDesc('total_views')
             ->get()
