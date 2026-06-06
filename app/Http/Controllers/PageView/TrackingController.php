@@ -92,10 +92,11 @@ class TrackingController extends Controller
      *     @OA\Response(response=200, description="Estadísticas de páginas más vistas")
      * )
      */
-    public function mostViewedPages(): JsonResponse
+    public function mostViewedPages(\Illuminate\Http\Request $request): JsonResponse
     {
         try {
-            $stats = $this->trackingService->getMostViewedPages();
+            $month = $request->query('month');
+            $stats = $this->trackingService->getMostViewedPages($month);
             return response()->json($stats);
         } catch (\Exception $e) {
             return response()->json([
