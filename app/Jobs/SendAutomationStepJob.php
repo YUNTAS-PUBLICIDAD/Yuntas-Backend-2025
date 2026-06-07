@@ -32,20 +32,20 @@ class SendAutomationStepJob implements ShouldQueue
      * Execute the job.
      */
     public function handle(
-    TemplateRenderService $renderService,
-    ChannelManagerService $channelManager
-    ): void
-    {
+        TemplateRenderService $renderService,
+        ChannelManagerService $channelManager
+    ): void {
+        $execution = null;
+        $variant = null;
 
-      $execution =
-                AutomationExecution::with('lead')
+        try {
+            $execution = AutomationExecution::with('lead')
                 ->findOrFail($this->executionId);
 
-            $variant =
-                TemplateVariant::with([
-                    'assets',
-                    'productOverrides'
-                ])->findOrFail($this->variantId);
+            $variant = TemplateVariant::with([
+                'assets',
+                'productOverrides'
+            ])->findOrFail($this->variantId);
 
             $payload = $renderService->render(
                 $execution->lead,
@@ -58,30 +58,33 @@ class SendAutomationStepJob implements ShouldQueue
             );
 
             AutomationLog::create([
-                'automation_execution_id'
-                    => $execution->id,
-
-                'template_step_id'
-                    => $this->stepId,
-
-                'template_variant_id'
-                    => $variant->id,
-
-                'lead_id'
-                    => $execution->lead_id,
-
-                'channel'
-                    => $variant->channel,
-
-                'status'
-                    => 'success',
-
-                'response'
-                    => $response,
-
-                'sent_at'
-                    => now(),
+                'automation_execution_id' => $execution->id,
+                'template_step_id' => $this->stepId,
+                'template_variant_id' => $variant->id,
+                'lead_id' => $execution->lead_id,
+                'channel' => $variant->channel,
+                'status' => 'success',
+                'response' => $response,
+                'sent_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Automation step failed', [
+                'execution_id' => $this->executionId,
+                'step_id' => $this->stepId,
+                'variant_id' => $this->variantId,
+                'error' => $e->getMessage(),
             ]);
 
+            AutomationLog::create([
+                'automation_execution_id' => $execution ? $execution->id : $this->executionId,
+                'template_step_id' => $this->stepId,
+                'template_variant_id' => $variant ? $variant->id : $this->variantId,
+                'lead_id' => $execution ? $execution->lead_id : null,
+                'channel' => $variant ? $variant->channel : 'whatsapp',
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+                'sent_at' => now(),
+            ]);
+        }
     }
 }
