@@ -18,6 +18,7 @@ use App\Models\BlogContentSlot;
 use App\Models\DocumentType;
 use App\Models\ClaimStatus;
 use App\Models\ClaimType;
+use Database\Seeders\ContactMessageSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -50,7 +51,7 @@ class DatabaseSeeder extends Seeder
         // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Benefits']);
         // ImageSlot::firstOrCreate(['module' => 'products', 'name' => 'Popups']);
 
-       $this->call(ImageSlotSeeder::class);
+        $this->call(ImageSlotSeeder::class);
 
         // 4. Slots de Contenido
         ProductContentSlot::firstOrCreate(['name' => 'Especificaciones']);
@@ -61,10 +62,10 @@ class DatabaseSeeder extends Seeder
         BlogContentSlot::firstOrCreate(['name' => 'Testimonios']);
 
         // 5. Fuentes de Leads
-     $inicioSource =   LeadSource::firstOrCreate(['name' => 'Inicio']);
-      $productosSource =  LeadSource::firstOrCreate(['name' => 'Productos']);
-       $detalleSource = LeadSource::firstOrCreate(['name' => 'Producto detalle']);
-       $adminSource = LeadSource::firstOrCreate(['name' => 'Administración']);
+        $inicioSource = LeadSource::firstOrCreate(['name' => 'Inicio']);
+        $productosSource = LeadSource::firstOrCreate(['name' => 'Productos']);
+        $detalleSource = LeadSource::firstOrCreate(['name' => 'Producto detalle']);
+        $adminSource = LeadSource::firstOrCreate(['name' => 'Administración']);
 
         // 6. Plantillas de Whatsapp Popup
         // $inicioSource = LeadSource::where('name', 'Inicio')->first();
@@ -161,7 +162,7 @@ class DatabaseSeeder extends Seeder
         //   ]
         // );
 
-//         // STEP 0
+        //         // STEP 0
 //         TemplateContent::updateOrCreate(
 //           [
 //             'template_id' => $templateProducto->id,
@@ -176,7 +177,7 @@ class DatabaseSeeder extends Seeder
 //           ]
 //         );
 
-//         // STEP 1
+        //         // STEP 1
 //         TemplateContent::updateOrCreate(
 //           [
 // 'template_id'=> $templateProducto->id,
@@ -191,7 +192,7 @@ class DatabaseSeeder extends Seeder
 //           ]
 //         );
 
-//         TemplateContent::updateOrCreate(
+        //         TemplateContent::updateOrCreate(
 //           [
 //             'template_id' => $templateProducto->id,
 //             'channel' => 'email',
@@ -205,7 +206,7 @@ class DatabaseSeeder extends Seeder
 //           ]
 //         );
 
-// =========================
+        // =========================
         // 🟢 TEMPLATE: INICIO
         // =========================
         // $templateInicio = Template::updateOrCreate(
@@ -283,7 +284,7 @@ class DatabaseSeeder extends Seeder
         //     ]
         // );
 
-//         TemplateContent::updateOrCreate(
+        //         TemplateContent::updateOrCreate(
 //     [
 //         'template_id' => $templateInicio->id,
 //         'channel' => 'email',
@@ -297,7 +298,7 @@ class DatabaseSeeder extends Seeder
 //     ]
 // );
 
-// TemplateContent::updateOrCreate(
+        // TemplateContent::updateOrCreate(
 //     [
 //         'template_id' => $templateProductos->id,
 //         'channel' => 'email',
@@ -311,7 +312,7 @@ class DatabaseSeeder extends Seeder
 //     ]
 // );
 
-// TemplateContent::updateOrCreate(
+        // TemplateContent::updateOrCreate(
 //     [
 //         'template_id' => $templateDetalle->id,
 //         'channel' => 'email',
@@ -333,8 +334,8 @@ class DatabaseSeeder extends Seeder
 // );
 
         // 7. Documento ID
-        DocumentType::firstOrCreate(['code' => '1','label' => 'dni']);
-        DocumentType::firstOrCreate(['code' => '2','label' => 'pasaporte']);
+        DocumentType::firstOrCreate(['code' => '1', 'label' => 'dni']);
+        DocumentType::firstOrCreate(['code' => '2', 'label' => 'pasaporte']);
 
         // 8. Estado reclamo
         ClaimStatus::firstOrCreate(['name' => 'pendiente']);
@@ -342,6 +343,18 @@ class DatabaseSeeder extends Seeder
 
         // 9. Tipo Reclamo
         ClaimType::firstOrCreate(['name' => 'reclamo']);
+
+        //10.Productos
+        $this->call(ProductSeeder::class);
+
+        //11.Mensaje de contacto
+        $this->call(ContactMessageSeeder::class);
+
+        // 12. Reclamos
+        $this->call(ClaimSeeder::class);
+
+        // 13. Blogs
+        $this->call(BlogSeeder::class);
 
         // Chatbot
         $this->call(ChatbotSeeder::class);
