@@ -43,11 +43,17 @@ class DeployService
             $token = $this->getGitHubAppToken();
             $repo = env('GITHUB_REPO');
 
-            $response = Http::withHeaders([
+            $httpRequest = Http::withHeaders([
                 'Accept' => 'application/vnd.github+json',
                 'Authorization' => "Bearer {$token}",
                 'X-GitHub-Api-Version' => '2022-11-28',
-            ])->post("https://api.github.com/repos/{$repo}/dispatches", [
+            ]);
+
+            if (app()->environment('local')) {
+                $httpRequest = $httpRequest->withoutVerifying();
+            }
+
+            $response = $httpRequest->post("https://api.github.com/repos/{$repo}/dispatches", [
                 'event_type' => 'rebuild-frontend',
                 'client_payload' => [
                     'triggered_by' => 'manual',
@@ -144,11 +150,17 @@ class DeployService
 
         $jwt = $this->generateJWT($privateKey, $appId);
 
-        $response = Http::withHeaders([
+        $tokenRequest = Http::withHeaders([
             'Authorization' => "Bearer {$jwt}",
             'Accept' => 'application/vnd.github+json',
             'X-GitHub-Api-Version' => '2022-11-28',
-        ])->post("https://api.github.com/app/installations/{$installationId}/access_tokens");
+        ]);
+
+        if (app()->environment('local')) {
+            $tokenRequest = $tokenRequest->withoutVerifying();
+        }
+
+        $response = $tokenRequest->post("https://api.github.com/app/installations/{$installationId}/access_tokens");
 
         if (!$response->successful()) {
             throw new \Exception('No se pudo obtener el token de la GitHub App: ' . $response->body());
