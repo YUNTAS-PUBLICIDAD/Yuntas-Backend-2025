@@ -50,6 +50,7 @@ class BlogService
                 'cover_subtitle' => $dto->cover_subtitle,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,
+                'keywords' => $dto->keywords,
 
                 'product_id' => $dto->product_id,
 
@@ -113,7 +114,8 @@ class BlogService
                 'hero_title' => $dto->hero_title,
                 'cover_subtitle' => $dto->cover_subtitle,
                 'status' => $dto->status,
-                'video_url' => $dto->video_url,                
+                'video_url' => $dto->video_url,    
+                'keywords' => $dto->keywords,            
                 'product_id' => $dto->product_id, 
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
@@ -332,6 +334,7 @@ class BlogService
         $dto->cover_subtitle = $this->sanitizeText($dto->cover_subtitle);
         $dto->meta_title = $this->sanitizeText($dto->meta_title);
         $dto->meta_description = $this->sanitizeText($dto->meta_description);
+        $dto->keywords = $this->sanitizeArray($dto->keywords);
         $dto->description = $this->sanitizeHtml($dto->description);
         $dto->testimonial = $this->sanitizeHtml($dto->testimonial);
         $dto->benefits = $this->sanitizeArray($dto->benefits);
