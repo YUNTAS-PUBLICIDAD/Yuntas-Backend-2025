@@ -108,6 +108,7 @@ class ProductController extends Controller
      *                 @OA\Property(property="precio", type="number"),
      *                 @OA\Property(property="imagen_principal", type="file"),
      *                 @OA\Property(property="descripcion", type="string")
+     *                 @OA\Property(property="video_url", type="string", format="url")
      *             )
      *         )
      *     ),
@@ -156,6 +157,7 @@ class ProductController extends Controller
      *                 @OA\Property(property="precio", type="number"),
      *                 @OA\Property(property="imagen_principal", type="file"),
      *                 @OA\Property(property="descripcion", type="string")
+     *                 @OA\Property(property="video_url", type="string", format="url")
      *             )
      *         )
      *     ),
