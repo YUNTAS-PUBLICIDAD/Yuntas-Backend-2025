@@ -308,6 +308,39 @@ class PopupController extends Controller
         unset($data['product_id']);
       }
 
+      if ($request->has('images')) {
+
+    Log::info('UPDATE IMAGES', [
+        'count' => count($request->images)
+    ]);
+
+    foreach ($request->images as $index => $img) {
+
+        Log::info("Procesando imagen {$index}", [
+            'device' => $img['device'] ?? null,
+            'slot' => $img['slot'] ?? null,
+            'has_file' => isset($img['file'])
+        ]);
+
+        if (!isset($img['file'])) {
+            continue;
+        }
+
+        $path = $this->imageService->store(
+            $img['file'],
+            'popups'
+        );
+
+        $popup->images()->create([
+            'image' => $path,
+            'device' => $img['device'],
+            'slot' => $img['slot'],
+            'alt' => $img['alt'] ?? null,
+            'title' => $img['title'] ?? null,
+        ]);
+    }
+}
+
       $popup->update($data);
       DB::commit();
 

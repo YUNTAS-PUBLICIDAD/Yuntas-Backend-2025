@@ -39,7 +39,7 @@ class PopupSeeder extends Seeder
         ];
 
         foreach ($popups as $data) {
-            Popup::updateOrCreate(
+            Popup::firstOrCreate(
                 ['slug' => $data['slug']],
                 $data
             );
