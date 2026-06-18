@@ -53,7 +53,8 @@ class Product extends Model
         'status',
         'meta_title',
         'meta_description',
-        'keywords'
+        'keywords',
+        'video_url'
     ];
 
     protected $casts = [

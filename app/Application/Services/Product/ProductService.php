@@ -65,6 +65,7 @@ class ProductService
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
                 'keywords' => $dto->keywords,
+                'video_url' => $dto->video_url,
             ]);
 
             // 2. Sincronizar Categorías (Vital)
@@ -131,6 +132,7 @@ class ProductService
                 'meta_title' => $dto->meta_title,
                 'meta_description' => $dto->meta_description,
                 'keywords' => $dto->keywords,
+                'video_url' => $dto->video_url,
             ]);
 
            if (!empty($dto->categories)) {
@@ -358,6 +360,10 @@ class ProductService
         $dto->keywords = $this->sanitizeKeywords($dto->keywords);
         $dto->slug = $this->sanitizeSlug($dto->slug);
         $dto->price = $this->sanitizeFloat($dto->price);
+
+        if ($dto->video_url) {
+            $dto->video_url = $this->sanitizeUrl($dto->video_url);
+        }
 
         // Sanitizar arrays
         if ($dto->specifications) {
