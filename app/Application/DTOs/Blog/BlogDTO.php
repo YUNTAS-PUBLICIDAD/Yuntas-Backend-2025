@@ -20,6 +20,7 @@ class BlogDTO
         // SEO
         public string $meta_title,
         public string $meta_description, 
+        public array $keywords,
         
         // Relaciones y Archivos
         public $main_image,
@@ -45,6 +46,9 @@ class BlogDTO
             cover_subtitle: $request->validated('cover_subtitle') ?? $request->input('cover_subtitle'),
             status: $request->input('status', 'published'),
             video_url: $request->input('video_url') ?? null,
+            keywords: is_string($request->input('keywords')) 
+                ? explode(',', $request->input('keywords')) 
+                : $request->input('keywords', []),
 
             product_id: $request->validated('product_id') ?? null,
 

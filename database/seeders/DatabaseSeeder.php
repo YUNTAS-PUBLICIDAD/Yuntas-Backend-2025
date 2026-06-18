@@ -356,6 +356,9 @@ class DatabaseSeeder extends Seeder
         // 13. Blogs
         $this->call(BlogSeeder::class);
 
+        // 14. Popups
+        $this->call(PopupSeeder::class);
+
         // Chatbot
         $this->call(ChatbotSeeder::class);
 
