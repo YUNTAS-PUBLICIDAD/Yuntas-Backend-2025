@@ -104,7 +104,7 @@ class TemplateController extends Controller
                    => 'nullable|string|max:255',
 
                'steps.*.variants.*.cta_url'
-                   => 'nullable|url|max:500',
+                   => 'nullable|string|max:500',
 
                'steps.*.variants.*.active'
                    => 'boolean',
@@ -145,7 +145,7 @@ class TemplateController extends Controller
                    => 'nullable|string',
 
                'steps.*.variants.*.product_overrides.*.cta_url'
-                   => 'nullable|url',
+                   => 'nullable|string|max:500',
                    'steps.*.variants.*.product_overrides.*.assets'
                        => 'array',
 

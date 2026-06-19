@@ -21,8 +21,13 @@ class Blog extends Model
         'meta_title',
         'meta_description',
         'video_url',
+        'keywords',
 
         'product_id',
+    ];
+
+    protected $casts = [
+        'keywords' => 'array',
     ];
 
     /**

@@ -24,6 +24,7 @@ class StoreBlogRequest extends FormRequest
             // SEO 
             'meta_title' => 'required|string|max:70', 
             'meta_description' => 'required|string|max:160',
+            'keywords' => 'nullable',
 
             // Imagen Principal
             'main_image' => 'required|image|mimes:webp|max:5120', // imagen princial en card
