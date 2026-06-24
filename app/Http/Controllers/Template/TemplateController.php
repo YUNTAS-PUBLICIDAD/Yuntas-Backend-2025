@@ -146,17 +146,24 @@ class TemplateController extends Controller
 
                'steps.*.variants.*.product_overrides.*.cta_url'
                    => 'nullable|string|max:500',
-                   'steps.*.variants.*.product_overrides.*.assets'
-                       => 'array',
 
-                   'steps.*.variants.*.product_overrides.*.assets.*.key'
-                       => 'required|string',
+               'steps.*.variants.*.product_overrides.*.variables'
+                   => 'array',
 
-                   'steps.*.variants.*.product_overrides.*.assets.*.path'
-                       => 'required|string',
+               'steps.*.variants.*.product_overrides.*.active'
+                   => 'boolean',
 
-                   'steps.*.variants.*.product_overrides.*.assets.*.meta'
-                       => 'nullable',
+               'steps.*.variants.*.product_overrides.*.assets'
+                   => 'array',
+
+               'steps.*.variants.*.product_overrides.*.assets.*.key'
+                   => 'required|string',
+
+               'steps.*.variants.*.product_overrides.*.assets.*.path'
+                   => 'required|string',
+
+               'steps.*.variants.*.product_overrides.*.assets.*.meta'
+                   => 'nullable',
 
            ]);
       }
