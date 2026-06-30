@@ -38,7 +38,14 @@ class ChatbotController extends Controller
 
         return response()->json([
             'conversation_id' => $conversation->uuid,
-            'messages' => $reply, // Retorna la respuesta de n8n (o estructura de mensajes si n8n te devuelve un array)
+            'messages' => [
+                [
+                    'role' => 'bot',
+                    'sender' => 'bot',
+                    'text' => $reply,
+                    'type' => 'text'
+                ]
+            ],
         ]);
     }
 
