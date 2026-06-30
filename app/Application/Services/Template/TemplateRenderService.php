@@ -39,21 +39,24 @@ class TemplateRenderService
                   // =====================================
 
                   $content =
-                      $override?->content
-                      ?? $variant->content
-                      ?? '';
+                      (!is_null($override?->content) && $override->content !== '')
+                      ? $override->content
+                      : ($variant->content ?? '');
 
                   $subject =
-                      $override?->subject
-                      ?? $variant->subject;
+                      (!is_null($override?->subject) && $override->subject !== '')
+                      ? $override->subject
+                      : $variant->subject;
 
                   $ctaText =
-                      $override?->cta_text
-                      ?? $variant->cta_text;
+                      (!is_null($override?->cta_text) && $override->cta_text !== '')
+                      ? $override->cta_text
+                      : $variant->cta_text;
 
                   $ctaUrl =
-                      $override?->cta_url
-                      ?? $variant->cta_url;
+                      (!is_null($override?->cta_url) && $override->cta_url !== '')
+                      ? $override->cta_url
+                      : $variant->cta_url;
 
                   return [
 
