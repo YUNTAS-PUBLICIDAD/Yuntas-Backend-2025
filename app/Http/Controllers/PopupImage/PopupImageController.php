@@ -96,7 +96,6 @@ class PopupImageController extends Controller
           'sometimes',
           'file',
           'image',
-          // 'mimes:jpg,jpeg,png,webp',
           'mimes:webp',
           'max:2048'
         ],
