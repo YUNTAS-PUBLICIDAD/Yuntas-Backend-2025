@@ -48,7 +48,7 @@ class UpdatePopupRequest extends FormRequest
 
         'images' => ['sometimes', 'array'],
         'images.*' => ['required', 'array'],
-        'images.*.file' => 'required_with:images|image|mimes:jpg,jpeg,png,webp|max:2048',
+        'images.*.file' => 'required_with:images|image|mimes:webp|max:2048',
         'images.*.device' => ['required_with:images', Rule::in(['desktop', 'mobile'])],
         'images.*.slot' => ['required_with:images', Rule::in(['left', 'right', 'center'])],
         'images.*.alt' => 'nullable|string|max:255',
