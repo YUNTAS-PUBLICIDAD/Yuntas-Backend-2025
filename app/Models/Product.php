@@ -42,7 +42,15 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    
+    protected static function booted()
+    {
+        static::deleting(function ($product) {
+            if (method_exists($product, 'isForceDeleting') && !$product->isForceDeleting()) {
+                $product->slug = $product->slug . '-deleted-' . time();
+                $product->saveQuietly();
+            }
+        });
+    }
 
     protected $fillable = [
         'name',
