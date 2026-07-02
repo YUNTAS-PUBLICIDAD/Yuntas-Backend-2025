@@ -12,6 +12,16 @@ class Blog extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted()
+    {
+        static::deleting(function ($blog) {
+            if (method_exists($blog, 'isForceDeleting') && !$blog->isForceDeleting()) {
+                $blog->slug = $blog->slug . '-deleted-' . time();
+                $blog->saveQuietly();
+            }
+        });
+    }
+
     protected $fillable = [
         'title',
         'slug',
