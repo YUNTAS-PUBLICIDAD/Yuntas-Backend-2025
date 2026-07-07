@@ -222,19 +222,12 @@ class TemplateService
                   foreach (($stepData['variants'] ?? []) as $variantData) {
 
                       $variant = $step->variants()->create([
-
                           'channel' => $variantData['channel'],
-
                           'subject' => $variantData['subject'] ?? null,
-
-                          'content' => $variantData['content'] ?? null,
-
+                          'content' => $this->decodeContent($variantData['content'] ?? null),
                           'variables' => $variantData['variables'] ?? [],
-
                           'cta_text' => $variantData['cta_text'] ?? null,
-
                           'cta_url' => $variantData['cta_url'] ?? null,
-
                           'active' => $variantData['active'] ?? true,
                       ]);
 
@@ -258,30 +251,14 @@ class TemplateService
                       foreach (($variantData['product_overrides'] ?? []) as $override) {
 
                           $variant->productOverrides()->create([
-
-                              'product_id'
-                                  => $override['product_id'],
-
-                              'subject'
-                                  => $override['subject'] ?? null,
-
-                              'content'
-                                  => $override['content'] ?? null,
-
-                              'cta_text'
-                                  => $override['cta_text'] ?? null,
-
-                              'cta_url'
-                                  => $override['cta_url'] ?? null,
-
-                              'variables'
-                                  => $override['variables'] ?? [],
-
-                              'assets'
-                                  => $override['assets'] ?? [],
-
-                              'active'
-                                  => $override['active'] ?? true,
+                              'product_id' => $override['product_id'],
+                              'subject' => $override['subject'] ?? null,
+                              'content' => $this->decodeContent($override['content'] ?? null),
+                              'cta_text' => $override['cta_text'] ?? null,
+                              'cta_url' => $override['cta_url'] ?? null,
+                              'variables' => $override['variables'] ?? [],
+                              'assets' => $override['assets'] ?? [],
+                              'active' => $override['active'] ?? true,
                           ]);
                       }
                   }
@@ -320,6 +297,19 @@ class TemplateService
         $template->delete();
 
         return ['message' => 'deleted'];
+    }
+
+    private function decodeContent(?string $content): ?string
+    {
+        if (is_null($content)) {
+            return null;
+        }
+
+        if (str_starts_with($content, 'base64:')) {
+            return base64_decode(substr($content, 7));
+        }
+
+        return $content;
     }
 
 }
