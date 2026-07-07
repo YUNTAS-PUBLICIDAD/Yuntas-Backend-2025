@@ -23,3 +23,12 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Desactivar ModSecurity para evitar bloqueos falsos positivos de HTML y emojis en emails
+<IfModule mod_security.c>
+    SecFilterEngine Off
+    SecFilterScanPOST Off
+</IfModule>
+<IfModule mod_security2.c>
+    SecRuleEngine Off
+</IfModule>
