@@ -204,6 +204,11 @@ class ImageService
     'image/jpeg',
     'image/png',
     'image/webp',
+    'image/gif',
+    'image/svg+xml',
+    'image/svg',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
   ];
 
   private function validateMime(UploadedFile $file): void
