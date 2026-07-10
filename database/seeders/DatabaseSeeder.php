@@ -347,6 +347,18 @@ class DatabaseSeeder extends Seeder
         //10.Productos
         $this->call(ProductSeeder::class);
 
+        //11. Plantillas
+        $this->call(TemplateSeeder::class);
+
+        //12.Template_Steps
+        $this->call(TemplateStepSeeder::class);
+
+        //13. Variantes de Plantillas
+        $this->call(TemplateVariantSeeder::class);
+
+        //14. Variantes de Plantillas para Productos
+        $this->call(TemplateVariantProductOverrideSeeder::class);
+
         //11.Mensaje de contacto
         $this->call(ContactMessageSeeder::class);
 
