@@ -38,7 +38,7 @@ jobs:
                git fetch origin && \
                git reset --hard origin/${{ env.BRANCH }} && \
                composer install --no-dev --optimize-autoloader && \
-               php artisan migrate --force && \
+               if [ \"${{ env.BRANCH }}\" = \"pre-masterb\" ]; then php artisan migrate --force; fi && \
                php artisan storage:link || true && \
                php artisan route:clear && \
                php artisan config:clear && \
