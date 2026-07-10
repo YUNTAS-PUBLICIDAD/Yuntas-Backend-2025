@@ -53,12 +53,9 @@ class DeployService
                 $httpRequest = $httpRequest->withoutVerifying();
             }
 
-            $response = $httpRequest->post("https://api.github.com/repos/{$repo}/dispatches", [
-                'event_type' => 'rebuild-frontend',
-                'client_payload' => [
-                    'triggered_by' => 'manual',
-                    'timestamp' => now()->toIso8601String(),
-                ],
+            $branch = env('GITHUB_BRANCH', 'master');
+            $response = $httpRequest->post("https://api.github.com/repos/{$repo}/actions/workflows/deploy.yml/dispatches", [
+                'ref' => $branch,
             ]);
 
             if ($response->successful()) {
