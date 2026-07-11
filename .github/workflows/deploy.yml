@@ -25,7 +25,7 @@ jobs:
             echo "DEST_PATH=~/domains/staging.yuntaspublicidad.com/public_html/back" >> $GITHUB_ENV
             echo "BRANCH=pre-masterb" >> $GITHUB_ENV
           else
-            echo "DEST_PATH=~/domains/apiyuntas.yuntaspublicidad.com/public_html" >> $GITHUB_ENV
+            echo "DEST_PATH=~/domains/apiyuntas.yuntaspublicidad.com/public_html/back" >> $GITHUB_ENV
             echo "BRANCH=master" >> $GITHUB_ENV
           fi
 
