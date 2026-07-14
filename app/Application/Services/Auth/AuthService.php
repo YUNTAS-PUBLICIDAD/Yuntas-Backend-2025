@@ -12,7 +12,8 @@ class AuthService
 {
     public function __construct(
         private UserRepositoryInterface $repository
-    ) {}
+    ) {
+    }
     /**
      * Intenta loguear al usuario y devuelve el token.
      */
@@ -20,19 +21,32 @@ class AuthService
     {
         $user = User::where('email', $dto->email)->first();
 
-        if (! $user || ! Hash::check($dto->password, $user->password)) {
+        if (!$user || !Hash::check($dto->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
-   
         $token = $user->createToken($dto->deviceName)->plainTextToken;
 
+        // Cargar el rol y sus permisos
+        $user->load('role.permissions');
+
         return [
-            'user' => $user->load('role'), 
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => [
+                    'id' => $user->role->id,
+                    'name' => $user->role->name,
+                ],
+                'permissions' => $user->role->permissions
+                    ->pluck('name')
+                    ->values(),
+            ],
             'token' => $token,
-            'token_type' => 'Bearer'
+            'token_type' => 'Bearer',
         ];
     }
 
@@ -49,7 +63,7 @@ class AuthService
      */
     public function getProfile(User $user): User
     {
-        return $user->load('role'); 
+        return $user->load('role');
     }
 
     /**
@@ -76,7 +90,7 @@ class AuthService
         $newToken = $user->createToken($tokenName)->plainTextToken;
 
         return [
-            'user'  => $user->load('role'),
+            'user' => $user->load('role'),
             'token' => $newToken,
             'token_type' => 'Bearer',
         ];

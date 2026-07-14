@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         // 1. Roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $marketingRole = Role::firstOrCreate(['name' => 'marketing']);
-        $ventasRole = Role::firstOrCreate(['name' => 'ventas']);
+        $ventasRole = Role::firstOrCreate(['name' => 'diseño']);
 
         // 2. Usuario Administrador
         User::firstOrCreate(
@@ -359,23 +359,23 @@ class DatabaseSeeder extends Seeder
         //14. Variantes de Plantillas para Productos
         $this->call(TemplateVariantProductOverrideSeeder::class);
 
-        //11.Mensaje de contacto
+        //15.Mensaje de contacto
         $this->call(ContactMessageSeeder::class);
 
-        // 12. Reclamos
+        // 16. Reclamos
         $this->call(ClaimSeeder::class);
 
-        // 13. Blogs
+        // 17. Blogs
         $this->call(BlogSeeder::class);
 
-        // 14. Popups
+        // 18. Popups
         $this->call(PopupSeeder::class);
+
+        //19.Roles y Permisos
+        $this->call(RolesAndPermissionsSeeder::class);
 
         // Chatbot
         $this->call(ChatbotSeeder::class);
-
-        // Products
-        $this->call(ProductSeeder::class);
 
         // Settings
         $this->call(SettingsSeeder::class);
