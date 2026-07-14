@@ -5,18 +5,25 @@ use App\Models\AutomationExecution;
 use App\Models\Lead;
 use App\Models\Template;
 
+use Illuminate\Support\Facades\Log;
+
 // Solo inicia flujos
 class AutomationExecutionService
 {
     public function start(
         Lead $lead,
         string $context
-    ): AutomationExecution {
+    ): ?AutomationExecution {
 
         $template = Template::query()
             ->where('context', $context)
             ->where('active', true)
-            ->firstOrFail();
+            ->first();
+
+        if (!$template) {
+            Log::warning("No se pudo iniciar la automatización para el lead ID {$lead->id} porque no hay una plantilla activa para el contexto '{$context}'.");
+            return null;
+        }
 
         return AutomationExecution::create([
 
