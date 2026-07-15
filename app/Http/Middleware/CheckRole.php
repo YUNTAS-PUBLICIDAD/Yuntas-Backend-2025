@@ -29,15 +29,6 @@ class CheckRole
             ], 403);
         }
 
-        // Si es marketing o ventas, solo puede hacer GET
-        if (in_array($userRole, ['marketing', 'ventas'])) {
-            if (!$request->isMethod('get')) {
-                return response()->json([
-                    'message' => 'Tu rol solo permite consultar información.'
-                ], 403);
-            }
-        }
-
         return $next($request);
     }
     

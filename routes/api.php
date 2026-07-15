@@ -78,43 +78,43 @@ Route::post('claims', [ClaimController::class, 'store'])->middleware('throttle:f
 // ------------------- CONTACTO (Soporte) -------------------
 Route::prefix('contacto')->middleware('throttle:forms')->group(function () {
   Route::post('/', [ContactMessageController::class, 'store']);
-  });
+});
 
-  // ------------------- POPUP: EMAIL -------------------
-  Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
-    Route::post('/enviar', [EmailPopupController::class, 'enviar']);
-    });
+// ------------------- POPUP: EMAIL -------------------
+Route::prefix('email-popup')->middleware('throttle:forms')->group(function () {
+  Route::post('/enviar', [EmailPopupController::class, 'enviar']);
+});
 
-    // ------------------- POPUP: WHATSAPP -------------------
-    Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
-      Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
-      });
+// ------------------- POPUP: WHATSAPP -------------------
+Route::prefix('whatsapp-popup')->middleware('throttle:forms')->group(function () {
+  Route::post('/enviar', [WhatsappPopupController::class, 'enviar']);
+});
 
-    // ------------------- TRACKING DE PÁGINAS (Público) -------------------
-    Route::post('page-view', [\App\Http\Controllers\PageView\TrackingController::class, 'store'])->middleware('throttle:public');
+// ------------------- TRACKING DE PÁGINAS (Público) -------------------
+Route::post('page-view', [\App\Http\Controllers\PageView\TrackingController::class, 'store'])->middleware('throttle:public');
 
-      // ==============================================================================
-      //                                WEBHOOKS
-      // ==============================================================================
-      // ------------------- DEPLOY FRONTEND -------------------
-      Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
-        Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
-        });
+// ==============================================================================
+//                                WEBHOOKS
+// ==============================================================================
+// ------------------- DEPLOY FRONTEND -------------------
+Route::prefix('webhooks')->middleware('throttle:webhooks')->group(function () {
+  Route::post('/deploy-frontend-complete', [WebhooksController::class, 'deployFrontend']);
+});
 
-        // Chatbot
-        Route::post('/chatbot/message', [ChatbotController::class, 'handle'])->middleware('throttle:forms');
+// Chatbot
+Route::post('/chatbot/message', [ChatbotController::class, 'handle'])->middleware('throttle:forms');
 
-        // Chatbot Whatsapp (entrada desde Baileys)
-        Route::post('/chatbot/whatsapp', [ChatbotController::class, 'whatsapp'])
-        ->middleware('throttle:webhooks');
+// Chatbot Whatsapp (entrada desde Baileys)
+Route::post('/chatbot/whatsapp', [ChatbotController::class, 'whatsapp'])
+  ->middleware('throttle:webhooks');
 
-        // ==============================================================================
-        //                          ADMINISTRACIÓN (ADMIN PANEL)
-        // ==============================================================================
-Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admin'])->group(function () {
+// ==============================================================================
+//                          ADMINISTRACIÓN (ADMIN PANEL)
+// ==============================================================================
+Route::middleware(['auth:sanctum', 'role:admin|marketing|diseño', 'throttle:admin'])->group(function () {
 
   // ------------------- USUARIOS -------------------
-  Route::prefix('admin/users')->group(function () {
+  Route::prefix('admin/users')->middleware('role:admin')->group(function () {
     Route::get('/', [UserController::class, 'index']);
     Route::post('/', [UserController::class, 'store']);
     Route::get('/{id}', [UserController::class, 'show']);
@@ -163,16 +163,22 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
 
   // ------------------- BLOGS -------------------
   Route::prefix('admin/blogs')->group(function () {
-    Route::post('/', [BlogController::class, 'store']);
-    Route::post('/{id}', [BlogController::class, 'update']);
-    Route::delete('/{id}', [BlogController::class, 'destroy']);
+    Route::post('/', [BlogController::class, 'store'])
+      ->middleware('permission:blogs.crear');
+    Route::post('/{id}', [BlogController::class, 'update'])
+      ->middleware('permission:blogs.editar');
+    Route::delete('/{id}', [BlogController::class, 'destroy'])
+      ->middleware('permission:blogs.eliminar');
   });
 
   // ------------------- PRODUCTOS -------------------
   Route::prefix('admin/productos')->middleware('throttle:uploads')->group(function () {
-    Route::post('/', [ProductController::class, 'store']);
-    Route::post('/{id}', [ProductController::class, 'update']);
-    Route::delete('/{id}', [ProductController::class, 'destroy']);
+    Route::post('/', [ProductController::class, 'store'])
+      ->middleware('permission:productos.crear');
+    Route::post('/{id}', [ProductController::class, 'update'])
+      ->middleware('permission:productos.editar');
+    Route::delete('/{id}', [ProductController::class, 'destroy'])
+      ->middleware('permission:productos.eliminar');
   });
 
   // ------------------- PRODUCTOS: EMAIL -------------------
@@ -213,29 +219,36 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
 
   Route::prefix('admin/popups')->group(function () {
     Route::get('/', [PopupController::class, 'index']);
-    Route::post('/', [PopupController::class, 'store']);
+    Route::post('/', [PopupController::class, 'store'])
+      ->middleware('permission:popups.crear');
 
     Route::get('{id}', [PopupController::class, 'show']);
-    Route::patch('{id}', [PopupController::class, 'update']);
-    Route::delete('{id}', [PopupController::class, 'destroy']);
+    Route::patch('{id}', [PopupController::class, 'update'])
+      ->middleware('permission:popups.editar');
+    Route::delete('{id}', [PopupController::class, 'destroy'])
+      ->middleware('permission:popups.eliminar');
   });
-  Route::prefix('admin/templates')->group(function() {
+  Route::prefix('admin/templates')->group(function () {
 
-      Route::get('/variables', [TemplateController::class, 'variables']);
-       Route::post('/upload-image', [TemplateAssetController::class, 'store']);
-       Route::post('/product-assets/upload', [TemplateProductAssetController::class, 'upload']);
-       Route::delete('/product-assets', [TemplateProductAssetController::class, 'destroy']);
-       Route::post(
-          '/product-overrides/upload',
-          [ProductOverrideAssetController::class, 'store']
-       );
-       Route::get('/', [TemplateController::class, 'index']);
-       Route::post('/', [TemplateController::class, 'store']);
-       Route::get('/{id}', [TemplateController::class, 'show']);
-       Route::put('/{id}', [TemplateController::class, 'update']);
-       Route::delete('/{id}', [TemplateController::class, 'destroy']);
+    Route::get('/variables', [TemplateController::class, 'variables']);
+    Route::post('/upload-image', [TemplateAssetController::class, 'store'])
+      ->middleware('permission:plantillas.crear');
+    Route::post('/product-assets/upload', [TemplateProductAssetController::class, 'upload'])
+      ->middleware('permission:plantillas.crear');
+    Route::delete('/product-assets', [TemplateProductAssetController::class, 'destroy'])
+      ->middleware('permission:plantillas.editar');
+    Route::post('/product-overrides/upload', [ProductOverrideAssetController::class, 'store'])
+      ->middleware('permission:plantillas.crear');
+    Route::get('/', [TemplateController::class, 'index']);
+    Route::post('/', [TemplateController::class, 'store'])
+      ->middleware('permission:plantillas.crear');
+    Route::get('/{id}', [TemplateController::class, 'show']);
+    Route::put('/{id}', [TemplateController::class, 'update'])
+      ->middleware('permission:plantillas.editar');
+    Route::delete('/{id}', [TemplateController::class, 'destroy'])
+      ->middleware('permission:plantillas.eliminar');
   });
-  Route::prefix('admin/popup-images')->group(function(){
+  Route::prefix('admin/popup-images')->group(function () {
     Route::post('{id}', [PopupImageController::class, 'update']);
     Route::patch('{id}', [PopupImageController::class, 'update']);
   });
@@ -248,21 +261,21 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|ventas', 'throttle:admi
 
   Route::prefix('admin/chatbot/flows')->group(function () {
 
-      Route::get('/', [ChatbotAdminController::class, 'index']);
-      Route::post('/', [ChatbotAdminController::class, 'store']);
-      Route::get('/{id}', [ChatbotAdminController::class, 'show']);
-      Route::put('/{id}', [ChatbotAdminController::class, 'update']);
-      Route::delete('/{id}', [ChatbotAdminController::class, 'destroy']);
+    Route::get('/', [ChatbotAdminController::class, 'index']);
+    Route::post('/', [ChatbotAdminController::class, 'store']);
+    Route::get('/{id}', [ChatbotAdminController::class, 'show']);
+    Route::put('/{id}', [ChatbotAdminController::class, 'update']);
+    Route::delete('/{id}', [ChatbotAdminController::class, 'destroy']);
 
-      // 🔥 GRAPH EDITOR
-      Route::get('/{id}/graph', [ChatbotAdminController::class, 'getGraph']);
-      Route::post('/{id}/graph', [ChatbotAdminController::class, 'saveGraph']);
+    // 🔥 GRAPH EDITOR
+    Route::get('/{id}/graph', [ChatbotAdminController::class, 'getGraph']);
+    Route::post('/{id}/graph', [ChatbotAdminController::class, 'saveGraph']);
   });
 
   // ------------------- DASHBOARD TRACKING (Privado) -------------------
-  Route::prefix('dashboard')->group(function () {
-      Route::get('most-viewed-pages', [\App\Http\Controllers\PageView\TrackingController::class, 'mostViewedPages']);
-      Route::get('user-type-stats', [\App\Http\Controllers\PageView\TrackingController::class, 'userTypeStats']);
+  Route::prefix('dashboard')->middleware('role:admin')->group(function () {
+    Route::get('most-viewed-pages', [\App\Http\Controllers\PageView\TrackingController::class, 'mostViewedPages']);
+    Route::get('user-type-stats', [\App\Http\Controllers\PageView\TrackingController::class, 'userTypeStats']);
   });
 });
 
