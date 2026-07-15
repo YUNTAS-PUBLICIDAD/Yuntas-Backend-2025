@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\App\Http\Middleware\SanitizeInput::class);
+        $middleware->append(\App\Http\Middleware\RemoveHeaders::class);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
@@ -42,6 +45,33 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Endpoint no encontrado.',
                     'error' => 'Not Found'
                 ], 404);
+            }
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Método HTTP no permitido para esta ruta.'
+                ], 405);
+            }
+        });
+
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                \Illuminate\Support\Facades\Log::error('Error de base de datos en API: ' . $e->getMessage(), [
+                    'sql' => $e->getSql(),
+                    'bindings' => $e->getBindings()
+                ]);
+
+                $message = config('app.debug') 
+                    ? 'Error de base de datos: ' . $e->getMessage() 
+                    : 'Ha ocurrido un error en la base de datos. Por favor, contacte a soporte.';
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $message
+                ], 500);
             }
         });
     })->create();
