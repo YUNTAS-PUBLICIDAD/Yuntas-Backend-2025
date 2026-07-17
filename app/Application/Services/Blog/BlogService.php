@@ -50,6 +50,8 @@ class BlogService
                 'cover_subtitle' => $dto->cover_subtitle,
                 'status' => $dto->status,
                 'video_url' => $dto->video_url,
+                'video_description' => $dto->video_description,
+                'video_subtitle' => $dto->video_subtitle,
                 'keywords' => $dto->keywords,
 
                 'product_id' => $dto->product_id,
@@ -114,7 +116,9 @@ class BlogService
                 'hero_title' => $dto->hero_title,
                 'cover_subtitle' => $dto->cover_subtitle,
                 'status' => $dto->status,
-                'video_url' => $dto->video_url,    
+                'video_url' => $dto->video_url,
+                'video_description' => $dto->video_description,
+                'video_subtitle' => $dto->video_subtitle,    
                 'keywords' => $dto->keywords,            
                 'product_id' => $dto->product_id, 
                 'meta_title' => $dto->meta_title,
@@ -342,6 +346,8 @@ class BlogService
         if ($dto->video_url) {
             $dto->video_url = $this->sanitizeUrl($dto->video_url);
         }
+        $dto->video_description = $this->sanitizeHtml($dto->video_description);
+        $dto->video_subtitle = $this->sanitizeText($dto->video_subtitle);
 
         $dto->product_id = $this->sanitizeInteger($dto->product_id);
 
