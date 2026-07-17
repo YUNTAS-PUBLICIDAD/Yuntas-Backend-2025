@@ -273,7 +273,7 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|diseño', 'throttle:adm
   });
 
   // ------------------- DASHBOARD TRACKING (Privado) -------------------
-  Route::prefix('dashboard')->middleware('role:admin')->group(function () {
+  Route::prefix('dashboard')->group(function () {
     Route::get('most-viewed-pages', [\App\Http\Controllers\PageView\TrackingController::class, 'mostViewedPages']);
     Route::get('user-type-stats', [\App\Http\Controllers\PageView\TrackingController::class, 'userTypeStats']);
   });
