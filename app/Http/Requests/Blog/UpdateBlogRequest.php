@@ -23,9 +23,9 @@ class UpdateBlogRequest extends FormRequest
                 'max:150',
                 Rule::unique('blogs', 'slug')->ignore($this->route('id'))
             ],
-            'hero_title' => 'required|string|max:150',
-            'cover_subtitle' => 'required|string|max:255',
-            'video_url' => 'nullable|url',
+            'video_url' => 'nullable|url|required_with:video_description,video_subtitle',
+            'video_description' => 'nullable|string',
+            'video_subtitle' => 'nullable|string|max:255',
 
             // SEO 
             'meta_title' => 'required|string|max:70', 

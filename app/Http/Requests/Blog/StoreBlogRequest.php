@@ -19,7 +19,9 @@ class StoreBlogRequest extends FormRequest
             'slug' => 'nullable|string|max:150|unique:blogs,slug', // slug
             'hero_title' => 'required|string|max:150', // titulo hero en detalle
             'cover_subtitle' => 'required|string|max:255', // subtitulo en detalle
-            'video_url' => 'nullable|url', // url de video opcional
+            'video_url' => 'nullable|url|required_with:video_description,video_subtitle',
+            'video_description' => 'nullable|string',
+            'video_subtitle' => 'nullable|string|max:255',
             
             // SEO 
             'meta_title' => 'required|string|max:70', 

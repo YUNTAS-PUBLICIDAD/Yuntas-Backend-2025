@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         // 1. Roles
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $marketingRole = Role::firstOrCreate(['name' => 'marketing']);
-        $ventasRole = Role::firstOrCreate(['name' => 'ventas']);
+        $disenoRole = Role::firstOrCreate(['name' => 'diseño']);
 
         // 2. Usuario Administrador
         User::firstOrCreate(
@@ -39,7 +39,27 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 3. Slots de Imágenes
+        // 3. Usuario Marketing
+        User::firstOrCreate(
+            ['email' => 'marketing@admin.com'],
+            [
+                'name' => 'Marketing',
+                'password' => Hash::make('password'),
+                'role_id' => $marketingRole->id,
+            ]   
+        );
+
+        // 4. Usuario Diseño
+        User::firstOrCreate(
+            ['email' => 'diseno@admin.com'],
+            [
+                'name' => 'Diseño',
+                'password' => Hash::make('password'),
+                'role_id' => $disenoRole->id,
+            ]   
+        );
+
+        // 5. Slots de Imágenes
         // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'List']);
         // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Hero']);
         // ImageSlot::firstOrCreate(['module' => 'blogs', 'name' => 'Desc']);
@@ -53,7 +73,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(ImageSlotSeeder::class);
 
-        // 4. Slots de Contenido
+        // 6. Slots de Contenido
         ProductContentSlot::firstOrCreate(['name' => 'Especificaciones']);
         ProductContentSlot::firstOrCreate(['name' => 'Beneficios']);
 
@@ -61,13 +81,12 @@ class DatabaseSeeder extends Seeder
         BlogContentSlot::firstOrCreate(['name' => 'Beneficios']);
         BlogContentSlot::firstOrCreate(['name' => 'Testimonios']);
 
-        // 5. Fuentes de Leads
+        // 7. Fuentes de Leads
         $inicioSource = LeadSource::firstOrCreate(['name' => 'Inicio']);
-        $productosSource = LeadSource::firstOrCreate(['name' => 'Productos']);
         $detalleSource = LeadSource::firstOrCreate(['name' => 'Producto detalle']);
         $adminSource = LeadSource::firstOrCreate(['name' => 'Administración']);
 
-        // 6. Plantillas de Whatsapp Popup
+        // 8. Plantillas de Whatsapp Popup
         // $inicioSource = LeadSource::where('name', 'Inicio')->first();
         // $productosSource = LeadSource::where('name', 'Productos')->first();
         // $detalleSource = LeadSource::where('name', 'Producto detalle')->first();
@@ -333,49 +352,49 @@ class DatabaseSeeder extends Seeder
 //     ]
 // );
 
-        // 7. Documento ID
+        //9. Documento ID
         DocumentType::firstOrCreate(['code' => '1', 'label' => 'dni']);
         DocumentType::firstOrCreate(['code' => '2', 'label' => 'pasaporte']);
 
-        // 8. Estado reclamo
+        //10. Estado reclamo
         ClaimStatus::firstOrCreate(['name' => 'pendiente']);
         ClaimStatus::firstOrCreate(['name' => 'completo']);
 
-        // 9. Tipo Reclamo
+        //11. Tipo Reclamo
         ClaimType::firstOrCreate(['name' => 'reclamo']);
 
-        //10.Productos
+        //12.Productos
         $this->call(ProductSeeder::class);
 
-        //11. Plantillas
+        //13. Plantillas
         $this->call(TemplateSeeder::class);
 
-        //12.Template_Steps
+        //14.Template_Steps
         $this->call(TemplateStepSeeder::class);
 
-        //13. Variantes de Plantillas
+        //15. Variantes de Plantillas
         $this->call(TemplateVariantSeeder::class);
 
-        //14. Variantes de Plantillas para Productos
+        //16. Variantes de Plantillas para Productos
         $this->call(TemplateVariantProductOverrideSeeder::class);
 
-        //11.Mensaje de contacto
+        //17.Mensaje de contacto
         $this->call(ContactMessageSeeder::class);
 
-        // 12. Reclamos
+        //18. Reclamos
         $this->call(ClaimSeeder::class);
 
-        // 13. Blogs
+        //19. Blogs
         $this->call(BlogSeeder::class);
 
-        // 14. Popups
+        //20. Popups
         $this->call(PopupSeeder::class);
+
+        //21.Roles y Permisos
+        $this->call(RolesAndPermissionsSeeder::class);
 
         // Chatbot
         $this->call(ChatbotSeeder::class);
-
-        // Products
-        $this->call(ProductSeeder::class);
 
         // Settings
         $this->call(SettingsSeeder::class);
