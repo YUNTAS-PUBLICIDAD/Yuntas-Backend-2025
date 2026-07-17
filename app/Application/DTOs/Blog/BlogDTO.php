@@ -13,6 +13,8 @@ class BlogDTO
         public string $cover_subtitle,       
         public string $status,
         public ?string $video_url,
+        public ?string $video_description,
+        public ?string $video_subtitle,
 
         //  Producto
         public ?int $product_id,
@@ -46,6 +48,9 @@ class BlogDTO
             cover_subtitle: $request->validated('cover_subtitle') ?? $request->input('cover_subtitle'),
             status: $request->input('status', 'published'),
             video_url: $request->input('video_url') ?? null,
+            video_description: $request->input('video_description') ?? null,
+            video_subtitle: $request->input('video_subtitle') ?? null,
+            
             keywords: is_string($request->input('keywords')) 
                 ? explode(',', $request->input('keywords')) 
                 : $request->input('keywords', []),
