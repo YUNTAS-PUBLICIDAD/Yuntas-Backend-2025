@@ -62,7 +62,9 @@ class Product extends Model
         'meta_title',
         'meta_description',
         'keywords',
-        'video_url'
+        'video_url',
+        'video_description',
+        'video_subtitle'
     ];
 
     protected $casts = [
