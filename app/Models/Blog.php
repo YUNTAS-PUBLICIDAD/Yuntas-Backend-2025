@@ -31,6 +31,8 @@ class Blog extends Model
         'meta_title',
         'meta_description',
         'video_url',
+        'video_description',
+        'video_subtitle',
         'keywords',
 
         'product_id',

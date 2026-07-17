@@ -19,6 +19,8 @@ class BlogResource extends JsonResource
             'hero_title' => $this->hero_title,
             'cover_subtitle' => $this->cover_subtitle,
             'video_url' => $this->video_url,
+            'video_description' => $this->video_description,
+            'video_subtitle' => $this->video_subtitle,
             'keywords' => $this->keywords,
             
             // SEO

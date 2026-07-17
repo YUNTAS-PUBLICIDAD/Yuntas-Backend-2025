@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
 
         // 4. Usuario Diseño
         User::firstOrCreate(
-            ['email' => 'diseño@admin.com'],
+            ['email' => 'diseno@admin.com'],
             [
                 'name' => 'Diseño',
                 'password' => Hash::make('password'),
@@ -83,7 +83,6 @@ class DatabaseSeeder extends Seeder
 
         // 7. Fuentes de Leads
         $inicioSource = LeadSource::firstOrCreate(['name' => 'Inicio']);
-        $productosSource = LeadSource::firstOrCreate(['name' => 'Productos']);
         $detalleSource = LeadSource::firstOrCreate(['name' => 'Producto detalle']);
         $adminSource = LeadSource::firstOrCreate(['name' => 'Administración']);
 
