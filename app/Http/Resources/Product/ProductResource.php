@@ -23,6 +23,8 @@ class ProductResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status,
             'video_url' => $this->video_url,
+            'video_description' => $this->video_description,
+            'video_subtitle' => $this->video_subtitle,
             
             // SEO
             'meta_title' => $this->meta_title,

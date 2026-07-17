@@ -17,6 +17,8 @@ class ProductDTO
         public ?string $meta_description,
         public ?array $keywords,
         public ?string $video_url,
+        public ?string $video_description,
+        public ?string $video_subtitle,
         
         // Relaciones y Archivos
         public ?array $categories,        
@@ -50,6 +52,8 @@ class ProductDTO
 
             categories: $request->input('categories', []), 
             video_url: $request->input('video_url') ?? null,
+            video_description: $request->input('video_description') ?? null,
+            video_subtitle: $request->input('video_subtitle') ?? null,
             
             main_image: $request->file('main_image'),
             main_image_title: $request->input('main_image_title'),

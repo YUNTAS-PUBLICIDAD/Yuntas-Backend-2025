@@ -21,7 +21,9 @@ class StoreProductRequest extends FormRequest
             'hero_title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status' => 'nullable|in:active,inactive',
-            'video_url' => 'nullable|url',
+            'video_url' => 'nullable|url|required_with:video_description,video_subtitle',
+            'video_description' => 'nullable|string',
+            'video_subtitle' => 'nullable|string|max:255',
 
             // SEO
             'meta_title' => 'nullable|string|max:70',
