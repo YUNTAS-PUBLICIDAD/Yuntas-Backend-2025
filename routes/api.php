@@ -31,6 +31,7 @@ use App\Http\Controllers\Template\ProductOverrideAssetController;
 use App\Http\Controllers\Template\TemplateAssetController;
 use App\Http\Controllers\Template\TemplateProductAssetController;
 use App\Http\Controllers\Template\TemplateVariantController;
+use App\Http\Controllers\ActivityLog\ActivityLogController;
 
 // ==============================================================================
 //                              AUTENTICACIÓN
@@ -276,6 +277,10 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|diseño', 'throttle:adm
   Route::prefix('dashboard')->group(function () {
     Route::get('most-viewed-pages', [\App\Http\Controllers\PageView\TrackingController::class, 'mostViewedPages']);
     Route::get('user-type-stats', [\App\Http\Controllers\PageView\TrackingController::class, 'userTypeStats']);
+  });
+
+  Route::prefix('admin/historial')->middleware('role:admin')->group(function () {
+    Route::get('/', [ActivityLogController::class, 'index']);
   });
 });
 
