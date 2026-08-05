@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Product;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 use App\Application\Services\Product\ProductService;
 use App\Application\DTOs\Product\ProductDTO;
@@ -30,7 +31,8 @@ class ProductController extends Controller
 {
     public function __construct(
         private ProductService $productService
-    ) {}
+    ) {
+    }
 
     /**
      * @OA\Get(
@@ -76,18 +78,18 @@ class ProductController extends Controller
      * )
      */
     // Cambiamos $slug por $term
-    public function show($term): JsonResponse 
+    public function show($term): JsonResponse
     {
         try {
-            $product = $this->productService->getDetail($term); 
-            
+            $product = $this->productService->getDetail($term);
+
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'data' => new ProductResource($product)
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => $e->getMessage()
             ], 404);
         }
@@ -117,11 +119,9 @@ class ProductController extends Controller
      * )
      */
     public function store(StoreProductRequest $request): JsonResponse
-
-    
     {
 
-        
+
         try {
             $dto = ProductDTO::fromRequest($request);
             $product = $this->productService->create($dto);
@@ -205,5 +205,24 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function recordView(int $id): Response
+    {
+        $this->productService->recordView($id);
+
+        return response()->noContent();
+    }
+
+    public function topProducts(Request $request): JsonResponse
+    {
+        $days = (int) $request->query('days', 7);
+
+        $data = $this->productService->topProducts($days);
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
     }
 }
