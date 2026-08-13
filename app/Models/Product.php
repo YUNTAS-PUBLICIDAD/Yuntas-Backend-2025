@@ -65,7 +65,9 @@ class Product extends Model
         'keywords',
         'video_url',
         'video_description',
-        'video_subtitle'
+        'video_subtitle',
+        'views_count',
+        'last_viewed_at',
     ];
 
     protected $casts = [
