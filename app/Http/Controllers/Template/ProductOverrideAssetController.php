@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Template;
 
 use App\Http\Controllers\Controller;
-use App\Service\Image\ImageService;
+use App\Application\Services\Image\ImageService;;
 use Illuminate\Http\Request;
 
 class ProductOverrideAssetController extends Controller
