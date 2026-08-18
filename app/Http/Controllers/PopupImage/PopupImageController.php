@@ -4,7 +4,7 @@ namespace App\Http\Controllers\PopupImage;
 
 use App\Http\Controllers\Controller;
 use App\Models\PopupImage;
-use App\Service\Image\ImageService;
+use App\Application\Services\Image\ImageService;;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
