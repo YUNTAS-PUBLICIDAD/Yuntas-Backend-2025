@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Service\Image;
+namespace App\Application\Services\Image;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;

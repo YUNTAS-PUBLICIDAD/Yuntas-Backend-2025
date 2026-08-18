@@ -3,7 +3,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Application\Services\Settings\SettingsService;
 use App\Http\Controllers\Controller;
-use App\Service\Image\ImageService;
+use App\Application\Services\Image\ImageService;;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 

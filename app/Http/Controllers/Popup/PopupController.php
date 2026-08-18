@@ -7,7 +7,7 @@ use App\Http\Requests\Popup\StorePopupRequest;
 use App\Http\Requests\Popup\UpdatePopupRequest;
 use App\Models\Popup;
 use App\Models\PopupImage;
-use App\Service\Image\ImageService;
+use App\Application\Services\Image\ImageService;;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

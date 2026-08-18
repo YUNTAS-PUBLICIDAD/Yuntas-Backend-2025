@@ -5,7 +5,7 @@ use App\Application\Support\TemplateVariableBuilder;
 use App\Models\Lead;
 use App\Models\ProductTemplateAsset;
 use App\Models\Template;
-use App\Service\Image\ImageService;
+use App\Application\Services\Image\ImageService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
