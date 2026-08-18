@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasActivityLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Popup extends Model
 {
+  use HasActivityLog;
   protected $fillable = [
     'lead_source_id',
     'slug',

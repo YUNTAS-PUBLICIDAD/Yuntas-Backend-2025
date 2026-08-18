@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasActivityLog;
 
 class ContactMessage extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivityLog;
 
     protected $fillable = [
         'first_name',

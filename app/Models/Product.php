@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasActivityLog;
 
 // Import Swagger Annotations
 use OpenApi\Annotations as OA;
@@ -40,7 +41,7 @@ use OpenApi\Annotations as OA;
  */
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasActivityLog;
 
     protected static function booted()
     {
@@ -64,7 +65,9 @@ class Product extends Model
         'keywords',
         'video_url',
         'video_description',
-        'video_subtitle'
+        'video_subtitle',
+        'views_count',
+        'last_viewed_at',
     ];
 
     protected $casts = [

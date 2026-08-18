@@ -14,12 +14,15 @@ use Illuminate\Http\UploadedFile;
 use App\Traits\ValidatesImageSecurity;
 use App\Traits\SanitizesInput;
 use Illuminate\Support\Facades\Cache;
+use App\Jobs\RecordProductView;
 
 class ProductService
 {
     use ValidatesImageSecurity, SanitizesInput;
 
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     public function getAll(int $perPage = 10)
     {
@@ -31,7 +34,7 @@ class ProductService
         $product = null;
 
         if (is_numeric($term)) {
-            $product = Product::find((int)$term);
+            $product = Product::find((int) $term);
         }
 
         if (!$product) {
@@ -92,7 +95,8 @@ class ProductService
                     $altText = $item['alt'] ?? $product->name;
 
                     // Validar que sea archivo
-                    if (!$image instanceof UploadedFile) continue;
+                    if (!$image instanceof UploadedFile)
+                        continue;
 
                     $this->uploadImage($product, $image, $slotName, 'products', $title, $altText);
                 }
@@ -139,7 +143,7 @@ class ProductService
                 'video_subtitle' => $dto->video_subtitle,
             ]);
 
-           if (!empty($dto->categories)) {
+            if (!empty($dto->categories)) {
                 $nombresCategorias = is_array($dto->categories)
                     ? $dto->categories
                     : [$dto->categories];
@@ -218,6 +222,61 @@ class ProductService
 
     }
 
+    public function recordView(int $id): void
+    {
+        $product = Product::findOrFail($id);
+
+        if ($product->status !== 'active') {
+            return;
+        }
+
+        if (
+            auth()->check() &&
+            auth()->user()->role?->name === 'admin'
+        ) {
+            return;
+        }
+
+        $ip = request()->ip();
+
+        $cacheKey = "product_view:{$product->id}:{$ip}";
+
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        Cache::put($cacheKey, true, now()->addHour());
+
+        RecordProductView::dispatch($product->id);
+    }
+
+    public function topProducts(int $days): array
+    {
+        $allowedDays = [7, 30, 90];
+
+        if (!in_array($days, $allowedDays)) {
+            $days = 7;
+        }
+
+        $products = Product::query()
+            ->where('status', 'active')
+            ->whereNotNull('last_viewed_at')
+            ->where('last_viewed_at', '>=', now()->subDays($days))
+            ->orderByDesc('views_count')
+            ->limit(10)
+            ->get([
+                'id',
+                'name',
+                'slug',
+                'views_count',
+            ]);
+
+        return [
+            'period' => "last_{$days}_days",
+            'total_views' => $products->sum('views_count'),
+            'products' => $products,
+        ];
+    }
 
     private function uploadImage(Product $product, $file, $slotName, $module, $title, $altText = null)
     {
@@ -257,7 +316,8 @@ class ProductService
         $slot = ImageSlot::where(
             ['name' => $slotName, 'module' => 'products']
         )->first();
-        if (!$slot) return;
+        if (!$slot)
+            return;
 
         $image = $product->images()->where('slot_id', $slot->id)->first();
 
@@ -273,7 +333,8 @@ class ProductService
             ['name' => $slotName, 'module' => 'products']
         )->first();
 
-        if (!$slot) return;
+        if (!$slot)
+            return;
 
         $image = $product->images()->where('slot_id', $slot->id)->first();
 
@@ -285,7 +346,8 @@ class ProductService
     private function deleteImagesBySlot(Product $product, $slotName)
     {
         $slot = ImageSlot::where(['name' => $slotName, 'module' => 'products'])->first();
-        if (!$slot) return;
+        if (!$slot)
+            return;
 
         $images = $product->images()->where('slot_id', $slot->id)->get();
         foreach ($images as $img) {
@@ -305,7 +367,8 @@ class ProductService
         foreach ($items as $index => $itemData) {
             $text = is_string($index) ? "$index: $itemData" : $itemData;
 
-            if(empty(trim($text))) continue;
+            if (empty(trim($text)))
+                continue;
 
             $product->contentItems()->create([
                 'slot_id' => $slot->id,
@@ -322,7 +385,8 @@ class ProductService
     {
         $ids = [];
         foreach ($categoryNames as $name) {
-            if (empty(trim($name))) continue;
+            if (empty(trim($name)))
+                continue;
 
             // Buscamos por nombre o creamos nueva
             $category = \App\Models\Category::firstOrCreate(
@@ -424,127 +488,127 @@ class ProductService
 
     public function searchForChatbot(string $query)
     {
-      $cacheKey = 'chatbot_search_' . md5($query);
+        $cacheKey = 'chatbot_search_' . md5($query);
 
-      return Cache::remember($cacheKey, 60, function () use ($query) {
+        return Cache::remember($cacheKey, 60, function () use ($query) {
 
-             $query = $this->normalizeText(trim($query));
+            $query = $this->normalizeText(trim($query));
 
-             $words = collect(explode(' ', $query))
-                 ->filter(fn ($w) => strlen($w) > 2)
-                 ->values();
+            $words = collect(explode(' ', $query))
+                ->filter(fn($w) => strlen($w) > 2)
+                ->values();
 
-             if ($words->isEmpty()) {
-                 return collect();
-             }
+            if ($words->isEmpty()) {
+                return collect();
+            }
 
-             $products = Product::query()
-                 ->with(['images.slot'])
-                 ->get()
-                 ->map(function ($product) use ($query, $words) {
+            $products = Product::query()
+                ->with(['images.slot'])
+                ->get()
+                ->map(function ($product) use ($query, $words) {
 
-                     $name = $this->normalizeText($product->name);
+                    $name = $this->normalizeText($product->name);
 
-                     $score = 0;
+                    $score = 0;
 
-                     // Match exacto completo
-                     if ($name === $query) {
-                         $score += 100;
-                     }
+                    // Match exacto completo
+                    if ($name === $query) {
+                        $score += 100;
+                    }
 
-                     // Contiene frase completa
-                     if (str_contains($name, $query)) {
-                         $score += 50;
-                     }
+                    // Contiene frase completa
+                    if (str_contains($name, $query)) {
+                        $score += 50;
+                    }
 
-                     // Match por palabras ponderado
-                     foreach ($words as $word) {
+                    // Match por palabras ponderado
+                    foreach ($words as $word) {
 
-                         // Exact match palabra
-                         if ($name === $word) {
-                             $score += 80;
-                             continue;
-                         }
+                        // Exact match palabra
+                        if ($name === $word) {
+                            $score += 80;
+                            continue;
+                        }
 
-                         // Empieza por
-                         if (str_starts_with($name, $word)) {
-                             $score += 30;
-                         }
+                        // Empieza por
+                        if (str_starts_with($name, $word)) {
+                            $score += 30;
+                        }
 
-                         // Contiene
-                         if (str_contains($name, $word)) {
-                             $score += 10;
-                         }
-                     }
+                        // Contiene
+                        if (str_contains($name, $word)) {
+                            $score += 10;
+                        }
+                    }
 
-                     return [
-                         'score' => $score,
-                         'product' => $product
-                     ];
-                 })
+                    return [
+                        'score' => $score,
+                        'product' => $product
+                    ];
+                })
 
-                 // Solo relevantes
-                 ->filter(fn ($item) => $item['score'] > 0)
+                // Solo relevantes
+                ->filter(fn($item) => $item['score'] > 0)
 
-                 // Mejor score primero
-                 ->sortByDesc('score')
+                // Mejor score primero
+                ->sortByDesc('score')
 
-                 // Solo el mejor
-                 ->take(1);
+                // Solo el mejor
+                ->take(1);
 
-             return $products->map(function ($item) {
+            return $products->map(function ($item) {
 
-                 $product = $item['product'];
+                $product = $item['product'];
 
-                 $image = $product->images
-                     ->firstWhere('slot.name', 'List');
+                $image = $product->images
+                    ->firstWhere('slot.name', 'List');
 
-                 return [
-                     'id' => $product->id,
-                     'name' => $product->name,
-                     'slug' => $product->slug,
-                     'price' => $product->price,
-                     'image' => $image?->url
-                 ];
-             })->values();
-         });
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'price' => $product->price,
+                    'image' => $image?->url
+                ];
+            })->values();
+        });
     }
 
     private function normalizeText(string $text): string
     {
-      $text = mb_strtolower($text);
+        $text = mb_strtolower($text);
 
-      $replace = [
-             'á' => 'a',
-             'é' => 'e',
-             'í' => 'i',
-             'ó' => 'o',
-             'ú' => 'u',
-             'ñ' => 'n',
-         ];
+        $replace = [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'ñ' => 'n',
+        ];
 
-         return strtr($text, $replace);
+        return strtr($text, $replace);
     }
 
     public function getFeaturedForChatbot()
     {
-      return Cache::remember('chatbot_featured_products', 60, function () {
-      return Product::query()
-        ->with(['images.slot'])
-        ->orderByDesc('updated_at')
-        ->limit(3)
-        ->get()
-        ->map(function ($product) {
-          $image = $product->images->firstWhere('slot.name', 'List' );
+        return Cache::remember('chatbot_featured_products', 60, function () {
+            return Product::query()
+                ->with(['images.slot'])
+                ->orderByDesc('updated_at')
+                ->limit(3)
+                ->get()
+                ->map(function ($product) {
+                    $image = $product->images->firstWhere('slot.name', 'List');
 
-          return [
-            'id' => $product->id,
-            'name' => $product->name,
-            'slug' => $product->slug,
-            'price' => $product->price,
-            'image' => $image?->url
-          ];
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'slug' => $product->slug,
+                        'price' => $product->price,
+                        'image' => $image?->url
+                    ];
+                });
         });
-      });
     }
 }

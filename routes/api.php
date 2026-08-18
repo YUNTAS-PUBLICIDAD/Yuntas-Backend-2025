@@ -31,6 +31,7 @@ use App\Http\Controllers\Template\ProductOverrideAssetController;
 use App\Http\Controllers\Template\TemplateAssetController;
 use App\Http\Controllers\Template\TemplateProductAssetController;
 use App\Http\Controllers\Template\TemplateVariantController;
+use App\Http\Controllers\ActivityLog\ActivityLogController;
 
 // ==============================================================================
 //                              AUTENTICACIÓN
@@ -61,6 +62,8 @@ Route::prefix('blogs')->middleware('throttle:public')->group(function () {
 Route::prefix('productos')->middleware('throttle:public')->group(function () {
   Route::get('/', [ProductController::class, 'index']);
   Route::get('/{slug}', [ProductController::class, 'show']);
+  // Registrar vista
+  Route::post('/{id}/view', [ProductController::class, 'recordView']);
 });
 
 // ------------------- CATEGORÍAS (Público) -------------------
@@ -276,6 +279,11 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|diseño', 'throttle:adm
   Route::prefix('dashboard')->group(function () {
     Route::get('most-viewed-pages', [\App\Http\Controllers\PageView\TrackingController::class, 'mostViewedPages']);
     Route::get('user-type-stats', [\App\Http\Controllers\PageView\TrackingController::class, 'userTypeStats']);
+    Route::get('top-products', [ProductController::class, 'topProducts']);
+    });
+
+  Route::prefix('admin/historial')->middleware('role:admin')->group(function () {
+    Route::get('/', [ActivityLogController::class, 'index']);
   });
 });
 
