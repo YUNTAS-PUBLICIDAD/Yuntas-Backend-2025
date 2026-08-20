@@ -222,33 +222,36 @@ class ProductService
 
     }
 
-    public function recordView(int $id): void
-    {
-        $product = Product::findOrFail($id);
+    public function recordView(int $id): string
+{
+    $product = Product::findOrFail($id);
 
-        if ($product->status !== 'active') {
-            return;
-        }
-
-        if (
-            auth()->check() &&
-            auth()->user()->role?->name === 'admin'
-        ) {
-            return;
-        }
-
-        $ip = request()->ip();
-
-        $cacheKey = "product_view:{$product->id}:{$ip}";
-
-        if (Cache::has($cacheKey)) {
-            return;
-        }
-
-        Cache::put($cacheKey, true, now()->addHour());
-
-        RecordProductView::dispatch($product->id);
+    // 1. Validar estado del producto
+    if (strtolower($product->status) !== 'active') {
+        return 'inactive_product';
     }
+
+    // 2. Ignorar administradores
+    if (auth()->check() && auth()->user()->role?->name === 'admin') {
+        return 'ignored_admin';
+    }
+
+    $ip = request()->ip();
+    $cacheKey = "product_view:{$product->id}:{$ip}";
+
+    // 3. Validar cooldown / caché
+    if (Cache::has($cacheKey)) {
+        return 'cooldown';
+    }
+
+    // Guardar en caché (ajusta el tiempo si deseas probar más rápido, ej: addMinutes(5))
+    Cache::put($cacheKey, true, now()->addHour());
+
+    // 4. Ejecutar el Job de forma inmediata y síncrona
+    RecordProductView::dispatchSync($product->id);
+
+    return 'success';
+}
 
     public function topProducts(int $days): array
     {
