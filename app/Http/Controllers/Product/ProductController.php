@@ -207,22 +207,11 @@ class ProductController extends Controller
         }
     }
 
-    public function recordView(Request $request, int $id): JsonResponse
+    public function recordView(int $id): Response
     {
-        try {
-            $this->productService->recordView($id);
+        $this->productService->recordView($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Vista de producto registrada exitosamente.',
-                'ip'      => $request->ip(),
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al registrar vista: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->noContent();
     }
 
     public function topProducts(Request $request): JsonResponse
