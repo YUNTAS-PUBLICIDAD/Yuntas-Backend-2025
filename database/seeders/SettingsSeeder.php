@@ -57,7 +57,13 @@ class SettingsSeeder extends Seeder
                       'secondary_color' => null,
                       'icon' => null,
                       'position' => 'bottom-right',
-                      'welcome_message' => 'Hola 👋 ¿En qué podemos ayudarte?',
+                      'welcome_message' => [
+    '👋 ¡Hola! ¿En qué podemos ayudarte?',
+    '✨ ¡Hola! Cuéntanos, ¿En qué podemos ayudarte?',
+    '✨ ¡Bienvenido(a)! Estamos aquí para ayudarte.',
+    '👋 ¡Hola! ¿Qué información necesitas?',
+    '😊 ¡Bienvenido(a)! ¿Qué podemos hacer por ti?',
+],
                       'show_delay_seconds' => 3,
                       'auto_close_seconds' => null,
                   ]

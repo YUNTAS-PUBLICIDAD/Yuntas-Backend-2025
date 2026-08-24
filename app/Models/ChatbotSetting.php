@@ -18,6 +18,7 @@ class ChatbotSetting extends Model
     ];
 
     protected $casts = [
-      'enabled' => 'boolean'
+      'enabled' => 'boolean',
+      'welcome_message' => 'array'
     ];
 }
