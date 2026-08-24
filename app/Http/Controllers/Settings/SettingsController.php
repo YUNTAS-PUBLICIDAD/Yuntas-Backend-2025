@@ -115,7 +115,8 @@ class SettingsController extends Controller
       'secondary_color' => ['sometimes','nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
       'icon' => 'sometimes|nullable|image',
       'position' => 'sometimes|required|in:bottom-right,bottom-left',
-      'welcome_message' => 'sometimes|nullable|string',
+      'welcome_message' => 'sometimes|nullable|array',
+      'welcome_message.*' => 'string',
       'show_delay_seconds' => 'sometimes|integer|min:0',
       'auto_close_seconds' => 'sometimes|nullable|integer|min:0'
     ]);
