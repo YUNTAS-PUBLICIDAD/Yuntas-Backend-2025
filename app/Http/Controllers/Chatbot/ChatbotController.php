@@ -42,8 +42,11 @@ class ChatbotController extends Controller
                 [
                     'role' => 'bot',
                     'sender' => 'bot',
-                    'text' => $reply,
-                    'type' => 'text'
+                    'text' => $reply['response'],
+                    'type' => $reply['show_whatsapp'] ? 'whatsapp' : 'text',
+                    'whatsapp_url' => $reply['show_whatsapp']
+                        ? 'https://wa.me/51912849782?text=' . urlencode('Hola Yuntas, quisiera conversar con un asesor comercial para que me brinde más información, por favor.')
+                        : null,
                 ]
             ],
         ]);
@@ -103,16 +106,18 @@ class ChatbotController extends Controller
         $reply = $this->callN8nEngine($message, $conversation->uuid);
 
         return response()->json([
-            'reply' => $reply
+            'reply' => $reply['response'],
+            'show_whatsapp' => $reply['show_whatsapp'],
         ]);
     }
 
     /**
      * Servicio interno para conectar con el Webhook de n8n
      */
-    protected function callN8nEngine(string $message, string $sessionId): string
+    protected function callN8nEngine(string $message, string $sessionId): array
     {
         $responseText = null;
+        $showWhatsapp = false;
         $n8nUrl = config('services.n8n.webhook_url');
 
         if (!$n8nUrl) {
@@ -120,25 +125,27 @@ class ChatbotController extends Controller
         } else {
             try {
                 $http = Http::timeout(10); // Timeout preventivo de 10 segundos
-                
+
                 if (app()->environment('local')) {
                     $http = $http->withoutVerifying();
                 }
 
                 // Payload idéntico a tu referencia, adaptado a tus variables
                 $response = $http->post($n8nUrl, [
-                    'message' => $message,
-                    'sessionId' => $sessionId
+                    'chatbotYuntas' => $message,
+                    'sessionId' => $sessionId,
+                    'platform' => 'website'
                 ]);
 
                 if ($response->successful()) {
                     $data = $response->json();
-                    
+
                     // Extrae la respuesta buscando llaves comunes devueltas por flujos de n8n AI
-                    $responseText = $data['response'] 
-                        ?? $data['output'] 
-                        ?? $data['respuesta'] 
+                    $responseText = $data['response']
+                        ?? $data['output']
+                        ?? $data['respuesta']
                         ?? null;
+                    $showWhatsapp = $data['show_whatsapp'] ?? false;
                 } else {
                     Log::error('n8n respondió con código de error', [
                         'status' => $response->status(),
@@ -155,7 +162,10 @@ class ChatbotController extends Controller
             $responseText = "Por el momento no puedo procesar tu solicitud, por favor comunícate directamente con soporte.";
         }
 
-        return $responseText;
+        return [
+            'response' => $responseText,
+            'show_whatsapp' => $showWhatsapp,
+        ];
     }
 
     /**
@@ -166,7 +176,7 @@ class ChatbotController extends Controller
         if ($request->conversation_id) {
             return ChatbotConversation::where('uuid', $request->conversation_id)->firstOrFail();
         }
-        
+
         return ChatbotConversation::create([
             'lead_id' => $request->lead_id,
             'started_at' => now(),
