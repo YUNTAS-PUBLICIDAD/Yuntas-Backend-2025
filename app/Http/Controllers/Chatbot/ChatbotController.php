@@ -8,6 +8,7 @@ use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\ContactSetting;
 
 class ChatbotController extends Controller
 {
@@ -34,6 +35,8 @@ class ChatbotController extends Controller
         // 2. Enviar el mensaje a n8n pasándole el UUID como sessionId para mantener el historial
         $reply = $this->callN8nEngine($request->message, $conversation->uuid);
 
+        $phone = ContactSetting::first()->whatsapp_number;
+
         // TODO: Si necesitas guardar el mensaje en tu base de datos local (ej. $conversation->messages()->create(...)), puedes hacerlo aquí usando $reply.
 
         return response()->json([
@@ -45,7 +48,7 @@ class ChatbotController extends Controller
                     'text' => $reply['response'],
                     'type' => $reply['show_whatsapp'] ? 'whatsapp' : 'text',
                     'whatsapp_url' => $reply['show_whatsapp']
-                        ? 'https://wa.me/51912849782?text=' . urlencode('Hola Yuntas, quisiera conversar con un asesor comercial para que me brinde más información, por favor.')
+                        ? 'https://wa.me/' . $phone . '?text=' . urlencode('Hola Yuntas, quisiera conversar con un asesor comercial para que me brinde más información, por favor.')
                         : null,
                 ]
             ],

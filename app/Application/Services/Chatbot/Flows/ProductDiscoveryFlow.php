@@ -6,145 +6,148 @@ use App\Application\Services\Chatbot\Context\ChatContext;
 use App\Application\Services\Chatbot\Extractors\BusinessTypeExtractor;
 use App\Application\Services\Chatbot\Extractors\InstallationExtractor;
 use App\Application\Services\Product\ProductRecommendationService;
+use App\Models\ContactSetting;
 
 class ProductDiscoveryFlow
 {
-  public function handle(string $message, ChatContext $context):array
-  {
-    $step = data_get($context->data, 'flow.step');
+    public function handle(string $message, ChatContext $context): array
+    {
+        $step = data_get($context->data, 'flow.step');
 
-    return match ($step) {
-      'installation' => $this->handleInstallation($message, $context),
-      'business' => $this->handleBusiness($message, $context),
-      default => $this->finish($context)
-    };
-  }
+        return match ($step) {
+            'installation' => $this->handleInstallation($message, $context),
+            'business' => $this->handleBusiness($message, $context),
+            default => $this->finish($context)
+        };
+    }
 
-  protected function handleInstallation(
-         string $message,
-         ChatContext $context
-     ): array {
+    protected function handleInstallation(
+        string $message,
+        ChatContext $context
+    ): array {
 
-         // primera vez
-         if (empty($message)) {
+        // primera vez
+        if (empty($message)) {
 
-             return [
-                 'text' => 'Perfecto. ¿La usarás en interior o exterior?',
-                 'metadata' => null
-             ];
-         }
+            return [
+                'text' => 'Perfecto. ¿La usarás en interior o exterior?',
+                'metadata' => null
+            ];
+        }
 
-         $installation = app(InstallationExtractor::class)
-             ->extract($message);
+        $installation = app(InstallationExtractor::class)
+            ->extract($message);
 
-         if (!$installation) {
+        if (!$installation) {
 
-             return [
-                 'text' => '¿Será para interior o exterior?',
-                 'metadata' => null
-             ];
-         }
+            return [
+                'text' => '¿Será para interior o exterior?',
+                'metadata' => null
+            ];
+        }
 
-         data_set(
-             $context->data,
-             'entities.installation',
-             $installation
-         );
+        data_set(
+            $context->data,
+            'entities.installation',
+            $installation
+        );
 
-         data_set(
-             $context->data,
-             'flow.step',
-             'business'
-         );
+        data_set(
+            $context->data,
+            'flow.step',
+            'business'
+        );
 
-         return [
-             'text' => 'Entiendo. ¿Para qué tipo de negocio la necesitas?',
-             'metadata' => null
-         ];
-     }
+        return [
+            'text' => 'Entiendo. ¿Para qué tipo de negocio la necesitas?',
+            'metadata' => null
+        ];
+    }
 
-     protected function handleBusiness(
-         string $message,
-         ChatContext $context
-     ): array {
+    protected function handleBusiness(
+        string $message,
+        ChatContext $context
+    ): array {
 
-         $business = app(BusinessTypeExtractor::class)
-             ->extract($message);
+        $business = app(BusinessTypeExtractor::class)
+            ->extract($message);
 
-         if (!$business) {
+        if (!$business) {
 
-             return [
-                 'text' => '¿Qué tipo de negocio tienes?',
-                 'metadata' => null
-             ];
-         }
+            return [
+                'text' => '¿Qué tipo de negocio tienes?',
+                'metadata' => null
+            ];
+        }
 
-         data_set(
-             $context->data,
-             'entities.business',
-             $business
-         );
+        data_set(
+            $context->data,
+            'entities.business',
+            $business
+        );
 
-         data_set(
-         $context->data,
-         'entities.business_raw',
-         $message
-         );
+        data_set(
+            $context->data,
+            'entities.business_raw',
+            $message
+        );
 
-         return $this->finish($context);
-     }
+        return $this->finish($context);
+    }
 
-     protected function finish(ChatContext $context): array
-     {
-         $entities = data_get(
-             $context->data,
-             'entities',
-             []
-         );
+    protected function finish(ChatContext $context): array
+    {
+        $entities = data_get(
+            $context->data,
+            'entities',
+            []
+        );
 
-         $products = app(ProductRecommendationService::class)
-             ->recommend($entities);
+        $products = app(ProductRecommendationService::class)
+            ->recommend($entities);
 
-         $productName = data_get(
-             $entities,
-             'product_name'
-         );
+        $productName = data_get(
+            $entities,
+            'product_name'
+        );
 
-         $installation = data_get(
-             $entities,
-             'installation'
-         );
+        $installation = data_get(
+            $entities,
+            'installation'
+        );
 
-         // $business = data_get(
-         //     $entities,
-         //     'business'
-         // );
-         $business = data_get(
-         $entities,
-         'business_raw'
-         );
+        // $business = data_get(
+        //     $entities,
+        //     'business'
+        // );
+        $business = data_get(
+            $entities,
+            'business_raw'
+        );
 
-         $whatsappMessage = rawurlencode(
-             "Hola, me interesa {$productName}. "
-             ."Uso: {$installation}. "
-             ."Negocio: {$business}."
-         );
+        $whatsappMessage = rawurlencode(
+            "Hola, me interesa {$productName}. "
+            . "Uso: {$installation}. "
+            . "Negocio: {$business}."
+        );
 
-         data_set($context->data, 'flow', null);
+        $phone = ContactSetting::first()->whatsapp_number;
 
-         return [
-             'text' => 'Perfecto, estas opciones podrían funcionar muy bien 👇',
+        data_set($context->data, 'flow', null);
 
-             'metadata' => [
-                 'type' => 'products',
+        return [
+            'text' => 'Perfecto, estas opciones podrían funcionar muy bien 👇',
 
-                 'products' => $products
-                     ->values()
-                     ->toArray(),
+            'metadata' => [
+                'type' => 'products',
 
-                 'whatsapp_url'
-                     => "https://wa.me/51912849782?text={$whatsappMessage}"
-             ]
-         ];
-     }
+                'products' => $products
+                    ->values()
+                    ->toArray(),
+
+                'whatsapp_url'
+                => "https://wa.me/{$phone}?text={$whatsappMessage}"
+            ]
+        ];
+    }
 }
