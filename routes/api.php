@@ -252,7 +252,6 @@ Route::middleware(['auth:sanctum', 'role:admin|marketing|diseño', 'throttle:adm
       ->middleware('permission:plantillas.eliminar');
   });
   Route::prefix('admin/popup-images')->group(function () {
-    Route::post('{id}', [PopupImageController::class, 'update']);
     Route::patch('{id}', [PopupImageController::class, 'update']);
   });
 
