@@ -115,12 +115,16 @@ class PopupImageController extends Controller
       ->count();
 
       if ($newDevice === 'desktop' && $count >= 2) {
+        DB::rollBack();
+
         return response()->json([
-          'message' => 'Solo ser permiten 2 imágenes desktop'
+          'message' => 'Solo se permiten 2 imágenes desktop'
         ], 422);
       }
 
       if ($newDevice === 'mobile' && $count >= 1) {
+        DB::rollBack();
+
         return response()->json([
           'message' => 'Solo se permite 1 imagen mobile'
         ], 422);
