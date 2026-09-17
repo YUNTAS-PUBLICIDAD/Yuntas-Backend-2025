@@ -290,4 +290,4 @@ Route::post('/leads/capture', [LeadController::class, 'capture']);
 
 Route::get('popup', [PopupController::class, 'getPopup'])->middleware('throttle:public');
 
-Route::get('settings', [SettingsController::class, 'index']);
+Route::get('settings', [SettingsController::class, 'index'])->middleware(['auth:sanctum', 'role:admin']);
