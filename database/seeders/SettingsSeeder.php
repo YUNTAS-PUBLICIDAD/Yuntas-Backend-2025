@@ -15,6 +15,7 @@ class SettingsSeeder extends Seeder
      */
     public function run(): void
     {
+        $companyRuc = config('app.company_ruc','20492552250');
       // =========================
               // GENERAL
               // =========================
@@ -22,6 +23,7 @@ class SettingsSeeder extends Seeder
                   ['id' => 1],
                   [
                       'company_name' => 'Yuntas',
+                      'company_ruc' => $companyRuc,
                       'logo_light' => null,
                       'logo_dark' => null,
                       'theme' => 'light',
