@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+    'company_ruc' => env('COMPANY_RUC','20492552250'),
+
 ];
