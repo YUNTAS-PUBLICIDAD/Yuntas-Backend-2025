@@ -24,7 +24,6 @@ class SettingsController extends Controller
 
    $this->ensureAllowed($request, [
       'company_name',
-      'company_ruc',
       'logo_light',
       'logo_dark',
       'theme'
@@ -32,7 +31,6 @@ class SettingsController extends Controller
 
     $validated = $request->validate([
     'company_name' => 'sometimes|required|string',
-    'company_ruc' => 'sometimes|nullable|string|size:11',
     'logo_light' => 'sometimes|nullable|image',
     'logo_dark' => 'sometimes|nullable|image',
     'theme' => 'sometimes|required|in:light,dark'
@@ -89,7 +87,23 @@ class SettingsController extends Controller
       'whatsapp_message' => 'sometimes|nullable|string',
       'show_in_footer' => 'sometimes|boolean',
       'show_contact_page' => 'sometimes|boolean',
-      'map_url' => 'sometimes|nullable|string'
+      'map_url' => [
+        'sometimes',
+        'nullable',
+        'string',
+        function ($attribute, $value, $fail) {
+          if (!empty($value)) {
+            $isGoogle = str_contains($value, 'google.com/maps')
+              || str_contains($value, 'maps.google.com')
+              || str_contains($value, 'maps.app.goo.gl')
+              || str_contains($value, 'goo.gl/maps')
+              || str_contains($value, '<iframe');
+            if (!$isGoogle) {
+              $fail('El enlace debe pertenecer a Google Maps o ser un código iframe.');
+            }
+          }
+        },
+      ]
     ]);
 
     return response()->json(
